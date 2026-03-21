@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">SISPTMPartner</string>
+    <string name="register_title">Registro de Partner</string>
+    <string name="full_name">Nombre Completo</string>
+    <string name="email">Correo Electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="confirm_password">Confirmar Contraseña</string>
+    <string name="location">Ubicación</string>
+    <string name="register_button">Registrarse</string>
+    <string name="already_have_account">¿Ya tienes una cuenta? Inicia sesión</string>
+    <string name="accept_terms">Acepto los términos y condiciones</string>
+    <string name="login_title">Inicio de Sesión Partner</string>
+    <string name="login_button">Iniciar Sesión</string>
+    <string name="dont_have_account">¿No tienes una cuenta? Regístrate</string>
+    <string name="welcome_home">¡Bienvenido a la Pantalla de Inicio de Partner!</string>
+    <string name="logout">Cerrar Sesión</string>
+    <string name="home_title">Inicio Partner</string>
+</resources>
