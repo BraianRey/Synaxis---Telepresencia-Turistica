@@ -9,6 +9,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.sismptm.client.R
+import com.sismptm.client.data.remote.RegisterRequest
+import com.sismptm.client.data.remote.RetrofitClient
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @Composable
@@ -22,7 +25,8 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
     
-    // Variable no visible con la fecha de creación
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
     val creationDate = remember { Date().toString() }
 
     Column(
@@ -94,14 +98,33 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { 
-                // Aquí se usaría 'creationDate' para guardarla en la DB/API
-                onRegisterSuccess() 
+            onClick = {
+                scope.launch {
+                    isLoading = true
+                    try {
+                        val request = RegisterRequest(name, email, password, creationDate)
+                        val response = RetrofitClient.apiService.registerUser(request)
+                        if (response.isSuccessful) {
+                            println("Successful connection: Registration successful")
+                        } else {
+                            println("Connection error: ${response.code()} - Registration failed (proceeding anyway for testing)")
+                        }
+                    } catch (e: Exception) {
+                        println("Connection failure: ${e.message} - Registration failed (proceeding anyway for testing)")
+                    } finally {
+                        isLoading = false
+                        onRegisterSuccess() // Navega de todas formas para pruebas
+                    }
+                }
             },
-            enabled = acceptedTerms,
+            enabled = acceptedTerms && !isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(stringResource(id = R.string.register_button))
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+            } else {
+                Text(stringResource(id = R.string.register_button))
+            }
         }
 
         TextButton(onClick = onNavigateToLogin) {
