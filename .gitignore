@@ -1,0 +1,20 @@
+# Gradle
+.gradle/
+build/
+
+# Android
+local.properties
+*.apk
+*.iml
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
