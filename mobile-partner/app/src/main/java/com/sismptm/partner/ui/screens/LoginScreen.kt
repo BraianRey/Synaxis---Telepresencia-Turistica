@@ -9,6 +9,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.sismptm.partner.R
+import com.sismptm.partner.data.remote.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -17,6 +19,8 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var pingResult by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -56,6 +60,41 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(id = R.string.login_button))
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Botón para probar el endpoint /ping
+        OutlinedButton(
+            onClick = {
+                scope.launch {
+                    try {
+                        val response = RetrofitClient.apiService.ping()
+                        if (response.isSuccessful) {
+                            pingResult = response.body()?.status ?: "OK"
+                        } else {
+                            pingResult = "Error: ${response.code()}"
+                        }
+                    } catch (e: Exception) {
+                        pingResult = "Error: ${e.message}"
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(id = R.string.test_connection))
+        }
+
+        if (pingResult.isNotEmpty()) {
+            Text(
+                text = if (pingResult.startsWith("Error")) 
+                    "Error de conexión: $pingResult"
+                else 
+                    "Conexión exitosa: $pingResult",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (pingResult.startsWith("Error")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
 
         TextButton(onClick = onNavigateToRegister) {
