@@ -9,12 +9,12 @@
 ### Dependencias (`pom.xml`)
 
 - **Spring Security** para BCrypt y configuración de seguridad HTTP.
-- Mantiene **Spring Data JPA**, **Validation**, **Web**, **PostgreSQL**, **H2** (runtime para desarrollo/pruebas).
+- Mantiene **Spring Data JPA**, **Validation**, **Web**, **H2** (base de datos embebida en desarrollo y en tests).
 
 ### Configuración
 
-- **`application.yaml`**: conexión a **PostgreSQL** (`localhost:5432`, base `tourpresence`, usuario `synexis`), Hibernate `ddl-auto: update`, puerto **8080**.
-- **`src/test/resources/application.yaml`**: **H2 en memoria** para tests automatizados (sin PostgreSQL local).
+- **`application.yaml`**: **H2 en archivo** (`./data/synaxis`), usuario `sa`, consola en `/h2-console`, Hibernate `ddl-auto: update`, puerto **8080**.
+- **`src/test/resources/application.yaml`**: **H2 en memoria** para tests automatizados.
 
 ### Modelos (`com.synexis.management_service.models`)
 
@@ -45,7 +45,7 @@
 
 ### Seguridad y errores
 
-- **`SecurityConfig`**: rutas públicas `/ping`, `/register/client`, `/register/partner`; CSRF deshabilitado para API; bean **`BCryptPasswordEncoder`**.
+- **`SecurityConfig`**: rutas públicas `/ping`, `/register/client`, `/register/partner`, `/h2-console/**`; cabeceras `frameOptions` deshabilitadas para la consola H2; CSRF deshabilitado para API; bean **`BCryptPasswordEncoder`**.
 - **`EmailAlreadyExistsException`** y **`RestExceptionHandler`**: **409** / **400** según corresponda.
 
 ### Pruebas
@@ -63,7 +63,7 @@
 
 ### Scripts (Windows)
 
-- **`start-database.bat`**: recordatorio en consola para configurar **PostgreSQL local** (pgAdmin / servicio Windows); credenciales alineadas con `application.yaml`. No usa Docker.
+- **`start-database.bat`**: recordatorio de URL JDBC y consola H2 (`/h2-console`). No requiere servidor de base de datos aparte.
 - **`start-backend.bat`**: `mvn spring-boot:run` en `backend-management-service`.
 
 ### Postman
@@ -72,7 +72,7 @@
 
 ### Base de datos
 
-- **PostgreSQL instalado localmente** (recomendado gestionar con **pgAdmin** o DBeaver). No hay `docker-compose` en el repositorio.
+- **H2** embebida (archivo bajo `backend-management-service/data/`, ignorado en Git). Consola web habilitada en desarrollo.
 
 ---
 

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "synaxis-mgmt-local",
     "name": "Synaxis Management Service",
-    "description": "Health (GET /ping), client registration (POST /register/client), partner registration (POST /register/partner).\n\nPrerequisites: backend on port 8080; PostgreSQL as configured.",
+    "description": "Health (GET /ping), client registration (POST /register/client), partner registration (POST /register/partner).\n\nPrerequisites: backend on port 8080; H2 embedded DB (see application.yaml).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

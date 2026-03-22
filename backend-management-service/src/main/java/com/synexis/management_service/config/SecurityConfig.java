@@ -2,9 +2,12 @@ package com.synexis.management_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,20 +17,39 @@ import org.springframework.security.web.SecurityFilterChain;
  * saving users.
  *
  * <p>How it works: {@link #securityFilterChain(HttpSecurity)} disables CSRF (typical for stateless JSON APIs) and
- * allows unauthenticated access only to {@code /ping}, {@code POST /register/client}, and {@code POST /register/partner};
- * everything else requires an authenticated principal. {@link #passwordEncoder()} is used by {@link com.synexis.management_service.service.AuthService
- * AuthService} for encoding and verification.
+ * allows unauthenticated access to {@code /ping}, paths under {@code /register/}, the H2 console, and {@code OPTIONS}
+ * preflight; everything else requires an authenticated principal. {@link #passwordEncoder()} is used by {@link
+ * com.synexis.management_service.service.AuthService AuthService} for encoding and verification.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /**
+     * Omite por completo el filtro de seguridad en estas rutas (evita 403 cuando {@code permitAll} no coincide con el
+     * {@code RequestMatcher} de MVC en algunos entornos). Los métodos del controlador no influyen en la URL: solo
+     * importan las rutas declaradas en {@code @PostMapping} / {@code @GetMapping}.
+     */
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web ->
+                web.ignoring()
+                        .requestMatchers("/ping", "/register/**", "/h2-console", "/h2-console/**");
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/ping", "/register/client", "/register/partner")
+                                .requestMatchers(HttpMethod.OPTIONS, "/**")
+                                .permitAll()
+                                .requestMatchers(
+                                        "/ping",
+                                        "/register/**",
+                                        "/h2-console",
+                                        "/h2-console/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated());

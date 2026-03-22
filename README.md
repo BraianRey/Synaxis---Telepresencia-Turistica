@@ -11,7 +11,7 @@ The system is composed of multiple independent yet integrated components:
 * **Client Mobile Application** — for end users requesting telepresence services
 * **Partner Mobile Application** — for service providers delivering telepresence experiences
 * **Backend API (Spring Boot)** — `backend-management-service` (REST API, BCrypt, registration by role)
-* **Database (PostgreSQL)** — local instance (e.g. via **pgAdmin** or the PostgreSQL Windows service); no Docker compose in this repo
+* **Database (H2)** — embedded file database for development; optional web console at `/h2-console` when the API is running
 
 This repository contains mobile applications, the **Spring Boot** management API, and shared development configuration.
 
@@ -23,10 +23,10 @@ This repository contains mobile applications, the **Spring Boot** management API
 .
 ├── mobile-client/              # Android app for end users (clients)
 ├── mobile-partner/             # Android app for service providers (partners)
-├── backend-management-service/ # Spring Boot API (PostgreSQL, registration, etc.)
+├── backend-management-service/ # Spring Boot API (H2, registration, etc.)
 ├── postman/                    # Postman collection for the API
 ├── docs/                       # Project notes and change summaries
-├── start-database.bat          # Local PostgreSQL setup reminder (Windows)
+├── start-database.bat          # H2 connection hints and console URL (Windows)
 ├── start-backend.bat           # Runs the Spring Boot service (Windows)
 ├── .vscode/                    # Shared VS Code configuration
 ├── .editorconfig               # Code formatting rules
@@ -72,7 +72,7 @@ The **`backend-management-service`** module is a **Spring Boot** application tha
 
 * RESTful endpoints (e.g. registration for clients and partners)
 * Password hashing with **BCrypt** (Spring Security)
-* Integration with **PostgreSQL**
+* Persistence with **H2** (embedded file database)
 
 Further features (e.g. JWT, full auth flows) may be added as the project evolves.
 
@@ -80,15 +80,15 @@ Further features (e.g. JWT, full auth flows) may be added as the project evolves
 
 ## Database
 
-The backend uses **PostgreSQL** as the primary relational database.
+The backend uses **H2** as the relational database. The file is stored under `backend-management-service/data/` when you run the app from `start-backend.bat` (working directory `backend-management-service`).
 
-**Local development (no Docker):**
+**Local development:**
 
-1. Install PostgreSQL and start the service (or connect from **pgAdmin**).
-2. Create database and role to match `backend-management-service/src/main/resources/application.yaml` (host `localhost`, port `5432`, database name, user, and password).
-3. Hibernate `ddl-auto` is used in development; for production, prefer explicit migrations (e.g. **Flyway**) and controlled schema changes.
+1. Start the API with `start-backend.bat`; no separate database server is required.
+2. Optional: open the H2 console at `http://localhost:8080/h2-console` and connect with JDBC URL `jdbc:h2:file:./data/synaxis`, user `sa`, empty password (same as `application.yaml`).
+3. Hibernate `ddl-auto` is set to `update` in development.
 
-Run `start-database.bat` on Windows for a printed checklist of connection settings and ports (**5432** for PostgreSQL vs **8080** for the HTTP API).
+Run `start-database.bat` on Windows for a short reminder of the JDBC URL and console.
 
 ---
 

@@ -12,7 +12,10 @@ import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Registration and future partner-specific business rules for {@link com.synexis.management_service.models.Partner}. */
+/**
+ * Registration and future partner-specific business rules for
+ * {@link com.synexis.management_service.models.Partner}.
+ */
 @Service
 public class PartnerService {
 
