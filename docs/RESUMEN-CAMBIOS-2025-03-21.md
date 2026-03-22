@@ -14,39 +14,43 @@
 ### Configuración
 
 - **`application.yaml`**: conexión a **PostgreSQL** (`localhost:5432`, base `tourpresence`, usuario `synexis`), Hibernate `ddl-auto: update`, puerto **8080**.
-- **`src/test/resources/application.yaml`**: **H2 en memoria** para tests sin depender de Docker.
+- **`src/test/resources/application.yaml`**: **H2 en memoria** para tests automatizados (sin PostgreSQL local).
 
 ### Modelos (`com.synexis.management_service.models`)
 
-- **`Role`**: enum `CLIENT`, `SOCIO` (persistido como texto en BD).
-- **`User`**: entidad JPA tabla `users` — `id`, `email` (único), `password_hash` (BCrypt), `role`, `profile_picture_path` (opcional, ruta bajo `picProfile/`).
+- **`UserBase`** (`@MappedSuperclass`): campos alineados con la tabla lógica **`User`** en `Documentos/SQLBD.sql` — `name`, `email`, `password_hash`, `status`, `language`, `created_at`, `terms_accepted`, `user_role` (columna física; equivale a `rol` en el SQL lógico), `pic_directory` (equivale a `picDirectory`).
+- **`Client`**: extiende `UserBase`; tabla `clients` (sin columnas extra respecto a `User` en el modelo lógico).
+- **`Partner`**: extiende `UserBase`; tabla `partners` + **`area_id`**, **`availability_status`** (tabla lógica `Partner` en SQLBD.sql).
+- Enums: `UserStatus`, `UserLanguage`, `UserRole` (`client` / `partner`), `PartnerAvailabilityStatus` (valores en minúsculas, coherentes con los ENUM del SQL / SQLBD.sql).
 
 ### Persistencia
 
-- **`UserRepository`**: `JpaRepository<User, Long>` + `existsByEmailIgnoreCase`, `findByEmailIgnoreCase`.
+- **`ClientRepository`** y **`PartnerRepository`**: un repositorio por tabla/entidad; consultas por email insensible a mayúsculas.
 
 ### DTOs
 
-- **`RegisterRequest`**: `email`, `password`, `role`, `profilePicturePath` opcional (validación Bean Validation).
-- **`RegisterResponse`**: `id`, `email`, `role`, `profilePicturePath` (sin contraseña ni hash).
+- **`RegisterClientRequest`** / **`RegisterClientResponse`**: `name`, `termsAccepted`, `language` opcional (por defecto `es`), `picDirectory` opcional.
+- **`RegisterPartnerRequest`** / **`RegisterPartnerResponse`**: lo mismo + **`areaId`** obligatorio; respuesta incluye `availabilityStatus`.
 
-### Servicio
+### Servicios
 
-- **`AuthService`**: registro — normaliza email, evita duplicados, codifica contraseña, guarda usuario y devuelve respuesta.
+- **`AuthService`**: solo **autenticación** a nivel de contraseña — `encodePassword`, `passwordMatches` (BCrypt); el registro no va aquí.
+- **`ClientService`**: alta de clientes; email único solo dentro de `clients`.
+- **`PartnerService`**: alta de socios; email único solo dentro de `partners`. La misma persona puede tener el mismo email en **ambas** tablas (cliente y socio).
 
 ### API REST
 
-- **`AuthController`**: `POST /register` → **201** con cuerpo JSON de registro.
+- **`UserController`**: `POST /register/client` y `POST /register/partner` → **201**.
 - **`Controller`** (raíz del paquete): `GET /ping` — comprobación de salud (`status`, `timestamp`).
 
 ### Seguridad y errores
 
-- **`SecurityConfig`**: rutas públicas `/ping` y `/register`; resto requiere autenticación; CSRF deshabilitado para API; bean **`BCryptPasswordEncoder`**.
-- **`EmailAlreadyExistsException`** y **`RestExceptionHandler`**: **409** si el email existe; **400** si falla la validación del cuerpo.
+- **`SecurityConfig`**: rutas públicas `/ping`, `/register/client`, `/register/partner`; CSRF deshabilitado para API; bean **`BCryptPasswordEncoder`**.
+- **`EmailAlreadyExistsException`** y **`RestExceptionHandler`**: **409** / **400** según corresponda.
 
 ### Pruebas
 
-- **`UserRepositoryTest`**: integración con contexto Spring, persistencia y lectura por email.
+- **`ClientRepositoryTest`**, **`PartnerRepositoryTest`**: persistencia por tabla.
 - **`ManagementServiceApplicationTests`**: carga de contexto.
 
 ### Recursos en disco
@@ -59,12 +63,16 @@
 
 ### Scripts (Windows)
 
-- **`start-database.bat`**: ejecuta `docker compose up -d` para PostgreSQL; mensaje recordando que Postman/API usan el puerto **8080**.
+- **`start-database.bat`**: recordatorio en consola para configurar **PostgreSQL local** (pgAdmin / servicio Windows); credenciales alineadas con `application.yaml`. No usa Docker.
 - **`start-backend.bat`**: `mvn spring-boot:run` en `backend-management-service`.
 
 ### Postman
 
-- **`postman/Synaxis-Management-Service.postman_collection.json`**: colección con `GET /ping`, `POST /register` (CLIENT, SOCIO, validación, duplicado), variable `baseUrl`, scripts de prueba básicos.
+- **`postman/Synaxis-Management-Service.postman_collection.json`**: `GET /ping`, `POST /register/client`, `POST /register/partner`, validación y duplicado; variable `baseUrl`.
+
+### Base de datos
+
+- **PostgreSQL instalado localmente** (recomendado gestionar con **pgAdmin** o DBeaver). No hay `docker-compose` en el repositorio.
 
 ---
 

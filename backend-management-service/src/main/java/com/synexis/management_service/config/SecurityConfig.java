@@ -14,9 +14,9 @@ import org.springframework.security.web.SecurityFilterChain;
  * saving users.
  *
  * <p>How it works: {@link #securityFilterChain(HttpSecurity)} disables CSRF (typical for stateless JSON APIs) and
- * allows unauthenticated access only to {@code /ping} and {@code POST /register}; everything else requires an
- * authenticated principal. {@link #passwordEncoder()} supplies BCrypt for {@link org.springframework.security.crypto.password.PasswordEncoder
- * PasswordEncoder} injection in {@link com.synexis.management_service.service.AuthService AuthService}.
+ * allows unauthenticated access only to {@code /ping}, {@code POST /register/client}, and {@code POST /register/partner};
+ * everything else requires an authenticated principal. {@link #passwordEncoder()} is used by {@link com.synexis.management_service.service.AuthService
+ * AuthService} for encoding and verification.
  */
 @Configuration
 @EnableWebSecurity
@@ -26,7 +26,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        auth -> auth.requestMatchers("/ping", "/register").permitAll().anyRequest().authenticated());
+                        auth -> auth
+                                .requestMatchers("/ping", "/register/client", "/register/partner")
+                                .permitAll()
+                                .anyRequest()
+                                .authenticated());
         return http.build();
     }
 

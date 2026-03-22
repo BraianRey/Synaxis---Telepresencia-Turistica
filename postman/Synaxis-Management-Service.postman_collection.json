@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "synaxis-mgmt-local",
     "name": "Synaxis Management Service",
-    "description": "Local API checks: health (GET /ping) and registration (POST /register).\n\nPrerequisites:\n- Backend running: `mvn spring-boot:run` in backend-management-service\n- PostgreSQL optional if application.yaml points to Docker DB\n\nSet `baseUrl` in Variables if your server uses another host/port.",
+    "description": "Health (GET /ping), client registration (POST /register/client), partner registration (POST /register/partner).\n\nPrerequisites: backend on port 8080; PostgreSQL as configured.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -39,17 +39,17 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/ping",
-            "description": "Public endpoint; should work without auth."
+            "description": "Public endpoint; no auth."
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Auth",
+      "name": "Users",
       "item": [
         {
-          "name": "Register — CLIENT",
+          "name": "Register — client",
           "event": [
             {
               "listen": "prerequest",
@@ -64,15 +64,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status is 201 Created\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test(\"Response has id, email, role CLIENT, profile path\", function () {",
-                  "    var j = pm.response.json();",
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "var j = pm.response.json();",
+                  "pm.test(\"Has id, email, name\", function () {",
                   "    pm.expect(j).to.have.property(\"id\");",
                   "    pm.expect(j).to.have.property(\"email\");",
-                  "    pm.expect(j.role).to.eql(\"CLIENT\");",
-                  "    pm.expect(j.profilePicturePath).to.eql(\"picProfile/demo-client.png\");",
+                  "    pm.expect(j.name).to.eql(\"Demo Client\");",
+                  "    pm.expect(j.picDirectory).to.eql(\"picProfile/demo-client.png\");",
+                  "    pm.expect(j.role).to.eql(\"client\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -81,29 +80,24 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"role\": \"CLIENT\",\n  \"profilePicturePath\": \"picProfile/demo-client.png\"\n}"
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Client\",\n  \"termsAccepted\": true,\n  \"language\": \"es\",\n  \"picDirectory\": \"picProfile/demo-client.png\"\n}"
             },
-            "url": "{{baseUrl}}/register",
-            "description": "Uses a unique email each run (prerequest script). Optional `profilePicturePath` is the stored path under picProfile/ (file on disk is separate)."
+            "url": "{{baseUrl}}/register/client",
+            "description": "Creates a row in table `clients` (logical User fields embedded)."
           },
           "response": []
         },
         {
-          "name": "Register — SOCIO",
+          "name": "Register — partner",
           "event": [
             {
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "pm.collectionVariables.set(\"registerEmailSocio\", \"user.socio.\" + Date.now() + \"@test.local\");"
+                  "pm.collectionVariables.set(\"registerEmailPartner\", \"user.partner.\" + Date.now() + \"@test.local\");"
                 ],
                 "type": "text/javascript"
               }
@@ -112,14 +106,13 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status is 201 Created\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test(\"Response has role SOCIO\", function () {",
-                  "    pm.expect(pm.response.json().role).to.eql(\"SOCIO\");",
-                  "});",
-                  "pm.test(\"profilePicturePath is null when omitted\", function () {",
-                  "    pm.expect(pm.response.json().profilePicturePath).to.eql(null);",
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "var j = pm.response.json();",
+                  "pm.test(\"Has name and areaId\", function () {",
+                  "    pm.expect(j.name).to.eql(\"Demo Partner Co\");",
+                  "    pm.expect(j.areaId).to.eql(1);",
+                  "    pm.expect(j.role).to.eql(\"partner\");",
+                  "    pm.expect(j.picDirectory).to.eql(null);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -128,34 +121,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{registerEmailSocio}}\",\n  \"password\": \"password12\",\n  \"role\": \"SOCIO\"\n}"
+              "raw": "{\n  \"email\": \"{{registerEmailPartner}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Partner Co\",\n  \"areaId\": 1,\n  \"termsAccepted\": true,\n  \"language\": \"es\"\n}"
             },
-            "url": "{{baseUrl}}/register",
-            "description": "Registers a partner; `profilePicturePath` omitted (null). You can add `\"profilePicturePath\": \"picProfile/...\"` when needed."
+            "url": "{{baseUrl}}/register/partner",
+            "description": "Creates a row in table `partners`. `areaId` must exist when Area entity is enforced (use a valid id from your DB)."
           },
           "response": []
         },
         {
-          "name": "Register — validation error (short password)",
+          "name": "Register client — validation error (short password)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status is 400 Bad Request\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Body has error field\", function () {",
-                  "    pm.expect(pm.response.json()).to.have.property(\"error\");",
-                  "});"
+                  "pm.test(\"Status is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Body has error\", function () { pm.expect(pm.response.json()).to.have.property(\"error\"); });"
                 ],
                 "type": "text/javascript"
               }
@@ -163,34 +147,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"bad@example.com\",\n  \"password\": \"short\",\n  \"role\": \"CLIENT\"\n}"
+              "raw": "{\n  \"email\": \"bad@example.com\",\n  \"password\": \"short\",\n  \"name\": \"X\",\n  \"termsAccepted\": true\n}"
             },
-            "url": "{{baseUrl}}/register",
-            "description": "Expects Bean Validation failure (password min 8 chars)."
+            "url": "{{baseUrl}}/register/client",
+            "description": "Password min 8 chars."
           },
           "response": []
         },
         {
-          "name": "Register — duplicate email (expect 409)",
+          "name": "Register client — duplicate email (409)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status is 409 Conflict\", function () {",
-                  "    pm.response.to.have.status(409);",
-                  "});",
-                  "pm.test(\"Error mentions duplicate email\", function () {",
-                  "    pm.expect(pm.response.json().error).to.include(\"Email already\");",
-                  "});"
+                  "pm.test(\"Status is 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Error text\", function () { pm.expect(pm.response.json().error).to.include(\"Email already\"); });"
                 ],
                 "type": "text/javascript"
               }
@@ -198,18 +173,13 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"role\": \"CLIENT\"\n}"
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Client\",\n  \"termsAccepted\": true,\n  \"language\": \"es\",\n  \"picDirectory\": \"picProfile/demo-client.png\"\n}"
             },
-            "url": "{{baseUrl}}/register",
-            "description": "Uses the same `registerEmail` set by **Register — CLIENT**. Run the collection with **Collection Runner** in folder order (or run **Register — CLIENT** first, then this request) so the email already exists → HTTP 409."
+            "url": "{{baseUrl}}/register/client",
+            "description": "Run after **Register — client** in the same Collection Runner session."
           },
           "response": []
         }
