@@ -1,0 +1,27 @@
+services:
+
+  postgres:
+
+    image: postgres:16
+
+    container_name: tourpresence-db
+
+    environment:
+
+      POSTGRES_DB: tourpresence
+
+      POSTGRES_USER: synexis
+
+      POSTGRES_PASSWORD: synexis123
+
+    ports:
+
+      - "5432:5432"
+
+    volumes:
+
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+
+  postgres_data:

@@ -1,0 +1,219 @@
+{
+  "info": {
+    "_postman_id": "synaxis-mgmt-local",
+    "name": "Synaxis Management Service",
+    "description": "Local API checks: health (GET /ping) and registration (POST /register).\n\nPrerequisites:\n- Backend running: `mvn spring-boot:run` in backend-management-service\n- PostgreSQL optional if application.yaml points to Docker DB\n\nSet `baseUrl` in Variables if your server uses another host/port.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Ping",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Body has status and timestamp\", function () {",
+                  "    var j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", \"pong\");",
+                  "    pm.expect(j).to.have.property(\"timestamp\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ping",
+            "description": "Public endpoint; should work without auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register — CLIENT",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set(\"registerEmail\", \"user.client.\" + Date.now() + \"@test.local\");"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response has id, email, role CLIENT, profile path\", function () {",
+                  "    var j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"id\");",
+                  "    pm.expect(j).to.have.property(\"email\");",
+                  "    pm.expect(j.role).to.eql(\"CLIENT\");",
+                  "    pm.expect(j.profilePicturePath).to.eql(\"picProfile/demo-client.png\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"role\": \"CLIENT\",\n  \"profilePicturePath\": \"picProfile/demo-client.png\"\n}"
+            },
+            "url": "{{baseUrl}}/register",
+            "description": "Uses a unique email each run (prerequest script). Optional `profilePicturePath` is the stored path under picProfile/ (file on disk is separate)."
+          },
+          "response": []
+        },
+        {
+          "name": "Register — SOCIO",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set(\"registerEmailSocio\", \"user.socio.\" + Date.now() + \"@test.local\");"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response has role SOCIO\", function () {",
+                  "    pm.expect(pm.response.json().role).to.eql(\"SOCIO\");",
+                  "});",
+                  "pm.test(\"profilePicturePath is null when omitted\", function () {",
+                  "    pm.expect(pm.response.json().profilePicturePath).to.eql(null);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmailSocio}}\",\n  \"password\": \"password12\",\n  \"role\": \"SOCIO\"\n}"
+            },
+            "url": "{{baseUrl}}/register",
+            "description": "Registers a partner; `profilePicturePath` omitted (null). You can add `\"profilePicturePath\": \"picProfile/...\"` when needed."
+          },
+          "response": []
+        },
+        {
+          "name": "Register — validation error (short password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Body has error field\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.property(\"error\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"bad@example.com\",\n  \"password\": \"short\",\n  \"role\": \"CLIENT\"\n}"
+            },
+            "url": "{{baseUrl}}/register",
+            "description": "Expects Bean Validation failure (password min 8 chars)."
+          },
+          "response": []
+        },
+        {
+          "name": "Register — duplicate email (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 409 Conflict\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test(\"Error mentions duplicate email\", function () {",
+                  "    pm.expect(pm.response.json().error).to.include(\"Email already\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"role\": \"CLIENT\"\n}"
+            },
+            "url": "{{baseUrl}}/register",
+            "description": "Uses the same `registerEmail` set by **Register — CLIENT**. Run the collection with **Collection Runner** in folder order (or run **Register — CLIENT** first, then this request) so the email already exists → HTTP 409."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
