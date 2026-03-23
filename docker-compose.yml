@@ -12,6 +12,17 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     volumes:
       - keycloak_data:/opt/keycloak/data
-
+  postgres:
+    container_name: postgres
+    image: postgres:16
+    environment:
+      POSTGRES_DB: tourpresence
+      POSTGRES_USER: synexis
+      POSTGRES_PASSWORD: synexis123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 volumes:
   keycloak_data:
+  postgres_data:
