@@ -2,14 +2,15 @@ package com.synexis.management_service.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.synexis.management_service.models.Partner;
-import com.synexis.management_service.models.PartnerAvailabilityStatus;
-import com.synexis.management_service.models.UserRole;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.synexis.management_service.entity.Partner;
+import com.synexis.management_service.entity.PartnerAvailabilityStatus;
+import com.synexis.management_service.entity.UserRole;
 
 @SpringBootTest
 @Transactional

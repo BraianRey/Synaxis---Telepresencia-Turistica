@@ -1,4 +1,4 @@
-package com.synexis.management_service.models;
+package com.synexis.management_service.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Service provider account. Logical model: {@code Partner} adds {@code Area_idArea} and
+ * Service provider account. Logical model: {@code Partner} adds
+ * {@code Area_idArea} and
  * {@code availability_status} to {@code User} (SQLBD.sql).
  */
 @Entity
