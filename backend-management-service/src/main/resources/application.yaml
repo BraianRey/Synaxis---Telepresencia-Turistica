@@ -6,7 +6,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/tourpresence
     driver-class-name: org.postgresql.Driver
     username: synexis
-    password: "synexis123"
+    password: synexis123
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

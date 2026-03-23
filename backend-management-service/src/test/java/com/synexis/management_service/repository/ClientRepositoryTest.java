@@ -22,7 +22,6 @@ class ClientRepositoryTest {
     void saveAndFindByEmail_persistsClient() {
         Client client = new Client();
         client.setEmail("client@example.com");
-        client.setPasswordHash("$2a$10$fakehashforrepositorytest");
         client.setName("Test User");
         client.setTermsAccepted(true);
         client.setRole(UserRole.client);
@@ -38,7 +37,6 @@ class ClientRepositoryTest {
                         c -> {
                             assertThat(c.getEmail()).isEqualTo("client@example.com");
                             assertThat(c.getName()).isEqualTo("Test User");
-                            assertThat(c.getPasswordHash()).startsWith("$2a$");
                             assertThat(c.getRole()).isEqualTo(UserRole.client);
                         });
     }

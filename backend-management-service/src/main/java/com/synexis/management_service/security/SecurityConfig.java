@@ -41,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-                .requestMatchers("/ping", "/register/**", "/h2-console", "/h2-console/**");
+                .requestMatchers("/ping", "/register/**");
     }
 
     @Bean
@@ -54,9 +54,7 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers(
                                         "/ping",
-                                        "/register/**",
-                                        "/h2-console",
-                                        "/h2-console/**")
+                                        "/register/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated());

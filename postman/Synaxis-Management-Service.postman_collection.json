@@ -1,16 +1,12 @@
 {
   "info": {
-    "_postman_id": "synaxis-mgmt-local",
+    "_postman_id": "e95cf850-16d8-4903-a494-783b80bff4ea",
     "name": "Synaxis Management Service",
     "description": "Health (GET /ping), client registration (POST /register/client), partner registration (POST /register/partner).\n\nPrerequisites: backend on port 8080; H2 embedded DB (see application.yaml).",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43147317",
+    "_collection_link": "https://go.postman.co/collection/43147317-e95cf850-16d8-4903-a494-783b80bff4ea?source=collection_link"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8080"
-    }
-  ],
   "item": [
     {
       "name": "Health",
@@ -31,14 +27,24 @@
                   "    pm.expect(j).to.have.property(\"timestamp\");",
                   "});"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/ping",
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            },
             "description": "Public endpoint; no auth."
           },
           "response": []
@@ -55,9 +61,15 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "pm.collectionVariables.set(\"registerEmail\", \"user.client.\" + Date.now() + \"@test.local\");"
+                  "const horaActual = new Date().toLocaleTimeString('en-GB').replace(/:/g, ''); \r",
+                  "// Resultado ej: 143005 (14:30:05 sin puntos)\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"registerEmail\", \"user.client.\" + horaActual + \"@test.local\");\r",
+                  ""
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             },
             {
@@ -66,26 +78,41 @@
                 "exec": [
                   "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
                   "var j = pm.response.json();",
-                  "pm.test(\"Has id, email, name\", function () {",
-                  "    pm.expect(j).to.have.property(\"id\");",
-                  "    pm.expect(j).to.have.property(\"email\");",
-                  "    pm.expect(j.name).to.eql(\"Demo Client\");",
-                  "    pm.expect(j.picDirectory).to.eql(\"picProfile/demo-client.png\");",
+                  "pm.test(\"Has name and areaId\", function () {",
+                  "    pm.expect(j.name).to.eql(\"Demo Client Co\");",
+                  "    pm.expect(j.areaId).to.eql(1);",
                   "    pm.expect(j.role).to.eql(\"client\");",
+                  "    pm.expect(j.picDirectory).to.eql(null);",
                   "});"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Client\",\n  \"termsAccepted\": true,\n  \"language\": \"es\",\n  \"picDirectory\": \"picProfile/demo-client.png\"\n}"
             },
-            "url": "{{baseUrl}}/register/client",
+            "url": {
+              "raw": "{{baseUrl}}/register/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "client"
+              ]
+            },
             "description": "Creates a row in table `clients` (logical User fields embedded)."
           },
           "response": []
@@ -97,9 +124,14 @@
               "listen": "prerequest",
               "script": {
                 "exec": [
-                  "pm.collectionVariables.set(\"registerEmailPartner\", \"user.partner.\" + Date.now() + \"@test.local\");"
+                  "const horaActual = new Date().toLocaleTimeString('en-GB').replace(/:/g, ''); \r",
+                  "// Resultado ej: 143005 (14:30:05 sin puntos)\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"registerEmail\", \"user.client.\" + horaActual + \"@test.local\");"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             },
             {
@@ -115,18 +147,34 @@
                   "    pm.expect(j.picDirectory).to.eql(null);",
                   "});"
                 ],
-                "type": "text/javascript"
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
               }
             }
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{registerEmailPartner}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Partner Co\",\n  \"areaId\": 1,\n  \"termsAccepted\": true,\n  \"language\": \"es\"\n}"
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Partner Co\",\n  \"areaId\": 1,\n  \"termsAccepted\": true,\n  \"language\": \"es\"\n}"
             },
-            "url": "{{baseUrl}}/register/partner",
+            "url": {
+              "raw": "{{baseUrl}}/register/partner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "partner"
+              ]
+            },
             "description": "Creates a row in table `partners`. `areaId` must exist when Area entity is enforced (use a valid id from your DB)."
           },
           "response": []
@@ -147,12 +195,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"bad@example.com\",\n  \"password\": \"short\",\n  \"name\": \"X\",\n  \"termsAccepted\": true\n}"
             },
-            "url": "{{baseUrl}}/register/client",
+            "url": {
+              "raw": "{{baseUrl}}/register/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "client"
+              ]
+            },
             "description": "Password min 8 chars."
           },
           "response": []
@@ -173,17 +235,65 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Client\",\n  \"termsAccepted\": true,\n  \"language\": \"es\",\n  \"picDirectory\": \"picProfile/demo-client.png\"\n}"
             },
-            "url": "{{baseUrl}}/register/client",
+            "url": {
+              "raw": "{{baseUrl}}/register/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "client"
+              ]
+            },
             "description": "Run after **Register — client** in the same Collection Runner session."
           },
           "response": []
         }
       ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "registerEmail",
+      "value": ""
     }
   ]
 }

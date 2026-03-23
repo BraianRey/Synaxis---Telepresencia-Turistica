@@ -23,7 +23,6 @@ class PartnerRepositoryTest {
     void saveAndFindByEmail_persistsPartner() {
         Partner partner = new Partner();
         partner.setEmail("partner@example.com");
-        partner.setPasswordHash("$2a$10$fakehashforrepositorytest");
         partner.setName("Tour Guides Inc");
         partner.setAreaId(1);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
@@ -42,7 +41,6 @@ class PartnerRepositoryTest {
                             assertThat(p.getEmail()).isEqualTo("partner@example.com");
                             assertThat(p.getName()).isEqualTo("Tour Guides Inc");
                             assertThat(p.getAreaId()).isEqualTo(1);
-                            assertThat(p.getPasswordHash()).startsWith("$2a$");
                             assertThat(p.getRole()).isEqualTo(UserRole.partner);
                         });
     }

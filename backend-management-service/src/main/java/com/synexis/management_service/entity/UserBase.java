@@ -29,15 +29,15 @@ public abstract class UserBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "keycloak_id", nullable = false)
+    private String keycloakId;
+
     /** {@code User.name} — display name (client) or trade/public name (partner). */
     @Column(nullable = false, length = 100)
     private String name;
 
     @Column(nullable = false, unique = true, length = 150)
     private String email;
-
-    @Column(name = "password_hash", nullable = false, length = 255)
-    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -62,6 +62,6 @@ public abstract class UserBase {
     private UserRole role;
 
     /** Same as logical {@code User.picDirectory}. */
-    @Column(name = "pic_directory", unique = true, length = 255)
+    @Column(name = "pic_directory", length = 255)
     private String picDirectory;
 }
