@@ -1,9 +1,10 @@
 {
   "editor.formatOnSave": true,
-  "editor.rulers": [120],
+  "editor.rulers": [
+    120
+  ],
   "editor.tabSize": 4,
   "files.trimTrailingWhitespace": true,
-
   "java.configuration.runtimes": [
     {
       "name": "JavaSE-21",
@@ -11,12 +12,13 @@
       "default": true
     }
   ],
-
   "[kotlin]": {
     "editor.defaultFormatter": "fwcd.kotlin"
   },
-
   "sonarlint.rules": {
-    "kotlin:S1135": { "level": "on" }
-  }
+    "kotlin:S1135": {
+      "level": "on"
+    }
+  },
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

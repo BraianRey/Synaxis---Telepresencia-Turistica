@@ -1,4 +1,4 @@
-package com.synexis.management_service.config;
+package com.synexis.management_service.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,28 +13,35 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Spring Security setup for the API: which URLs are anonymous, CSRF policy, and the password hashing bean used when
+ * Spring Security setup for the API: which URLs are anonymous, CSRF policy, and
+ * the password hashing bean used when
  * saving users.
  *
- * <p>How it works: {@link #securityFilterChain(HttpSecurity)} disables CSRF (typical for stateless JSON APIs) and
- * allows unauthenticated access to {@code /ping}, paths under {@code /register/}, the H2 console, and {@code OPTIONS}
- * preflight; everything else requires an authenticated principal. {@link #passwordEncoder()} is used by {@link
- * com.synexis.management_service.service.AuthService AuthService} for encoding and verification.
+ * <p>
+ * How it works: {@link #securityFilterChain(HttpSecurity)} disables CSRF
+ * (typical for stateless JSON APIs) and
+ * allows unauthenticated access to {@code /ping}, paths under
+ * {@code /register/}, the H2 console, and {@code OPTIONS}
+ * preflight; everything else requires an authenticated principal.
+ * {@link #passwordEncoder()} is used by {@link
+ * com.synexis.management_service.service.impl.AuthServiceImpl AuthService} for
+ * encoding and verification.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     /**
-     * Omite por completo el filtro de seguridad en estas rutas (evita 403 cuando {@code permitAll} no coincide con el
-     * {@code RequestMatcher} de MVC en algunos entornos). Los métodos del controlador no influyen en la URL: solo
+     * Omite por completo el filtro de seguridad en estas rutas (evita 403 cuando
+     * {@code permitAll} no coincide con el
+     * {@code RequestMatcher} de MVC en algunos entornos). Los métodos del
+     * controlador no influyen en la URL: solo
      * importan las rutas declaradas en {@code @PostMapping} / {@code @GetMapping}.
      */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web ->
-                web.ignoring()
-                        .requestMatchers("/ping", "/register/**", "/h2-console", "/h2-console/**");
+        return web -> web.ignoring()
+                .requestMatchers("/ping", "/register/**");
     }
 
     @Bean
@@ -47,16 +54,17 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers(
                                         "/ping",
-                                        "/register/**",
-                                        "/h2-console",
-                                        "/h2-console/**")
+                                        "/register/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated());
         return http.build();
     }
 
-    /** BCrypt strength default (10). Used to hash passwords before storing {@code password_hash} in the database. */
+    /**
+     * BCrypt strength default (10). Used to hash passwords before storing
+     * {@code password_hash} in the database.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
