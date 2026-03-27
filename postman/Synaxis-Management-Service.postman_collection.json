@@ -1,0 +1,299 @@
+{
+  "info": {
+    "_postman_id": "e95cf850-16d8-4903-a494-783b80bff4ea",
+    "name": "Synaxis Management Service",
+    "description": "Health (GET /ping), client registration (POST /register/client), partner registration (POST /register/partner).\n\nPrerequisites: backend on port 8080; H2 embedded DB (see application.yaml).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "43147317",
+    "_collection_link": "https://go.postman.co/collection/43147317-e95cf850-16d8-4903-a494-783b80bff4ea?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Ping",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Body has status and timestamp\", function () {",
+                  "    var j = pm.response.json();",
+                  "    pm.expect(j).to.have.property(\"status\", \"pong\");",
+                  "    pm.expect(j).to.have.property(\"timestamp\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            },
+            "description": "Public endpoint; no auth."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Register — client",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const horaActual = new Date().toLocaleTimeString('en-GB').replace(/:/g, ''); \r",
+                  "// Resultado ej: 143005 (14:30:05 sin puntos)\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"registerEmail\", \"user.client.\" + horaActual + \"@test.local\");\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "var j = pm.response.json();",
+                  "pm.test(\"Has name and areaId\", function () {",
+                  "    pm.expect(j.name).to.eql(\"Demo Client Co\");",
+                  "    pm.expect(j.areaId).to.eql(1);",
+                  "    pm.expect(j.role).to.eql(\"client\");",
+                  "    pm.expect(j.picDirectory).to.eql(null);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Client\",\n  \"termsAccepted\": true,\n  \"language\": \"es\",\n  \"picDirectory\": \"picProfile/demo-client.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "client"
+              ]
+            },
+            "description": "Creates a row in table `clients` (logical User fields embedded)."
+          },
+          "response": []
+        },
+        {
+          "name": "Register — partner",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const horaActual = new Date().toLocaleTimeString('en-GB').replace(/:/g, ''); \r",
+                  "// Resultado ej: 143005 (14:30:05 sin puntos)\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"registerEmail\", \"user.client.\" + horaActual + \"@test.local\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
+                  "var j = pm.response.json();",
+                  "pm.test(\"Has name and areaId\", function () {",
+                  "    pm.expect(j.name).to.eql(\"Demo Partner Co\");",
+                  "    pm.expect(j.areaId).to.eql(1);",
+                  "    pm.expect(j.role).to.eql(\"partner\");",
+                  "    pm.expect(j.picDirectory).to.eql(null);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Partner Co\",\n  \"areaId\": 1,\n  \"termsAccepted\": true,\n  \"language\": \"es\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register/partner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "partner"
+              ]
+            },
+            "description": "Creates a row in table `partners`. `areaId` must exist when Area entity is enforced (use a valid id from your DB)."
+          },
+          "response": []
+        },
+        {
+          "name": "Register client — validation error (short password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"Body has error\", function () { pm.expect(pm.response.json()).to.have.property(\"error\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"bad@example.com\",\n  \"password\": \"short\",\n  \"name\": \"X\",\n  \"termsAccepted\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "client"
+              ]
+            },
+            "description": "Password min 8 chars."
+          },
+          "response": []
+        },
+        {
+          "name": "Register client — duplicate email (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 409\", function () { pm.response.to.have.status(409); });",
+                  "pm.test(\"Error text\", function () { pm.expect(pm.response.json().error).to.include(\"Email already\"); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Client\",\n  \"termsAccepted\": true,\n  \"language\": \"es\",\n  \"picDirectory\": \"picProfile/demo-client.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/register/client",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "register",
+                "client"
+              ]
+            },
+            "description": "Run after **Register — client** in the same Collection Runner session."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "registerEmail",
+      "value": ""
+    }
+  ]
+}

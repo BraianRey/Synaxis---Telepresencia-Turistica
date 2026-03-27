@@ -18,3 +18,9 @@ Thumbs.db
 
 # Secrets
 .env
+
+# Local helper for git commit message (git commit -F commit-message.txt)
+commit-message.txt
+
+# H2 file database (local dev)
+backend-management-service/data/
