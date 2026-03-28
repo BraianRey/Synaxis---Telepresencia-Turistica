@@ -9,7 +9,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.sismptm.partner.R
-import java.util.Date
 
 @Composable
 fun RegisterScreen(
@@ -20,10 +19,14 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
-    
-    val creationDate = remember { Date().toString() }
+    val isFormValid = RegisterFormValidator.isFormValid(
+        fullName = name,
+        email = email,
+        password = password,
+        confirmPassword = confirmPassword,
+        acceptedTerms = acceptedTerms
+    )
 
     Column(
         modifier = Modifier
@@ -75,16 +78,6 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Nuevo atributo: Localización para partner solamente
-        OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text(stringResource(id = R.string.location)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
@@ -105,10 +98,13 @@ fun RegisterScreen(
 
         Button(
             onClick = { 
-                // Aquí se usaría 'creationDate' y 'location' para guardarlos
-                onRegisterSuccess() 
+                if (!isFormValid) {
+                    return@Button
+                }
+
+                onRegisterSuccess()
             },
-            enabled = acceptedTerms,
+            enabled = isFormValid,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(id = R.string.register_button))

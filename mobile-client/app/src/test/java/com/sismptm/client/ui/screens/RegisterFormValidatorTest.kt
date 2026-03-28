@@ -28,6 +28,7 @@ class RegisterFormValidatorTest {
             fullName = "David Perez",
             email = "david@example.com",
             password = "12345678",
+            confirmPassword = "12345678",
             acceptedTerms = true
         )
 
@@ -40,6 +41,7 @@ class RegisterFormValidatorTest {
             fullName = "   ",
             email = "david@example.com",
             password = "12345678",
+            confirmPassword = "12345678",
             acceptedTerms = true
         )
 
@@ -52,6 +54,7 @@ class RegisterFormValidatorTest {
             fullName = "David Perez",
             email = "david@example.com",
             password = "1234567",
+            confirmPassword = "1234567",
             acceptedTerms = true
         )
 
@@ -64,6 +67,7 @@ class RegisterFormValidatorTest {
             fullName = "David Perez",
             email = "david.example.com",
             password = "12345678",
+            confirmPassword = "12345678",
             acceptedTerms = true
         )
 
@@ -76,7 +80,34 @@ class RegisterFormValidatorTest {
             fullName = "David Perez",
             email = "david@example.com",
             password = "12345678",
+            confirmPassword = "12345678",
             acceptedTerms = false
+        )
+
+        assertFalse(isValid)
+    }
+
+    @Test
+    fun isFormValid_returnsFalse_whenPasswordsDoNotMatch() {
+        val isValid = RegisterFormValidator.isFormValid(
+            fullName = "David Perez",
+            email = "david@example.com",
+            password = "12345678",
+            confirmPassword = "87654321",
+            acceptedTerms = true
+        )
+
+        assertFalse(isValid)
+    }
+
+    @Test
+    fun isFormValid_returnsFalse_whenConfirmPasswordIsBlank() {
+        val isValid = RegisterFormValidator.isFormValid(
+            fullName = "David Perez",
+            email = "david@example.com",
+            password = "12345678",
+            confirmPassword = "",
+            acceptedTerms = true
         )
 
         assertFalse(isValid)

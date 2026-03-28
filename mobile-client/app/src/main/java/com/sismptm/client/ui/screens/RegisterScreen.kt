@@ -28,8 +28,10 @@ fun RegisterScreen(
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
     val emailHasError = email.isNotBlank() && !RegisterFormValidator.isValidEmail(email)
+    val passwordMismatch = confirmPassword.isNotBlank() && password != confirmPassword
     
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
@@ -123,6 +125,27 @@ fun RegisterScreen(
             )
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            placeholder = { Text(stringResource(R.string.confirm_password)) },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = passwordMismatch,
+            supportingText = {
+                if (passwordMismatch) {
+                    Text(text = stringResource(R.string.passwords_do_not_match))
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1E88E5),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
+        )
+
         Spacer(modifier = Modifier.height(20.dp))
 
         // Terms Checkbox
@@ -169,6 +192,7 @@ fun RegisterScreen(
                 fullName = fullName,
                 email = email,
                 password = password,
+                confirmPassword = confirmPassword,
                 acceptedTerms = acceptedTerms
             ) && !isLoading,
             modifier = Modifier

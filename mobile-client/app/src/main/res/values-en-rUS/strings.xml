@@ -10,6 +10,7 @@
     <string name="password">Password</string>
     <string name="password_placeholder">Min. 8 characters</string>
     <string name="confirm_password">Confirm Password</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
     <string name="register_button">Register</string>
     <string name="already_have_account">Already have an account? Login</string>
     <string name="already_user">Already a user? </string>

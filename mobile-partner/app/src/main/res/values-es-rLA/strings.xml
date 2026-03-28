@@ -5,7 +5,6 @@
     <string name="email">Correo Electrónico</string>
     <string name="password">Contraseña</string>
     <string name="confirm_password">Confirmar Contraseña</string>
-    <string name="location">Ubicación</string>
     <string name="register_button">Registrarse</string>
     <string name="already_have_account">¿Ya tienes una cuenta? Inicia sesión</string>
     <string name="accept_terms">Acepto los términos y condiciones</string>

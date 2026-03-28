@@ -10,6 +10,7 @@
     <string name="password">Contraseña</string>
     <string name="password_placeholder">Mín. 8 caracteres</string>
     <string name="confirm_password">Confirmar Contraseña</string>
+    <string name="passwords_do_not_match">Las contraseñas no coinciden</string>
     <string name="register_button">Registrarse</string>
     <string name="already_have_account">¿Ya tienes una cuenta? Inicia sesión</string>
     <string name="already_user">¿Ya eres usuario? </string>

@@ -14,12 +14,14 @@ internal object RegisterFormValidator {
         fullName: String,
         email: String,
         password: String,
+        confirmPassword: String,
         acceptedTerms: Boolean
     ): Boolean {
         return acceptedTerms &&
             fullName.isNotBlank() &&
             isValidEmail(email) &&
-            password.length >= MIN_PASSWORD_LENGTH
+            password.length >= MIN_PASSWORD_LENGTH &&
+            password == confirmPassword
     }
 }
 
