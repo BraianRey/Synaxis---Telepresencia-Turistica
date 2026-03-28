@@ -11,29 +11,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sismptm.client.R
 import com.sismptm.client.ui.components.ProfilePictureUpload
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var contactNumber by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
+    val emailHasError = email.isNotBlank() && !RegisterFormValidator.isValidEmail(email)
     
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
-    val creationDate = remember { Date().toString() }
 
     Column(
         modifier = Modifier
@@ -51,14 +50,14 @@ fun RegisterScreen(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Create Account",
+                text = stringResource(R.string.register_title),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Set up your client profile",
+                text = stringResource(R.string.register_subtitle),
                 fontSize = 14.sp,
                 color = Color(0xFF9E9E9E)
             )
@@ -74,25 +73,9 @@ fun RegisterScreen(
 
         // Form Fields
         OutlinedTextField(
-            value = firstName,
-            onValueChange = { firstName = it },
-            placeholder = { Text("Your first name") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = lastName,
-            onValueChange = { lastName = it },
-            placeholder = { Text("Your last name") },
+            value = fullName,
+            onValueChange = { fullName = it },
+            placeholder = { Text(stringResource(R.string.full_name_placeholder)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -108,10 +91,14 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text("your@email.com") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            placeholder = { Text(stringResource(R.string.email_placeholder)) },
+            isError = emailHasError,
+            supportingText = {
+                if (emailHasError) {
+                    Text(text = stringResource(R.string.invalid_email))
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFF1E88E5),
@@ -124,24 +111,8 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = { Text("Min. 8 characters") },
+            placeholder = { Text(stringResource(R.string.password_placeholder)) },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = contactNumber,
-            onValueChange = { contactNumber = it },
-            placeholder = { Text("+57 300 000 0000") },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -169,7 +140,7 @@ fun RegisterScreen(
                 )
             )
             Text(
-                text = "I agree to the Terms and Conditions",
+                text = stringResource(R.string.accept_terms),
                 fontSize = 13.sp,
                 color = Color.Black,
                 modifier = Modifier.weight(1f)
@@ -185,7 +156,7 @@ fun RegisterScreen(
                     isLoading = true
                     try {
                         // TODO: Implement registration API call
-                        println("Registration initiated: $firstName $lastName")
+                        println("Registration initiated: $fullName")
                     } catch (e: Exception) {
                         println("Registration error: ${e.message}")
                     } finally {
@@ -194,7 +165,12 @@ fun RegisterScreen(
                     }
                 }
             },
-            enabled = acceptedTerms && firstName.isNotEmpty() && lastName.isNotEmpty() && email.isNotEmpty() && password.length >= 8 && contactNumber.isNotEmpty() && !isLoading,
+            enabled = RegisterFormValidator.isFormValid(
+                fullName = fullName,
+                email = email,
+                password = password,
+                acceptedTerms = acceptedTerms
+            ) && !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(54.dp),
@@ -212,7 +188,7 @@ fun RegisterScreen(
                 )
             } else {
                 Text(
-                    text = "Get Started",
+                    text = stringResource(R.string.get_started),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White
@@ -228,12 +204,12 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Already a user? ",
+                text = stringResource(R.string.already_user),
                 fontSize = 14.sp,
                 color = Color(0xFF9E9E9E)
             )
             Text(
-                text = "Sign in",
+                text = stringResource(R.string.sign_in),
                 fontSize = 14.sp,
                 color = Color(0xFF1E88E5),
                 fontWeight = FontWeight.SemiBold,
