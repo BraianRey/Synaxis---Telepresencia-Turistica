@@ -9,7 +9,10 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onLogout: () -> Unit) {
+fun HomeScreen(
+    onLogout: () -> Unit,
+    onGoToPartnerSearch: () -> Unit
+) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -28,7 +31,13 @@ fun HomeScreen(onLogout: () -> Unit) {
                 .padding(padding),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Welcome to the Home Screen!", style = MaterialTheme.typography.headlineMedium)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(text = "Welcome to the Home Screen!", style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = onGoToPartnerSearch) {
+                    Text("Buscar Partners")
+                }
+            }
         }
     }
 }
