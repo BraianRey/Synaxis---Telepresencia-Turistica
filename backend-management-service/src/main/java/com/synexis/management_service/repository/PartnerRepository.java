@@ -13,4 +13,6 @@ public interface PartnerRepository extends JpaRepository<Partner, Long> {
     boolean existsByEmailIgnoreCase(String email);
 
     Optional<Partner> findByEmailIgnoreCase(String email);
+
+    Optional<Partner> findByKeycloakId(String keycloakId);
 }

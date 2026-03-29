@@ -57,18 +57,16 @@ public class PartnerServiceImpl implements PartnerService {
             throw new EmailAlreadyExistsException(normalizedEmail);
         }
 
-        // =========================
-        // CREATE USER IN KEYCLOAK
-        // =========================
-        // Create a Keycloak user record with username/email and enable status.
+        // 1. CREAR USUARIO EN KEYCLOAK
         UserRepresentation user = new UserRepresentation();
         user.setUsername(normalizedEmail);
         user.setEmail(normalizedEmail);
         user.setEnabled(true);
+        user.setFirstName(request.name().trim());
+        user.setLastName(request.name().trim());
+        user.setEmailVerified(true); // Se recomienda marcar como verificado si no envías correo
 
-        Response response = keycloak.realm(keycloakRealm)
-                .users()
-                .create(user);
+        Response response = keycloak.realm(keycloakRealm).users().create(user);
 
         if (response.getStatus() != 201) {
             throw new KeycloakUserCreationException(response.getStatus());
@@ -76,43 +74,41 @@ public class PartnerServiceImpl implements PartnerService {
 
         String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
 
-        // =========================
-        // SET PASSWORD IN KEYCLOAK
-        // =========================
-        // Configure the new Keycloak user credentials (non-temporary password).
+        // 2. CONFIGURAR CONTRASEÑA
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
-        credential.setValue(request.password()); // Use raw password here; Keycloak will hash it internally.
+        credential.setValue(request.password());
         credential.setTemporary(false);
 
-        keycloak.realm(keycloakRealm)
-                .users()
-                .get(userId)
-                .resetPassword(credential);
+        keycloak.realm(keycloakRealm).users().get(userId).resetPassword(credential);
 
-        // =========================
-        // ASSIGN REALM ROLE IN KEYCLOAK
-        // =========================
-        // Add the CLIENT role to the newly created user in Keycloak realm roles.
-        RoleRepresentation role = keycloak.realm(keycloakRealm)
+        // 3. ASIGNAR ROL 'PARTNER' A NIVEL DE CLIENTE 'telepresence'
+        // Buscamos el UUID interno del cliente de Keycloak
+        String clientUuid = keycloak.realm(keycloakRealm)
+                .clients()
+                .findByClientId("telepresence")
+                .get(0)
+                .getId();
+
+        // Obtenemos el rol PARTNER definido dentro de ese cliente
+        RoleRepresentation partnerRole = keycloak.realm(keycloakRealm)
+                .clients()
+                .get(clientUuid)
                 .roles()
                 .get("PARTNER")
                 .toRepresentation();
 
+        // Asignamos el rol al usuario
         keycloak.realm(keycloakRealm)
                 .users()
                 .get(userId)
                 .roles()
-                .realmLevel()
-                .add(List.of(role));
+                .clientLevel(clientUuid)
+                .add(List.of(partnerRole));
 
-        // =========================
-        // PERSIST CLIENT ENTITY TO DATABASE (PASSWORD IS NOT STORED LOCALLY)
-        // =========================
-        // Save the client profile in local database with Keycloak id and normalized
-        // data.
+        // 4. PERSISTENCIA EN BASE DE DATOS LOCAL
         Partner partner = new Partner();
-        partner.setKeycloakId(userId); // IMPORTANT - LINK TO KEYCLOAK USER
+        partner.setKeycloakId(userId);
         partner.setEmail(normalizedEmail);
         partner.setName(request.name().trim());
         partner.setAreaId(request.areaId());

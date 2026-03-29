@@ -14,5 +14,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8085/realms/synexis
+
 server:
   port: 8087
