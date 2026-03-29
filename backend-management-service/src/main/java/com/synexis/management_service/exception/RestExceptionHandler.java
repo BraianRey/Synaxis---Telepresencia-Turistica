@@ -46,4 +46,10 @@ public class RestExceptionHandler {
                 .collect(Collectors.joining("; "));
         return ResponseEntity.badRequest().body(Map.of("error", message));
     }
+
+    /** Resource not found → {@code 404} with {@code {"error":"..."}}. */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    }
 }

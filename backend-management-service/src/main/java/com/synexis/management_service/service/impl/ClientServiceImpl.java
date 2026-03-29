@@ -20,6 +20,7 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +64,10 @@ public class ClientServiceImpl implements ClientService {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(normalizedEmail);
         user.setEmail(normalizedEmail);
+        user.setFirstName(request.name().trim());
+        user.setLastName(request.name().trim()); // Optional: could be set to something else if needed
         user.setEnabled(true);
+        user.setEmailVerified(true);
 
         Response response = keycloak.realm(keycloakRealm)
                 .users()
@@ -96,22 +100,30 @@ public class ClientServiceImpl implements ClientService {
         // =========================
         // ASSIGN REALM ROLE IN KEYCLOAK
         // =========================
-        // Add the CLIENT role to the newly created user in Keycloak realm roles.
-        RoleRepresentation role = keycloak.realm(keycloakRealm)
+        // 1. Obtener el ID interno (UUID) del cliente 'telepresence'
+
+        String clientUuid = keycloak.realm(keycloakRealm)
+                .clients()
+                .findByClientId("telepresence") // Esto devuelve una lista de clientes que coinciden
+                .get(0) // Aquí podría fallar si 'telepresence' no existe
+                .getId();
+
+        // 2. Obtener la representación del rol 'CLIENT' que pertenece a ese cliente
+        RoleRepresentation clientRole = keycloak.realm(keycloakRealm)
+                .clients()
+                .get(clientUuid)
                 .roles()
                 .get("CLIENT")
                 .toRepresentation();
 
+        // 3. Asignar el rol al usuario a nivel de cliente (clientLevel)
         keycloak.realm(keycloakRealm)
                 .users()
                 .get(userId)
                 .roles()
-                .realmLevel()
-                .add(List.of(role));
+                .clientLevel(clientUuid)
+                .add(List.of(clientRole));
 
-        System.out.println("CLIENT role assigned to Keycloak user: " + normalizedEmail);
-
-        // =========================
         // PERSIST CLIENT ENTITY TO DATABASE (PASSWORD IS NOT STORED LOCALLY)
         // =========================
         // Save the client profile in local database with Keycloak id and normalized
