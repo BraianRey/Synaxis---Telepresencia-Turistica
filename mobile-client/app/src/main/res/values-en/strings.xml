@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">SISPTMClient</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Set up your client profile</string>
+    <string name="full_name">Full Name</string>
+    <string name="full_name_placeholder">Your full name</string>
+    <string name="email">Email</string>
+    <string name="email_placeholder">your@email.com</string>
+    <string name="invalid_email">Enter a valid email address</string>
+    <string name="password">Password</string>
+    <string name="password_placeholder">Min. 8 characters</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
+    <string name="register_button">Register</string>
+    <string name="already_have_account">Already have an account? Login</string>
+    <string name="already_user">Already a user? </string>
+    <string name="accept_terms">I accept the terms and conditions</string>
+    <string name="get_started">Get Started</string>
+    <string name="sign_in">Sign in</string>
+</resources>
+

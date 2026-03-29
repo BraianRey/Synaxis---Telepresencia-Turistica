@@ -1,11 +1,11 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:locale="en">
     <string name="app_name">SISPTMPartner</string>
     <string name="register_title">Register as Partner</string>
     <string name="full_name">Full Name</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
-    <string name="location">Location</string>
     <string name="register_button">Register</string>
     <string name="already_have_account">Already have an account? Login</string>
     <string name="accept_terms">I accept the terms and conditions</string>

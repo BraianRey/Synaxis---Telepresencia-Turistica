@@ -1,11 +1,20 @@
 <resources>
     <string name="app_name">SISPTMClient</string>
-    <string name="register_title">Registro</string>
+    <string name="register_title">Crear cuenta</string>
+    <string name="register_subtitle">Configura tu perfil de cliente</string>
     <string name="full_name">Nombre Completo</string>
+    <string name="full_name_placeholder">Tu nombre completo</string>
     <string name="email">Correo Electrónico</string>
+    <string name="email_placeholder">tu@correo.com</string>
+    <string name="invalid_email">Ingresa un correo electrónico válido</string>
     <string name="password">Contraseña</string>
+    <string name="password_placeholder">Mín. 8 caracteres</string>
     <string name="confirm_password">Confirmar Contraseña</string>
+    <string name="passwords_do_not_match">Las contraseñas no coinciden</string>
     <string name="register_button">Registrarse</string>
     <string name="already_have_account">¿Ya tienes una cuenta? Inicia sesión</string>
+    <string name="already_user">¿Ya eres usuario? </string>
     <string name="accept_terms">Acepto los términos y condiciones</string>
+    <string name="get_started">Comenzar</string>
+    <string name="sign_in">Iniciar sesión</string>
 </resources>

@@ -1,18 +1,20 @@
 package com.sismptm.client.ui.screens
 
-import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.sismptm.client.R
-import com.sismptm.client.data.remote.LoginRequest
-import com.sismptm.client.data.remote.RetrofitClient
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 @Composable
@@ -24,98 +26,155 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 48.dp, horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = stringResource(id = R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
+        // Header Section
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 48.dp)
+        ) {
+            Text(
+                text = "Sign In",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Welcome back",
+                fontSize = 14.sp,
+                color = Color(0xFF9E9E9E)
+            )
+        }
+
+        // Email Field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text(stringResource(id = R.string.email)) },
-            modifier = Modifier.fillMaxWidth()
+            placeholder = { Text("your@email.com") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1E88E5),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
+        // Password Field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(stringResource(id = R.string.password)) },
+            placeholder = { Text("Enter your password") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1E88E5),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Botón de Ping para probar conexión
-        OutlinedButton(
-            onClick = {
-                scope.launch {
-                    try {
-                        val response = RetrofitClient.apiService.ping()
-                        if (response.isSuccessful) {
-                            val body = response.body()
-                            Toast.makeText(context, "Ping OK: ${body?.status}", Toast.LENGTH_SHORT).show()
-                            println("Ping exitoso: ${body?.status} a las ${body?.timestamp}")
-                        } else {
-                            Toast.makeText(context, "Error Ping: ${response.code()}", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Fallo conexión: ${e.message}", Toast.LENGTH_LONG).show()
-                        println("Error de red: ${e.message}")
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+        // Forgot Password Link
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.CenterEnd
         ) {
-            Text("Probar Conexión (Ping)")
+            Text(
+                text = "Forgot password?",
+                fontSize = 13.sp,
+                color = Color(0xFF1E88E5),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable { /* TODO: Navigate to forgot password */ }
+            )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
+        // Sign In Button
         Button(
             onClick = {
                 scope.launch {
                     isLoading = true
                     try {
-                        val response = RetrofitClient.apiService.loginUser(LoginRequest(email, password))
-                        if (response.isSuccessful) {
-                            println("Successful connection: Login successful")
-                        } else {
-                            println("Connection error: ${response.code()} - Login failed (proceeding anyway for testing)")
-                        }
+                        // TODO: Implement login API call with RetrofitClient
+                        println("Login attempt: $email")
+                        // val response = RetrofitClient.apiService.loginUser(LoginRequest(email, password))
                     } catch (e: Exception) {
-                        println("Connection failure: ${e.message} - Login failed (proceeding anyway for testing)")
+                        println("Login error: ${e.message}")
                     } finally {
                         isLoading = false
                         onLoginSuccess()
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF1E88E5),
+                disabledContainerColor = Color(0xFFBBDEFB)
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
             } else {
-                Text("Ingresar")
+                Text(
+                    text = "Sign In",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
             }
         }
 
-        TextButton(onClick = onNavigateToRegister) {
-            Text(stringResource(id = R.string.already_have_account))
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Create Account Link
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp)
+        ) {
+            Text(
+                text = "New here? ",
+                fontSize = 14.sp,
+                color = Color(0xFF9E9E9E)
+            )
+            Text(
+                text = "Create an account",
+                fontSize = 14.sp,
+                color = Color(0xFF1E88E5),
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable(onClick = onNavigateToRegister)
+            )
         }
     }
 }
