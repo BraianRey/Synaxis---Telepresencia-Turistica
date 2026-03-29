@@ -18,4 +18,27 @@
     <string name="test_connection">Test Connection</string>
     <string name="connection_success">Connection Success: %1$s</string>
     <string name="connection_error">Connection Error: %1$s</string>
+
+    <!-- Home Screen -->
+    <string name="welcome_back">Welcome back,</string>
+    <string name="gps_permission_required">GPS Permission Required</string>
+    <string name="gps_permission_explanation">This app requires GPS access to update your location and receive tour requests. Please enable permissions to continue.</string>
+    <string name="grant_permissions">Grant Permissions</string>
+    <string name="availability_status">Availability Status</string>
+    <string name="availability_explanation">Turn on to receive tour requests</string>
+    <string name="status_online">You are online · Visible to clients</string>
+    <string name="status_offline">You are offline · Not visible to clients</string>
+    <string name="tours_today">Tours today</string>
+    <string name="your_rating">Your rating</string>
+    <string name="incoming_requests">Incoming Requests</string>
+    <string name="new_requests_count">%1$d new</string>
+    <string name="no_requests_yet">You don\'t have any requests yet. Make sure you\'re online to receive new ones!</string>
+
+    <!-- Requests -->
+    <string name="time_ago_min">%1$d min ago</string>
+    <string name="duration_min">%1$d min</string>
+    <string name="price_format">$%1$s COP</string>
+    <string name="wants_tour">Wants a tour in %1$s</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
 </resources>

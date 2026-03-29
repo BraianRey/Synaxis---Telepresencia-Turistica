@@ -1,20 +1,47 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:locale="en">
     <string name="app_name">SISPTMClient</string>
-    <string name="register_title">Create Account</string>
-    <string name="register_subtitle">Set up your client profile</string>
+    <string name="register_title">Register as Client</string>
+    <string name="register_subtitle">Fill in your details to create an account</string>
     <string name="full_name">Full Name</string>
-    <string name="full_name_placeholder">Your full name</string>
+    <string name="full_name_placeholder">Enter your full name</string>
     <string name="email">Email</string>
-    <string name="email_placeholder">your@email.com</string>
-    <string name="invalid_email">Enter a valid email address</string>
+    <string name="email_placeholder">Enter your email</string>
+    <string name="invalid_email">Please enter a valid email address</string>
     <string name="password">Password</string>
-    <string name="password_placeholder">Min. 8 characters</string>
+    <string name="password_placeholder">Enter your password</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="passwords_do_not_match">Passwords do not match</string>
     <string name="register_button">Register</string>
     <string name="already_have_account">Already have an account? Login</string>
-    <string name="already_user">Already a user? </string>
     <string name="accept_terms">I accept the terms and conditions</string>
+    <string name="login_title">Client Login</string>
+    <string name="login_button">Login</string>
+    <string name="dont_have_account">Don\'t have an account? Register</string>
+    <string name="welcome_home">Welcome to the Home Screen!</string>
+    <string name="logout">Logout</string>
+    <string name="home_title">Home</string>
+    <string name="test_connection">Test Connection</string>
+    <string name="connection_success">Connection Success: %1$s</string>
+    <string name="connection_error">Connection Error: %1$s</string>
+    <string name="search_partners">Search Partners</string>
     <string name="get_started">Get Started</string>
-    <string name="sign_in">Sign in</string>
+    <string name="already_user">Already a user? </string>
+    <string name="sign_in">Sign In</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">TourPresence</string>
+    <string name="welcome_subtitle">Explore the world from your device</string>
+
+    <!-- Login Screen Additions -->
+    <string name="forgot_password">Forgot password?</string>
+    <string name="new_here">New here? </string>
+    <string name="create_account">Create an account</string>
+
+    <!-- Home Screen -->
+    <string name="welcome_back">Welcome back,</string>
+    <string name="explore_tours">Explore Tours</string>
+    <string name="my_bookings">My Bookings</string>
+    <string name="no_tours_available">No tours available at the moment.</string>
+    <string name="search_placeholder">Search for a destination...</string>
 </resources>

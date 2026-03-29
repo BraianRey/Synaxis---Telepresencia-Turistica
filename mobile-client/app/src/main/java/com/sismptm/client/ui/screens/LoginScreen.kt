@@ -11,10 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sismptm.client.R
 import kotlinx.coroutines.launch
 
 @Composable
@@ -45,14 +47,14 @@ fun LoginScreen(
                 .padding(bottom = 48.dp)
         ) {
             Text(
-                text = "Sign In",
+                text = stringResource(R.string.login_title),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Welcome back",
+                text = stringResource(R.string.welcome_back),
                 fontSize = 14.sp,
                 color = Color(0xFF9E9E9E)
             )
@@ -62,7 +64,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text("your@email.com") },
+            placeholder = { Text(stringResource(R.string.email_placeholder)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -79,7 +81,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = { Text("Enter your password") },
+            placeholder = { Text(stringResource(R.string.password_placeholder)) },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier
                 .fillMaxWidth()
@@ -101,7 +103,7 @@ fun LoginScreen(
             contentAlignment = Alignment.CenterEnd
         ) {
             Text(
-                text = "Forgot password?",
+                text = stringResource(R.string.forgot_password),
                 fontSize = 13.sp,
                 color = Color(0xFF1E88E5),
                 fontWeight = FontWeight.Medium,
@@ -117,9 +119,7 @@ fun LoginScreen(
                 scope.launch {
                     isLoading = true
                     try {
-                        // TODO: Implement login API call with RetrofitClient
                         println("Login attempt: $email")
-                        // val response = RetrofitClient.apiService.loginUser(LoginRequest(email, password))
                     } catch (e: Exception) {
                         println("Login error: ${e.message}")
                     } finally {
@@ -146,7 +146,7 @@ fun LoginScreen(
                 )
             } else {
                 Text(
-                    text = "Sign In",
+                    text = stringResource(R.string.login_button),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White
@@ -164,12 +164,12 @@ fun LoginScreen(
                 .padding(vertical = 20.dp)
         ) {
             Text(
-                text = "New here? ",
+                text = stringResource(R.string.new_here),
                 fontSize = 14.sp,
                 color = Color(0xFF9E9E9E)
             )
             Text(
-                text = "Create an account",
+                text = stringResource(R.string.create_account),
                 fontSize = 14.sp,
                 color = Color(0xFF1E88E5),
                 fontWeight = FontWeight.SemiBold,

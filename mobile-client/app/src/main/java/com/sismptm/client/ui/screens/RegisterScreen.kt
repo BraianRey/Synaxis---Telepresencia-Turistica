@@ -20,6 +20,11 @@ import com.sismptm.client.R
 import com.sismptm.client.ui.components.ProfilePictureUpload
 import kotlinx.coroutines.launch
 
+/**
+ * Screen that handles the registration of a new user.
+ * @param onRegisterSuccess Callback triggered upon successful registration.
+ * @param onNavigateToLogin Callback to navigate back to the login screen.
+ */
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
@@ -44,7 +49,6 @@ fun RegisterScreen(
             .padding(vertical = 24.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header Section
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -65,15 +69,13 @@ fun RegisterScreen(
             )
         }
 
-        // Profile Picture Upload
         ProfilePictureUpload(
-            onPhotoClick = { /* Handle photo upload */ },
+            onPhotoClick = { },
             modifier = Modifier.padding(vertical = 24.dp)
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Form Fields
         OutlinedTextField(
             value = fullName,
             onValueChange = { fullName = it },
@@ -148,7 +150,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Terms Checkbox
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -172,13 +173,11 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Get Started Button
         Button(
             onClick = {
                 scope.launch {
                     isLoading = true
                     try {
-                        // TODO: Implement registration API call
                         println("Registration initiated: $fullName")
                     } catch (e: Exception) {
                         println("Registration error: ${e.message}")
@@ -222,7 +221,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Sign In Link
         Row(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()

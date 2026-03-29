@@ -15,7 +15,15 @@ interface ApiService {
 
     @POST("auth/partner/login")
     suspend fun loginPartner(@Body loginRequest: LoginRequest): Response<AuthResponse>
+
+    @POST("/location/update")
+    suspend fun updateLocation(@Body locationRequest: LocationUpdateRequest): Response<Unit>
 }
+
+data class LocationUpdateRequest(
+    val latitude: Double,
+    val longitude: Double
+)
 
 data class PingResponse(
     val status: String,
