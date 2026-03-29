@@ -7,7 +7,7 @@ import retrofit2.http.POST
 
 interface ApiService {
 
-    // Endpoint de prueba para verificar conexión
+    // Ping Endpoint
     @GET("ping")
     suspend fun ping(): Response<PingResponse>
     

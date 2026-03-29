@@ -5,7 +5,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.sismptm.client.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -16,10 +18,10 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Home") },
+                title = { Text(stringResource(id = R.string.home_title)) },
                 actions = {
                     TextButton(onClick = onLogout) {
-                        Text("Logout")
+                        Text(stringResource(id = R.string.logout))
                     }
                 }
             )
@@ -32,10 +34,13 @@ fun HomeScreen(
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Welcome to the Home Screen!", style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    text = stringResource(id = R.string.welcome_home),
+                    style = MaterialTheme.typography.headlineMedium
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = onGoToPartnerSearch) {
-                    Text("Buscar Partners")
+                    Text(stringResource(id = R.string.search_partners))
                 }
             }
         }

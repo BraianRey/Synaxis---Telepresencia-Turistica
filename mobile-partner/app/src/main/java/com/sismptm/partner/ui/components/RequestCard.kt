@@ -24,9 +24,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.sismptm.partner.R
 
+/**
+ * Component to display a tour request from a client.
+ */
 @Composable
 fun RequestCard(
     clientName: String,
@@ -77,7 +82,7 @@ fun RequestCard(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Wants a tour in $location",
+                        text = stringResource(id = R.string.wants_tour, location),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFFB9C0CB)
                     )
@@ -106,7 +111,7 @@ fun RequestCard(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444))
                 ) {
-                    Text(text = "Decline", fontWeight = FontWeight.SemiBold)
+                    Text(text = stringResource(id = R.string.decline), fontWeight = FontWeight.SemiBold)
                 }
 
                 Button(
@@ -118,13 +123,16 @@ fun RequestCard(
                         contentColor = Color.White
                     )
                 ) {
-                    Text(text = "Accept", fontWeight = FontWeight.SemiBold)
+                    Text(text = stringResource(id = R.string.accept), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
     }
 }
 
+/**
+ * Small chip to display request details like duration and price.
+ */
 @Composable
 private fun DetailChip(text: String) {
     Box(
@@ -140,5 +148,3 @@ private fun DetailChip(text: String) {
         )
     }
 }
-
-
