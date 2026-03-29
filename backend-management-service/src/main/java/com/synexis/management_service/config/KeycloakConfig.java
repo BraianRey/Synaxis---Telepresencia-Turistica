@@ -34,10 +34,8 @@ public class KeycloakConfig {
                 .serverUrl("http://localhost:8085")
                 .realm("synexis")
                 .clientId("telepresence")
-                .clientSecret("H3cv0aLtkJX1EIhRt4JlZXkRql0XzvMV")
-                .username("admin")
-                .password("admin")
-                .grantType(OAuth2Constants.PASSWORD)
+                .clientSecret("wO8qciPyigPvlYPQAX3wzft18wa1lqv6")
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .build();
     }
 }
