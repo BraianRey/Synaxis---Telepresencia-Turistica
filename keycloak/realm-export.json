@@ -1,0 +1,140 @@
+{
+  "id": "synexis",
+  "realm": "synexis",
+  "displayName": "Synexis TourPresence",
+  "enabled": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "defaultRoles": [
+    "default-roles-synexis"
+  ],
+  "roles": {
+    "realm": [
+      {
+        "id": "admin-role-id",
+        "name": "admin",
+        "description": "Administrador con acceso total al realm",
+        "composite": true,
+        "composites": {
+          "client": {
+            "realm-management": [
+              "manage-users",
+              "manage-clients",
+              "view-clients",
+              "view-users",
+              "realm-admin"
+            ]
+          }
+        },
+        "clientRole": false,
+        "containerId": "synexis"
+      },
+      {
+        "id": "default-roles-synexis-id",
+        "name": "default-roles-synexis",
+        "description": "Roles por defecto del realm",
+        "composite": true,
+        "clientRole": false,
+        "containerId": "synexis"
+      }
+    ],
+    "client": {
+      "telepresence": [
+        {
+          "id": "client-role-id",
+          "name": "CLIENT",
+          "description": "User client - turista remoto",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "telepresence-client-id"
+        },
+        {
+          "id": "partner-role-id",
+          "name": "PARTNER",
+          "description": "User partner - guía local",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "telepresence-client-id"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "id": "telepresence-client-id",
+      "clientId": "telepresence",
+      "name": "telepresence client",
+      "description": "Client for Synexis TourPresence access",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "wO8qciPyigPvlYPQAX3wzft18wa1lqv6",
+      "redirectUris": [
+        "/*"
+      ],
+      "webOrigins": [
+        "/*"
+      ],
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "fullScopeAllowed": true
+    }
+  ],
+  "users": [
+    {
+      "id": "admin-user-id",
+      "username": "admin",
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "Synexis",
+      "email": "admin@synexis.com",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "default-roles-synexis"
+      ]
+    },
+    {
+      "id": "service-account-telepresence-id",
+      "username": "service-account-telepresence",
+      "enabled": true,
+      "serviceAccountClientId": "telepresence",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users",
+          "query-users",
+          "realm-admin"
+        ]
+      }
+    }
+  ],
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "telepresence",
+        "roles": [
+          "manage-users",
+          "view-users",
+          "realm-admin"
+        ]
+      }
+    ]
+  },
+  "defaultDefaultClientScopes": [
+    "web-origins",
+    "roles",
+    "profile",
+    "email"
+  ]
+}
