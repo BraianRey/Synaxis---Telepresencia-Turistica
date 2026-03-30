@@ -17,5 +17,28 @@
     <string name="accept_terms">Acepto los términos y condiciones</string>
     <string name="get_started">Comenzar</string>
     <string name="sign_in">Iniciar sesión</string>
-</resources>
 
+    <!-- Welcome Screen -->
+    <string name="welcome_title">TourPresence</string>
+    <string name="welcome_subtitle">Explora el mundo desde tu dispositivo</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Inicio de Sesión</string>
+    <string name="login_button">Ingresar</string>
+    <string name="dont_have_account">¿No tienes cuenta? Regístrate</string>
+    <string name="test_connection">Probar Conexión (Ping)</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="new_here">¿Eres nuevo? </string>
+    <string name="create_account">Crea una cuenta</string>
+
+    <!-- Home Screen -->
+    <string name="welcome_home">¡Bienvenido a la pantalla principal!</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="home_title">Inicio</string>
+    <string name="search_partners">Buscar Socios</string>
+    <string name="welcome_back">Bienvenido de nuevo,</string>
+    <string name="explore_tours">Explorar Tours</string>
+    <string name="my_bookings">Mis Reservas</string>
+    <string name="no_tours_available">No hay tours disponibles por el momento.</string>
+    <string name="search_placeholder">Busca un destino...</string>
+</resources>

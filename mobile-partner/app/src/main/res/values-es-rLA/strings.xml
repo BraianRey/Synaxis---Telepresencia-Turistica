@@ -17,4 +17,27 @@
     <string name="test_connection">Probar Conexión</string>
     <string name="connection_success">Conexión Exitosa: %1$s</string>
     <string name="connection_error">Error de Conexión: %1$s</string>
+
+    <!-- Home Screen -->
+    <string name="welcome_back">Bienvenido de nuevo,</string>
+    <string name="gps_permission_required">Permiso de GPS Requerido</string>
+    <string name="gps_permission_explanation">Esta aplicación requiere acceso al GPS para actualizar tu ubicación y recibir solicitudes de tours. Por favor, habilita los permisos para continuar.</string>
+    <string name="grant_permissions">Conceder Permisos</string>
+    <string name="availability_status">Estado de Disponibilidad</string>
+    <string name="availability_explanation">Activa para recibir solicitudes de tours</string>
+    <string name="status_online">Estás conectado · Visible para clientes</string>
+    <string name="status_offline">Estás desconectado · No visible para clientes</string>
+    <string name="tours_today">Tours hoy</string>
+    <string name="your_rating">Tu calificación</string>
+    <string name="incoming_requests">Solicitudes Entrantes</string>
+    <string name="new_requests_count">%1$d nuevas</string>
+    <string name="no_requests_yet">Aún no tienes solicitudes. ¡Asegúrate de estar conectado para recibir nuevas!</string>
+
+    <!-- Requests -->
+    <string name="time_ago_min">Hace %1$d min</string>
+    <string name="duration_min">%1$d min</string>
+    <string name="price_format">$%1$s COP</string>
+    <string name="wants_tour">Quiere un tour en %1$s</string>
+    <string name="accept">Aceptar</string>
+    <string name="decline">Rechazar</string>
 </resources>
