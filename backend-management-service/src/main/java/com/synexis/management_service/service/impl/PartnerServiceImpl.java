@@ -2,6 +2,7 @@ package com.synexis.management_service.service.impl;
 
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
 import com.synexis.management_service.dto.response.RegisterPartnerResponse;
+import com.synexis.management_service.entity.Area;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.entity.PartnerAvailabilityStatus;
 import com.synexis.management_service.entity.UserLanguage;
@@ -9,6 +10,7 @@ import com.synexis.management_service.entity.UserRole;
 import com.synexis.management_service.exception.EmailAlreadyExistsException;
 import com.synexis.management_service.exception.KeycloakUserCreationException;
 import com.synexis.management_service.repository.PartnerRepository;
+import com.synexis.management_service.service.AreaService;
 import com.synexis.management_service.service.PartnerService;
 
 import jakarta.ws.rs.core.Response;
@@ -36,15 +38,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PartnerServiceImpl implements PartnerService {
 
-    // @Value("${KEYCLOAK_REALM}")
-    private String keycloakRealm = "synexis"; // TODO - FIX - HARDCODED FOR TESTING - REVERT TO @Value IN PRODUCTION
+    private String keycloakRealm = "synexis";
 
     private final PartnerRepository partnerRepository;
     private final Keycloak keycloak;
+    private final AreaService areaService;
 
-    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak) {
+    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak, AreaService areaService) {
         this.partnerRepository = partnerRepository;
         this.keycloak = keycloak;
+        this.areaService = areaService;
     }
 
     @Override
@@ -57,18 +60,16 @@ public class PartnerServiceImpl implements PartnerService {
             throw new EmailAlreadyExistsException(normalizedEmail);
         }
 
-        // =========================
-        // CREATE USER IN KEYCLOAK
-        // =========================
-        // Create a Keycloak user record with username/email and enable status.
+        // 1. CREATE USER IN KEYCLOAK
         UserRepresentation user = new UserRepresentation();
         user.setUsername(normalizedEmail);
         user.setEmail(normalizedEmail);
         user.setEnabled(true);
+        user.setFirstName(request.name().trim());
+        user.setLastName(request.name().trim());
+        user.setEmailVerified(true);
 
-        Response response = keycloak.realm(keycloakRealm)
-                .users()
-                .create(user);
+        Response response = keycloak.realm(keycloakRealm).users().create(user);
 
         if (response.getStatus() != 201) {
             throw new KeycloakUserCreationException(response.getStatus());
@@ -76,46 +77,45 @@ public class PartnerServiceImpl implements PartnerService {
 
         String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
 
-        // =========================
-        // SET PASSWORD IN KEYCLOAK
-        // =========================
-        // Configure the new Keycloak user credentials (non-temporary password).
+        // 2. SET PASSWORD
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
-        credential.setValue(request.password()); // Use raw password here; Keycloak will hash it internally.
+        credential.setValue(request.password());
         credential.setTemporary(false);
 
-        keycloak.realm(keycloakRealm)
-                .users()
-                .get(userId)
-                .resetPassword(credential);
+        keycloak.realm(keycloakRealm).users().get(userId).resetPassword(credential);
 
-        // =========================
-        // ASSIGN REALM ROLE IN KEYCLOAK
-        // =========================
-        // Add the CLIENT role to the newly created user in Keycloak realm roles.
-        RoleRepresentation role = keycloak.realm(keycloakRealm)
+        // 3. ASSIGN 'PARTNER' ROLE AT 'telepresence' CLIENT LEVEL
+        // We search for the internal UUID of the Keycloak client
+        String clientUuid = keycloak.realm(keycloakRealm)
+                .clients()
+                .findByClientId("telepresence")
+                .get(0)
+                .getId();
+
+        // We get the PARTNER role defined within that client
+        RoleRepresentation partnerRole = keycloak.realm(keycloakRealm)
+                .clients()
+                .get(clientUuid)
                 .roles()
                 .get("PARTNER")
                 .toRepresentation();
 
+        // We assign the role to the user
         keycloak.realm(keycloakRealm)
                 .users()
                 .get(userId)
                 .roles()
-                .realmLevel()
-                .add(List.of(role));
+                .clientLevel(clientUuid)
+                .add(List.of(partnerRole));
 
-        // =========================
-        // PERSIST CLIENT ENTITY TO DATABASE (PASSWORD IS NOT STORED LOCALLY)
-        // =========================
-        // Save the client profile in local database with Keycloak id and normalized
-        // data.
+        // 4. PERSISTENCE IN LOCAL DATABASE
         Partner partner = new Partner();
-        partner.setKeycloakId(userId); // IMPORTANT - LINK TO KEYCLOAK USER
+        partner.setKeycloakId(userId);
         partner.setEmail(normalizedEmail);
         partner.setName(request.name().trim());
-        partner.setAreaId(request.areaId());
+        Area area = areaService.findById(request.areaId().longValue());
+        partner.setArea(area);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(request.termsAccepted());
         partner.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
@@ -135,7 +135,7 @@ public class PartnerServiceImpl implements PartnerService {
                 saved.getTermsAccepted(),
                 saved.getPicDirectory(),
                 saved.getRole(),
-                saved.getAreaId(),
+                saved.getArea().getId().intValue(),
                 saved.getAvailabilityStatus());
     }
 
