@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,8 +22,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Partner extends UserBase {
 
-    @Column(name = "area_id", nullable = false)
-    private Integer areaId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "area_id", nullable = false)
+    private Area area;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "availability_status", nullable = false, length = 20)

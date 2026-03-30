@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.synexis.management_service.entity.Area;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.entity.PartnerAvailabilityStatus;
 import com.synexis.management_service.entity.UserRole;
@@ -18,13 +19,23 @@ class PartnerRepositoryTest {
 
     @Autowired
     private PartnerRepository partnerRepository;
+    @Autowired
+    private AreaRepository areaRepository;
 
     @Test
     void saveAndFindByEmail_persistsPartner() {
+        Area area = new Area();
+        area.setCountry("Colombia");
+        area.setState("Cauca");
+        area.setMunicipality("Popayán");
+        area.setCenterLat(2.4448);
+        area.setCenterLng(-76.6147);
+        Area savedArea = areaRepository.save(area);
+
         Partner partner = new Partner();
         partner.setEmail("partner@example.com");
         partner.setName("Tour Guides Inc");
-        partner.setAreaId(1);
+        partner.setArea(savedArea);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(true);
         partner.setRole(UserRole.partner);
@@ -40,7 +51,7 @@ class PartnerRepositoryTest {
                         p -> {
                             assertThat(p.getEmail()).isEqualTo("partner@example.com");
                             assertThat(p.getName()).isEqualTo("Tour Guides Inc");
-                            assertThat(p.getAreaId()).isEqualTo(1);
+                            assertThat(p.getArea().getId()).isEqualTo(savedArea.getId());
                             assertThat(p.getRole()).isEqualTo(UserRole.partner);
                         });
     }

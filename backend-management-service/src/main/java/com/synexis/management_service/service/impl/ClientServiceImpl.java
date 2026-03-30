@@ -100,15 +100,15 @@ public class ClientServiceImpl implements ClientService {
         // =========================
         // ASSIGN REALM ROLE IN KEYCLOAK
         // =========================
-        // 1. Obtener el ID interno (UUID) del cliente 'telepresence'
+        // 1. Get the internal ID (UUID) of the 'telepresence' client
 
         String clientUuid = keycloak.realm(keycloakRealm)
                 .clients()
-                .findByClientId("telepresence") // Esto devuelve una lista de clientes que coinciden
-                .get(0) // Aquí podría fallar si 'telepresence' no existe
+                .findByClientId("telepresence") // This returns a list of matching clients
+                .get(0) // This could fail if 'telepresence' does not exist
                 .getId();
 
-        // 2. Obtener la representación del rol 'CLIENT' que pertenece a ese cliente
+        // 2. Get the representation of the 'CLIENT' role that belongs to that client
         RoleRepresentation clientRole = keycloak.realm(keycloakRealm)
                 .clients()
                 .get(clientUuid)
@@ -116,7 +116,7 @@ public class ClientServiceImpl implements ClientService {
                 .get("CLIENT")
                 .toRepresentation();
 
-        // 3. Asignar el rol al usuario a nivel de cliente (clientLevel)
+        // 3. Assign the role to the user at client level (clientLevel)
         keycloak.realm(keycloakRealm)
                 .users()
                 .get(userId)

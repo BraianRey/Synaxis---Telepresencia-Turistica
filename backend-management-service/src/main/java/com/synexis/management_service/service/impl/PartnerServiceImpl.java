@@ -2,6 +2,7 @@ package com.synexis.management_service.service.impl;
 
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
 import com.synexis.management_service.dto.response.RegisterPartnerResponse;
+import com.synexis.management_service.entity.Area;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.entity.PartnerAvailabilityStatus;
 import com.synexis.management_service.entity.UserLanguage;
@@ -9,6 +10,7 @@ import com.synexis.management_service.entity.UserRole;
 import com.synexis.management_service.exception.EmailAlreadyExistsException;
 import com.synexis.management_service.exception.KeycloakUserCreationException;
 import com.synexis.management_service.repository.PartnerRepository;
+import com.synexis.management_service.service.AreaService;
 import com.synexis.management_service.service.PartnerService;
 
 import jakarta.ws.rs.core.Response;
@@ -36,15 +38,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PartnerServiceImpl implements PartnerService {
 
-    // @Value("${KEYCLOAK_REALM}")
-    private String keycloakRealm = "synexis"; // TODO - FIX - HARDCODED FOR TESTING - REVERT TO @Value IN PRODUCTION
+    private String keycloakRealm = "synexis";
 
     private final PartnerRepository partnerRepository;
     private final Keycloak keycloak;
+    private final AreaService areaService;
 
-    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak) {
+    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak, AreaService areaService) {
         this.partnerRepository = partnerRepository;
         this.keycloak = keycloak;
+        this.areaService = areaService;
     }
 
     @Override
@@ -57,14 +60,14 @@ public class PartnerServiceImpl implements PartnerService {
             throw new EmailAlreadyExistsException(normalizedEmail);
         }
 
-        // 1. CREAR USUARIO EN KEYCLOAK
+        // 1. CREATE USER IN KEYCLOAK
         UserRepresentation user = new UserRepresentation();
         user.setUsername(normalizedEmail);
         user.setEmail(normalizedEmail);
         user.setEnabled(true);
         user.setFirstName(request.name().trim());
         user.setLastName(request.name().trim());
-        user.setEmailVerified(true); // Se recomienda marcar como verificado si no envías correo
+        user.setEmailVerified(true);
 
         Response response = keycloak.realm(keycloakRealm).users().create(user);
 
@@ -74,7 +77,7 @@ public class PartnerServiceImpl implements PartnerService {
 
         String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
 
-        // 2. CONFIGURAR CONTRASEÑA
+        // 2. SET PASSWORD
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(request.password());
@@ -82,15 +85,15 @@ public class PartnerServiceImpl implements PartnerService {
 
         keycloak.realm(keycloakRealm).users().get(userId).resetPassword(credential);
 
-        // 3. ASIGNAR ROL 'PARTNER' A NIVEL DE CLIENTE 'telepresence'
-        // Buscamos el UUID interno del cliente de Keycloak
+        // 3. ASSIGN 'PARTNER' ROLE AT 'telepresence' CLIENT LEVEL
+        // We search for the internal UUID of the Keycloak client
         String clientUuid = keycloak.realm(keycloakRealm)
                 .clients()
                 .findByClientId("telepresence")
                 .get(0)
                 .getId();
 
-        // Obtenemos el rol PARTNER definido dentro de ese cliente
+        // We get the PARTNER role defined within that client
         RoleRepresentation partnerRole = keycloak.realm(keycloakRealm)
                 .clients()
                 .get(clientUuid)
@@ -98,7 +101,7 @@ public class PartnerServiceImpl implements PartnerService {
                 .get("PARTNER")
                 .toRepresentation();
 
-        // Asignamos el rol al usuario
+        // We assign the role to the user
         keycloak.realm(keycloakRealm)
                 .users()
                 .get(userId)
@@ -106,12 +109,13 @@ public class PartnerServiceImpl implements PartnerService {
                 .clientLevel(clientUuid)
                 .add(List.of(partnerRole));
 
-        // 4. PERSISTENCIA EN BASE DE DATOS LOCAL
+        // 4. PERSISTENCE IN LOCAL DATABASE
         Partner partner = new Partner();
         partner.setKeycloakId(userId);
         partner.setEmail(normalizedEmail);
         partner.setName(request.name().trim());
-        partner.setAreaId(request.areaId());
+        Area area = areaService.findById(request.areaId().longValue());
+        partner.setArea(area);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(request.termsAccepted());
         partner.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
@@ -131,7 +135,7 @@ public class PartnerServiceImpl implements PartnerService {
                 saved.getTermsAccepted(),
                 saved.getPicDirectory(),
                 saved.getRole(),
-                saved.getAreaId(),
+                saved.getArea().getId().intValue(),
                 saved.getAvailabilityStatus());
     }
 
