@@ -1,12 +1,14 @@
 package com.synexis.management_service.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api/availability")
 public class AvailabilityController {
 
     @GetMapping("/ping")
