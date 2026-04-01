@@ -123,7 +123,7 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setTermsAccepted(request.termsAccepted());
         partner.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
         partner.setPicDirectory(normalizePicDirectory(request.picDirectory()));
-        partner.setRole(UserRole.partner);
+        partner.setRole(UserRole.PARTNER);
         partner.setCreatedAt(Instant.now());
 
         Partner saved = partnerRepository.save(partner);

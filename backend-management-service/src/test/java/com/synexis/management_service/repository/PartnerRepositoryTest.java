@@ -38,7 +38,7 @@ class PartnerRepositoryTest {
         partner.setArea(savedArea);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(true);
-        partner.setRole(UserRole.partner);
+        partner.setRole(UserRole.PARTNER);
         partner.setCreatedAt(Instant.now());
 
         Partner saved = partnerRepository.save(partner);
@@ -52,7 +52,7 @@ class PartnerRepositoryTest {
                             assertThat(p.getEmail()).isEqualTo("partner@example.com");
                             assertThat(p.getName()).isEqualTo("Tour Guides Inc");
                             assertThat(p.getArea().getId()).isEqualTo(savedArea.getId());
-                            assertThat(p.getRole()).isEqualTo(UserRole.partner);
+                            assertThat(p.getRole()).isEqualTo(UserRole.PARTNER);
                         });
     }
 }
