@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('CLIENT', 'PARTNER')")
     public ResponseEntity<UserProfileResponse> getMyProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String keycloakId = auth.getName();

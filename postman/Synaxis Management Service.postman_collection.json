@@ -37,11 +37,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/ping",
+              "raw": "{{baseUrl}}/api/availability/ping",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
+                "api",
+                "availability",
                 "ping"
               ]
             },
@@ -256,6 +258,166 @@
               ]
             },
             "description": "Run after **Register — client** in the same Collection Runner session."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        {
+          "name": "Create Service",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get services by client id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services/client/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "client",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get services by partner id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services/partner/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "partner",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get services available by area id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services/available/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "available",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get service by id",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/services/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "services",
+                "2"
+              ]
+            }
           },
           "response": []
         }

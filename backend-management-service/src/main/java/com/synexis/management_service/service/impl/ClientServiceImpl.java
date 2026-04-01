@@ -19,8 +19,6 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,7 +133,7 @@ public class ClientServiceImpl implements ClientService {
         client.setTermsAccepted(request.termsAccepted());
         client.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
         client.setPicDirectory(normalizePicDirectory(request.picDirectory()));
-        client.setRole(UserRole.client);
+        client.setRole(UserRole.CLIENT);
         client.setCreatedAt(Instant.now());
 
         Client saved = clientRepository.save(client);

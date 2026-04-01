@@ -24,7 +24,7 @@ class ClientRepositoryTest {
         client.setEmail("client@example.com");
         client.setName("Test User");
         client.setTermsAccepted(true);
-        client.setRole(UserRole.client);
+        client.setRole(UserRole.CLIENT);
         client.setCreatedAt(Instant.now());
 
         Client saved = clientRepository.save(client);
@@ -37,7 +37,7 @@ class ClientRepositoryTest {
                         c -> {
                             assertThat(c.getEmail()).isEqualTo("client@example.com");
                             assertThat(c.getName()).isEqualTo("Test User");
-                            assertThat(c.getRole()).isEqualTo(UserRole.client);
+                            assertThat(c.getRole()).isEqualTo(UserRole.CLIENT);
                         });
     }
 }

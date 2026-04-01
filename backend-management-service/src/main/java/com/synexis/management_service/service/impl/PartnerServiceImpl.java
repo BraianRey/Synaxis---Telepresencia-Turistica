@@ -22,7 +22,6 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,7 +119,7 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setTermsAccepted(request.termsAccepted());
         partner.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
         partner.setPicDirectory(normalizePicDirectory(request.picDirectory()));
-        partner.setRole(UserRole.partner);
+        partner.setRole(UserRole.PARTNER);
         partner.setCreatedAt(Instant.now());
 
         Partner saved = partnerRepository.save(partner);
