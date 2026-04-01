@@ -7,34 +7,51 @@ import retrofit2.http.POST
 
 interface ApiService {
 
+    /** GET /ping */
     @GET("ping")
     suspend fun ping(): Response<PingResponse>
-    
-    @POST("auth/partner/register")
-    suspend fun registerPartner(@Body registerRequest: RegisterRequest): Response<Unit>
 
-    @POST("auth/partner/login")
-    suspend fun loginPartner(@Body loginRequest: LoginRequest): Response<AuthResponse>
+    /** POST /api/partners/register/partner */
+    @POST("api/partners/register/partner")
+    suspend fun registerPartner(@Body request: RegisterPartnerRequest): Response<RegisterPartnerResponse>
 
-    @POST("/location/update")
-    suspend fun updateLocation(@Body locationRequest: LocationUpdateRequest): Response<Unit>
+    /** POST /api/auth/partner/login */
+    @POST("api/auth/partner/login")
+    suspend fun loginPartner(@Body request: LoginRequest): Response<LoginResponse>
+
+    /** POST /api/partners/location/update */
+    @POST("api/partners/location/update")
+    suspend fun updateLocation(@Body request: LocationUpdateRequest): Response<Unit>
 }
 
-data class LocationUpdateRequest(
-    val latitude: Double,
-    val longitude: Double
-)
-
 data class PingResponse(
-    val status: String,
-    val timestamp: String
+    val status: String
 )
 
-data class RegisterRequest(
-    val name: String,
+// ── Request DTO (espeja RegisterPartnerRequest del backend) ──────────────────
+data class RegisterPartnerRequest(
     val email: String,
     val password: String,
-    val creationDate: String
+    val name: String,
+    val areaId: Int,
+    val termsAccepted: Boolean,
+    val language: String,        // "en" | "es"
+    val picDirectory: String? = null
+)
+
+// ── Response DTO (espeja RegisterPartnerResponse del backend) ─────────────────
+data class RegisterPartnerResponse(
+    val id: Long,
+    val email: String,
+    val name: String,
+    val status: String,
+    val language: String,
+    val createdAt: String,
+    val termsAccepted: Boolean,
+    val picDirectory: String?,
+    val role: String,
+    val areaId: Int,
+    val availabilityStatus: String
 )
 
 data class LoginRequest(
@@ -42,8 +59,18 @@ data class LoginRequest(
     val password: String
 )
 
-data class AuthResponse(
-    val token: String,
-    val partnerId: String,
-    val partnerName: String
+data class LoginResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String,
+    val expiresIn: Long,
+    val id: Long,
+    val email: String,
+    val name: String,
+    val role: String
+)
+
+data class LocationUpdateRequest(
+    val latitude: Double,
+    val longitude: Double
 )

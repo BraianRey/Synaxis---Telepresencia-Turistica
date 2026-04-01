@@ -16,9 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
 import com.sismptm.client.ui.components.ProfilePictureUpload
-import kotlinx.coroutines.launch
 
 /**
  * Screen that handles the registration of a new user.
@@ -28,7 +28,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    viewModel: RegisterViewModel = viewModel()
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -37,9 +38,17 @@ fun RegisterScreen(
     var acceptedTerms by remember { mutableStateOf(false) }
     val emailHasError = email.isNotBlank() && !RegisterFormValidator.isValidEmail(email)
     val passwordMismatch = confirmPassword.isNotBlank() && password != confirmPassword
-    
-    val scope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading
+
+    // Navegar al home cuando el registro sea exitoso
+    LaunchedEffect(uiState) {
+        if (uiState is RegisterViewModel.RegisterUiState.Success) {
+            onRegisterSuccess()
+            viewModel.resetState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -173,19 +182,32 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Mostrar error si la llamada al backend falla
+        if (uiState is RegisterViewModel.RegisterUiState.Error) {
+            val errorMsg = (uiState as RegisterViewModel.RegisterUiState.Error).message
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Text(
+                    text = errorMsg,
+                    color = Color(0xFFC62828),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
+
         Button(
             onClick = {
-                scope.launch {
-                    isLoading = true
-                    try {
-                        println("Registration initiated: $fullName")
-                    } catch (e: Exception) {
-                        println("Registration error: ${e.message}")
-                    } finally {
-                        isLoading = false
-                        onRegisterSuccess()
-                    }
-                }
+                viewModel.register(
+                    name = fullName,
+                    email = email,
+                    password = password,
+                    termsAccepted = acceptedTerms
+                )
             },
             enabled = RegisterFormValidator.isFormValid(
                 fullName = fullName,
