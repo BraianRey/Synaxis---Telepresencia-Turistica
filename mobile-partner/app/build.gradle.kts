@@ -58,6 +58,10 @@ dependencies {
     // Google Play Services Location
     implementation(libs.play.services.location)
 
+    // ViewModel
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.lifecycle.viewmodel.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
