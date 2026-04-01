@@ -25,7 +25,7 @@ import lombok.Setter;
 public class Partner extends UserBase {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "areas_id", nullable = false)
+    @JoinColumn(name = "area_id", nullable = false)
     private Area area;
 
     @Enumerated(EnumType.STRING)

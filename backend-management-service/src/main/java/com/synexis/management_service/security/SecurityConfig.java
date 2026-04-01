@@ -34,49 +34,48 @@ import org.springframework.security.config.Customizer;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    /**
-     * Omite por completo el filtro de seguridad en estas rutas (evita 403 cuando
-     * {@code permitAll} no coincide con el
-     * {@code RequestMatcher} de MVC en algunos entornos). Los métodos del
-     * controlador no influyen en la URL: solo
-     * importan las rutas declaradas en {@code @PostMapping} / {@code @GetMapping}.
-     */
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring()
-                .requestMatchers(
-                        "/ping",
-                        "/register/**",
-                        "/api/auth/**",
-                        "/api/clients/register/client",
-                        "/api/partners/register/partner");
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .authorizeHttpRequests(
-                        auth -> auth
-                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        /**
+         * Omite por completo el filtro de seguridad en estas rutas (evita 403 cuando
+         * {@code permitAll} no coincide con el
+         * {@code RequestMatcher} de MVC en algunos entornos). Los métodos del
+         * controlador no influyen en la URL: solo
+         * importan las rutas declaradas en {@code @PostMapping} / {@code @GetMapping}.
+         */
+        @Bean
+        public WebSecurityCustomizer webSecurityCustomizer() {
+                return web -> web.ignoring()
                                 .requestMatchers(
-                                        "/ping",
-                                        "/register/**",
-                                        "/api/auth/**",
-                                        "/api/clients/register/client",
-                                        "/api/partners/register/partner").permitAll()
-                                .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults()));
-        return http.build();
-    }
+                                                "/ping",
+                                                "/api/auth/**",
+                                                "/api/clients/register",
+                                                "/api/partners/register");
+        }
 
-    /**
-     * BCrypt strength default (10). Used to hash passwords before storing
-     * {@code password_hash} in the database.
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http.csrf(AbstractHttpConfigurer::disable)
+                                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                                .authorizeHttpRequests(
+                                                auth -> auth
+                                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                                .requestMatchers(
+                                                                                "/ping",
+                                                                                "/api/auth/**",
+                                                                                "/api/clients/register",
+                                                                                "/api/partners/register")
+                                                                .permitAll()
+                                                                .anyRequest().authenticated())
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(Customizer.withDefaults()));
+                return http.build();
+        }
+
+        /**
+         * BCrypt strength default (10). Used to hash passwords before storing
+         * {@code password_hash} in the database.
+         */
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }
