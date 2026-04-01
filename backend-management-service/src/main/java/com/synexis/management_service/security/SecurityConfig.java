@@ -44,7 +44,12 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-                .requestMatchers("/ping", "/register/**");
+                .requestMatchers(
+                        "/ping",
+                        "/register/**",
+                        "/api/auth/**",
+                        "/api/clients/register/client",
+                        "/api/partners/register/partner");
     }
 
     @Bean
@@ -54,7 +59,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/ping", "/register/**").permitAll()
+                                .requestMatchers(
+                                        "/ping",
+                                        "/register/**",
+                                        "/api/auth/**",
+                                        "/api/clients/register/client",
+                                        "/api/partners/register/partner").permitAll()
                                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults()));

@@ -9,4 +9,7 @@ public class KeycloakUserCreationException extends RuntimeException {
         super("Error creating user in Keycloak with status code: " + statusCode);
     }
 
+    public KeycloakUserCreationException(String message) {
+        super(message);
+    }
 }
