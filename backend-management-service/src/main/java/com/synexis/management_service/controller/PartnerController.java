@@ -23,7 +23,7 @@ public class PartnerController {
         this.partnerService = partnerService;
     }
 
-    @PostMapping("/register/partner")
+    @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public RegisterPartnerResponse registerPartner(@Valid @RequestBody RegisterPartnerRequest request) {
         return partnerService.registerPartner(request);
