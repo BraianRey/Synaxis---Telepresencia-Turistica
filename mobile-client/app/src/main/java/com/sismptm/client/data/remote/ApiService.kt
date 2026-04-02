@@ -8,8 +8,7 @@ import retrofit2.http.POST
 interface ApiService {
 
     // Ping Endpoint
-    @GET("ping")
-    suspend fun ping(): Response<PingResponse>
+    @GET("api/availability/ping") suspend fun ping(): Response<PingResponse>
     
     // Ejemplo de endpoint de registro
     @POST("auth/register")

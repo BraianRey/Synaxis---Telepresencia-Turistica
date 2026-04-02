@@ -26,6 +26,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -93,6 +94,8 @@ fun HomeScreen(onLogout: () -> Unit) {
                 )
             )
         }
+        // Initialize location service only once
+        LocationService.init(context)
     }
 
     if (!hasLocationPermission) {
@@ -155,23 +158,34 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
  */
 @Composable
 fun HomeContent(onLogout: () -> Unit) {
-    val context = LocalContext.current
     var isOnline by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isOnline) {
-        if (isOnline) {
-            LocationService.init(context)
-            LocationService.startLocationUpdates()
-        } else {
-            LocationService.stopLocationUpdates()
-        }
-    }
 
     val requests = remember {
         listOf(
-            PartnerRequest("r1", "Ana Gonzalez", "Centro Historico", "2 min ago", "60 min", "$30.000 COP"),
-            PartnerRequest("r2", "Luis Herrera", "San Blas", "5 min ago", "90 min", "$45.000 COP"),
-            PartnerRequest("r3", "Maria Torres", "Sacsayhuaman", "11 min ago", "120 min", "$70.000 COP")
+            PartnerRequest(
+                id = "r1", 
+                clientName = "Ana Gonzalez", 
+                location = "Centro Historico", 
+                elapsedTime = "Hace 2 min", 
+                duration = "60 min", 
+                price = "$30.000 COP"
+            ),
+            PartnerRequest(
+                id = "r2", 
+                clientName = "Luis Herrera", 
+                location = "San Blas", 
+                elapsedTime = "Hace 5 min", 
+                duration = "90 min", 
+                price = "$45.000 COP"
+            ),
+            PartnerRequest(
+                id = "r3", 
+                clientName = "Maria Torres", 
+                location = "Sacsayhuaman", 
+                elapsedTime = "Hace 11 min", 
+                duration = "120 min", 
+                price = "$70.000 COP"
+            )
         )
     }
 
@@ -187,6 +201,16 @@ fun HomeContent(onLogout: () -> Unit) {
         ) {
             item { HeaderSection(partnerName = "Partner Name") }
             item { AvailabilityCard(isOnline = isOnline, onToggleOnline = { isOnline = it }) }
+            item { 
+                OutlinedButton(
+                    onClick = { LocationService.sendCurrentLocationOnce() },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
+                ) {
+                    Text(text = stringResource(id = R.string.send_location))
+                }
+            }
             item { StatsGrid() }
             item { IncomingRequestsHeader(newCount = requests.size) }
 

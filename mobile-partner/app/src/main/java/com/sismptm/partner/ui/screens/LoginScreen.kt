@@ -12,6 +12,9 @@ import com.sismptm.partner.R
 import com.sismptm.partner.data.remote.RetrofitClient
 import kotlinx.coroutines.launch
 
+/**
+ * Screen for user login and connection testing.
+ */
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -64,7 +67,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Botón para probar el endpoint /ping
         OutlinedButton(
             onClick = {
                 scope.launch {
@@ -86,13 +88,14 @@ fun LoginScreen(
         }
 
         if (pingResult.isNotEmpty()) {
+            val isError = pingResult.startsWith("Error")
             Text(
-                text = if (pingResult.startsWith("Error")) 
-                    "Error de conexión: $pingResult"
+                text = if (isError) 
+                    stringResource(id = R.string.connection_error, pingResult)
                 else 
-                    "Conexión exitosa: $pingResult",
+                    stringResource(id = R.string.connection_success, pingResult),
                 style = MaterialTheme.typography.bodySmall,
-                color = if (pingResult.startsWith("Error")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 8.dp)
             )
         }

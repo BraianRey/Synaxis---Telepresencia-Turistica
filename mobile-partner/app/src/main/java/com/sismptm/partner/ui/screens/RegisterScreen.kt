@@ -5,21 +5,28 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.sismptm.partner.R
+import com.sismptm.partner.location.LocationService
 
+/**
+ * Screen for new partner registration.
+ */
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
+    
     val isFormValid = RegisterFormValidator.isFormValid(
         fullName = name,
         email = email,
@@ -102,6 +109,9 @@ fun RegisterScreen(
                     return@Button
                 }
 
+                // Manual location update during registration
+                LocationService.init(context)
+                LocationService.sendCurrentLocationOnce()
                 onRegisterSuccess()
             },
             enabled = isFormValid,

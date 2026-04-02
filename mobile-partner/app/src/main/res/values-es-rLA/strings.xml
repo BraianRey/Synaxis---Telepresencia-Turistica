@@ -40,4 +40,7 @@
     <string name="wants_tour">Quiere un tour en %1$s</string>
     <string name="accept">Aceptar</string>
     <string name="decline">Rechazar</string>
+
+    <!-- Actions -->
+    <string name="send_location">Enviar ubicación actual</string>
 </resources>

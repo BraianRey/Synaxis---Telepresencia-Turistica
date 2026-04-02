@@ -44,7 +44,7 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-                .requestMatchers("/ping", "/register/**");
+                .requestMatchers("/ping", "/api/availability/ping", "/register/**");
     }
 
     @Bean
@@ -54,7 +54,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers("/ping", "/register/**").permitAll()
+                                .requestMatchers("/ping", "/api/availability/ping", "/register/**").permitAll()
                                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults()));
