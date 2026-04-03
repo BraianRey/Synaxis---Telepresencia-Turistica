@@ -16,18 +16,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is LoginViewModel.LoginUiState.Loading
+
+    LaunchedEffect(uiState) {
+        if (uiState is LoginViewModel.LoginUiState.Success) {
+            onLoginSuccess()
+            viewModel.resetState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -113,20 +122,27 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        if (uiState is LoginViewModel.LoginUiState.Error) {
+            val errorMsg = (uiState as LoginViewModel.LoginUiState.Error).message
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                Text(
+                    text = errorMsg,
+                    color = Color(0xFFC62828),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
+
         // Sign In Button
         Button(
             onClick = {
-                scope.launch {
-                    isLoading = true
-                    try {
-                        println("Login attempt: $email")
-                    } catch (e: Exception) {
-                        println("Login error: ${e.message}")
-                    } finally {
-                        isLoading = false
-                        onLoginSuccess()
-                    }
-                }
+                viewModel.login(email = email, password = password)
             },
             enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading,
             modifier = Modifier

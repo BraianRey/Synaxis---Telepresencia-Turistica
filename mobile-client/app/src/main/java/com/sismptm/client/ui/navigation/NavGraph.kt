@@ -60,7 +60,9 @@ fun NavGraph() {
                     }
                 },
                 onNavigateToLogin = {
-                    navController.popBackStack()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Register.route) { inclusive = true }
+                    }
                 }
             )
         }

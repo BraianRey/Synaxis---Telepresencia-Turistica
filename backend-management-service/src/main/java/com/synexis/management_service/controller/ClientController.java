@@ -24,7 +24,7 @@ public class ClientController {
         this.clientService = clientService;
     }
 
-    @PostMapping("/register/client")
+    @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public RegisterClientResponse registerClient(@Valid @RequestBody RegisterClientRequest request) {
         return clientService.registerClient(request);

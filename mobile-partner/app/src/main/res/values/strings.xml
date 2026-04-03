@@ -2,10 +2,14 @@
     tools:locale="en">
     <string name="app_name">SISPTMPartner</string>
     <string name="register_title">Register as Partner</string>
+    <string name="register_subtitle">Join our network of tour guides</string>
     <string name="full_name">Full Name</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="confirm_password">Confirm Password</string>
+    <string name="area_id">Area ID</string>
+    <string name="invalid_email">Enter a valid email address</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
     <string name="register_button">Register</string>
     <string name="already_have_account">Already have an account? Login</string>
     <string name="accept_terms">I accept the terms and conditions</string>
@@ -33,6 +37,7 @@
     <string name="incoming_requests">Incoming Requests</string>
     <string name="new_requests_count">%1$d new</string>
     <string name="no_requests_yet">You don\'t have any requests yet. Make sure you\'re online to receive new ones!</string>
+
 
     <!-- Requests -->
     <string name="time_ago_min">%1$d min ago</string>

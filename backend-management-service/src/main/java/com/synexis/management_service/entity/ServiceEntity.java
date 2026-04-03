@@ -8,26 +8,26 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "service")
+@Table(name = "services")
 @Getter
 @Setter
-public class Service {
+public class ServiceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idService;
+    private Long idService;
 
     // Relaciones
     @ManyToOne
-    @JoinColumn(name = "clients_id", nullable = false)
+    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
     @ManyToOne
-    @JoinColumn(name = "partners_id", nullable = false)
+    @JoinColumn(name = "partner_id")
     private Partner partner;
 
     @ManyToOne
-    @JoinColumn(name = "areas_id", nullable = false)
+    @JoinColumn(name = "area_id", nullable = false)
     private Area area;
 
     // Campos
