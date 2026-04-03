@@ -7,7 +7,6 @@ import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.ServiceEntity;
 import com.synexis.management_service.exception.ResourceNotFoundException;
 import com.synexis.management_service.repository.AreaRepository;
-import com.synexis.management_service.repository.ClientRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,15 +15,13 @@ import org.springframework.stereotype.Component;
 public class ServiceMapper {
 
     @Autowired
-    private ClientRepository clientRepository;
-
-    @Autowired
     private AreaRepository areaRepository;
 
-    public ServiceEntity toEntity(RegisterServiceRequest request) {
-
-        Client client = clientRepository.findById(request.clientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + request.clientId()));
+    /**
+     * Builds a new {@link ServiceEntity} from the request; {@code client} must be
+     * the authenticated client (resolved from JWT), not taken from the request body.
+     */
+    public ServiceEntity toEntity(RegisterServiceRequest request, Client client) {
 
         Area area = areaRepository.findById(request.areaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Area not found with id: " + request.areaId()));

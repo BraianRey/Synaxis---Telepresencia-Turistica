@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val userLanguage by remember { mutableStateOf("en") }
+            val userLanguage by remember { mutableStateOf("es") }
 
             LanguageContext(languageCode = userLanguage) {
                 SISPTMClientTheme {

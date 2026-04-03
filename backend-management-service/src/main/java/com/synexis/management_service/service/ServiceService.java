@@ -7,15 +7,21 @@ import com.synexis.management_service.dto.response.ServiceResponse;
 
 public interface ServiceService {
 
-    ServiceResponse registerService(RegisterServiceRequest request);
+    /**
+     * Creates a service for {@code authenticatedClientId} (from JWT). Optional
+     * {@code idempotencyKey} ties repeated creates to the same service.
+     */
+    ServiceResponse registerService(RegisterServiceRequest request, Long authenticatedClientId, String idempotencyKey);
 
-    List<ServiceResponse> getServicesByClientId(Long clientId);
+    List<ServiceResponse> getServicesByClientIdForUser(Long clientId, Long authenticatedClientId);
 
-    List<ServiceResponse> getServicesByPartnerId(Long partnerId);
+    List<ServiceResponse> getServicesByPartnerIdForUser(Long partnerId, Long authenticatedPartnerId);
 
     List<ServiceResponse> getServicesAvailableByAreaId(Long areaId);
 
-    ServiceResponse getServicesByServiceId(Long serviceId);
+    ServiceResponse getServiceForClient(Long serviceId, Long clientId);
+
+    ServiceResponse getServiceForPartner(Long serviceId, Long partnerId);
 
     ServiceResponse acceptService(Long serviceId, Long partnerId);
 
@@ -24,5 +30,7 @@ public interface ServiceService {
     ServiceResponse completeService(Long serviceId, Long partnerId);
 
     ServiceResponse cancelService(Long serviceId, Long clientId);
+
+    ServiceResponse cancelServiceByPartner(Long serviceId, Long partnerId);
 
 }

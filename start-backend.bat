@@ -4,6 +4,8 @@ cd /d "%~dp0backend-management-service"
 
 echo.
 echo [%~nx0] Starting Spring Boot API on http://localhost:8080
+echo Base services URL: http://localhost:8080/management/api/services
+echo See docs at backend-management-service\docs\services-lifecycle-api.md
 echo Keep this window open while you use Postman. Press Ctrl+C to stop the server.
 echo.
 

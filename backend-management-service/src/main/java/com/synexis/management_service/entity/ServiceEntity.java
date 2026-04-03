@@ -17,6 +17,12 @@ public class ServiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idService;
 
+    /**
+     * Optimistic lock for concurrent updates (e.g. two partners racing to accept).
+     */
+    @Version
+    private Long version;
+
     // Relaciones
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
