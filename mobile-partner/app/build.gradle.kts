@@ -57,6 +57,7 @@ dependencies {
 
     // Google Play Services Location
     implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // ViewModel
     implementation(libs.lifecycle.viewmodel.compose)

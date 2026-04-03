@@ -54,10 +54,7 @@ data class RegisterPartnerResponse(
     val availabilityStatus: String
 )
 
-data class LoginRequest(
-    val email: String,
-    val password: String
-)
+data class LoginRequest(val email: String, val password: String)
 
 data class LoginResponse(
     val accessToken: String,

@@ -19,6 +19,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 
+/**
+ * Screen for user login and connection testing.
+ */
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,

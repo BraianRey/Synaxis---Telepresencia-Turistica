@@ -19,13 +19,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
+import com.sismptm.partner.location.LocationService
 
+/**
+ * Screen for new partner registration.
+ */
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
     viewModel: RegisterViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
