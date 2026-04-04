@@ -25,6 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.ui.theme.*
 
+/**
+ * Screen displaying comprehensive details of a booked tour service.
+ * Shows tour information including partner details, location, duration, pricing,
+ * itinerary, and allows users to confirm or go back.
+ *
+ * @param onConfirm Callback triggered when user confirms the tour booking.
+ * @param onBack Callback triggered when user navigates back.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceDetailScreen(

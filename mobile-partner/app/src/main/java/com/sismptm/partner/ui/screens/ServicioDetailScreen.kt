@@ -9,6 +9,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 
+/**
+ * Screen displaying details of an accepted tour service currently in progress.
+ * Allows partners to view service information and mark the service as completed.
+ *
+ * @param onComplete Callback triggered when partner completes the tour service.
+ * @param onBack Callback triggered when user navigates back.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServicioDetailScreen(
@@ -18,12 +25,12 @@ fun ServicioDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Detalles del Servicio") },
+                title = { Text("Service Details") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = "Back"
                         )
                     }
                 }
@@ -42,7 +49,7 @@ fun ServicioDetailScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Servicio en Progreso",
+                    text = "Service in Progress",
                     style = MaterialTheme.typography.headlineMedium
                 )
 
@@ -55,19 +62,19 @@ fun ServicioDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Cliente: María García",
+                            text = "Client: María García",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = "Ruta: Salida desde centro histórico",
+                            text = "Route: Starting from historic downtown",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = "Duración: 4 horas",
+                            text = "Duration: 4 hours",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = "Estado: En Progreso",
+                            text = "Status: In Progress",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -77,11 +84,11 @@ fun ServicioDetailScreen(
                     onClick = onComplete,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Completar Servicio")
+                    Text("Complete Service")
                 }
 
                 OutlinedButton(onClick = onBack) {
-                    Text("Volver")
+                    Text("Back")
                 }
             }
         }

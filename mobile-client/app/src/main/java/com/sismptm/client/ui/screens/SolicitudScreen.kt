@@ -20,6 +20,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.ui.theme.*
 
+/**
+ * Screen displaying tour request confirmation and details.
+ * Allows users to review their tour request, configure request options,
+ * and proceed to view service details.
+ *
+ * @param onViewDetails Callback triggered when user confirms and views service details.
+ * @param onBack Callback triggered when user navigates back.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SolicitudScreen(

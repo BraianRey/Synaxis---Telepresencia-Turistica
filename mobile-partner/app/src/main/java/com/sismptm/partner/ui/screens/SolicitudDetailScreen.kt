@@ -9,6 +9,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 
+/**
+ * Screen displaying details of an incoming tour request.
+ * Allows partners to view request details and accept or reject the request.
+ *
+ * @param onAccept Callback triggered when partner accepts the tour request.
+ * @param onReject Callback triggered when partner rejects the tour request.
+ * @param onBack Callback triggered when user navigates back.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SolicitudDetailScreen(
@@ -19,12 +27,12 @@ fun SolicitudDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Detalles de Solicitud") },
+                title = { Text("Request Details") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = "Back"
                         )
                     }
                 }
@@ -43,7 +51,7 @@ fun SolicitudDetailScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Solicitud de Tour",
+                    text = "Tour Request",
                     style = MaterialTheme.typography.headlineMedium
                 )
 
@@ -56,19 +64,19 @@ fun SolicitudDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Cliente: María García",
+                            text = "Client: María García",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = "Ubicación: Parque Nacional Puracé",
+                            text = "Location: Puracé National Natural Park",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = "Descripción: Tour guiado de 4 horas",
+                            text = "Description: 4-hour guided tour",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = "Precio ofertado: $150.000 COP",
+                            text = "Offered Price: $150,000 COP",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -82,19 +90,19 @@ fun SolicitudDetailScreen(
                         onClick = onReject,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Rechazar")
+                        Text("Reject")
                     }
 
                     Button(
                         onClick = onAccept,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Aceptar")
+                        Text("Accept")
                     }
                 }
 
                 OutlinedButton(onClick = onBack) {
-                    Text("Volver")
+                    Text("Back")
                 }
             }
         }

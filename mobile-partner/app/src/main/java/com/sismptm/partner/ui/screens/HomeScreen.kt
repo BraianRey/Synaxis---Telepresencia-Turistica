@@ -63,9 +63,12 @@ private data class PartnerRequest(
 )
 
 /**
- * Main screen for the partner app, handling location permissions and content display.
- * @param onLogout Callback for logout action.
- * @param onRequestTour Callback for accepting a tour request.
+ * Main home screen for the mobile-partner application.
+ * Displays incoming tour requests, handles location permissions, and manages partner availability.
+ * Partners can toggle their online status, view incoming requests, and accept tour offers.
+ *
+ * @param onLogout Callback triggered when partner logs out.
+ * @param onRequestTour Callback triggered when partner accepts an incoming tour request.
  */
 @Composable
 fun HomeScreen(

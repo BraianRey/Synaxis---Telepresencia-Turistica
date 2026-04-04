@@ -10,6 +10,10 @@ import com.sismptm.partner.ui.screens.RegisterScreen
 import com.sismptm.partner.ui.screens.SolicitudDetailScreen
 import com.sismptm.partner.ui.screens.ServicioDetailScreen
 
+/**
+ * Sealed class representing all navigation routes in the mobile-partner application.
+ * Each object corresponds to a screen in the partner navigation graph.
+ */
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -18,6 +22,12 @@ sealed class Screen(val route: String) {
     object ServicioDetail : Screen("servicio_detail")
 }
 
+/**
+ * Main navigation graph composable for the mobile-partner application.
+ * Defines the navigation structure and relationships between all screens.
+ * Manages the NavController and handles navigation between Login, Register, Home,
+ * SolicitudDetail, and ServicioDetail screens.
+ */
 @Composable
 fun PartnerNavGraph() {
     val navController = rememberNavController()

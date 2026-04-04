@@ -87,6 +87,13 @@ private val demoPartners = listOf(
 
 private val filterOptions = listOf("All", "Available now", "Top rated", "Adventure")
 
+/**
+ * Screen for searching and displaying available tour partners.
+ * Allows users to search by city/location, filter results, and request tours from partners.
+ *
+ * @param onCancelSearch Callback triggered when user navigates back from search.
+ * @param onRequestTour Callback triggered when user requests a tour from a partner.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PartnerSearchScreen(
@@ -274,6 +281,13 @@ private fun String.normalizeSearchToken(): String {
         .lowercase()
 }
 
+/**
+ * Individual partner card component displaying partner information and request button.
+ * Shows partner avatar, name, location, rating, response time, and request tour button.
+ *
+ * @param partner The partner UI model containing partner information.
+ * @param onRequestTour Callback triggered when user clicks the "Request Tour" button.
+ */
 @Composable
 private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
     Card(
