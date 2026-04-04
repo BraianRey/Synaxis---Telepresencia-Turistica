@@ -24,3 +24,6 @@ commit-message.txt
 
 # H2 file database (local dev)
 backend-management-service/data/
+
+# Management service docs (local / generated)
+backend-management-service/docs/

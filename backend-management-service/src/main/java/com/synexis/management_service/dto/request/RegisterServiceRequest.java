@@ -5,8 +5,6 @@ import java.math.BigDecimal;
 
 public record RegisterServiceRequest(
 
-        @NotNull Long clientId,
-
         @NotNull Long areaId,
 
         @Size(max = 255) String startLocationDescription,
