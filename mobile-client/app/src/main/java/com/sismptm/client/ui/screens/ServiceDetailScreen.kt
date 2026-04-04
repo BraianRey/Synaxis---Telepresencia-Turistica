@@ -258,7 +258,7 @@ fun ServiceDetailScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Available chip
+                // Available chipp
                 Row(
                     modifier = Modifier
                         .background(AvailableBadgeBg, RoundedCornerShape(20.dp))
