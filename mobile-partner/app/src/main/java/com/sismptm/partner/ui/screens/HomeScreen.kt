@@ -63,11 +63,18 @@ private data class PartnerRequest(
 )
 
 /**
- * Main screen for the partner app, handling location permissions and content display.
- * @param onLogout Callback for logout action.
+ * Main home screen for the mobile-partner application.
+ * Displays incoming tour requests, handles location permissions, and manages partner availability.
+ * Partners can toggle their online status, view incoming requests, and accept tour offers.
+ *
+ * @param onLogout Callback triggered when partner logs out.
+ * @param onRequestTour Callback triggered when partner accepts an incoming tour request.
  */
 @Composable
-fun HomeScreen(onLogout: () -> Unit) {
+fun HomeScreen(
+    onLogout: () -> Unit,
+    onRequestTour: () -> Unit = {}
+) {
     val context = LocalContext.current
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -108,7 +115,7 @@ fun HomeScreen(onLogout: () -> Unit) {
             )
         }
     } else {
-        HomeContent(onLogout = onLogout)
+        HomeContent(onLogout = onLogout, onRequestTour = onRequestTour)
     }
 }
 
@@ -155,35 +162,36 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
 /**
  * Main content of the Home screen, including availability toggle and requests list.
  * @param onLogout Callback for logout action.
+ * @param onRequestTour Callback triggered when partner accepts an incoming tour request.
  */
 @Composable
-fun HomeContent(onLogout: () -> Unit) {
+fun HomeContent(onLogout: () -> Unit, onRequestTour: () -> Unit = {}) {
     var isOnline by remember { mutableStateOf(false) }
 
     val requests = remember {
         listOf(
             PartnerRequest(
-                id = "r1", 
-                clientName = "Ana Gonzalez", 
-                location = "Centro Historico", 
-                elapsedTime = "Hace 2 min", 
-                duration = "60 min", 
+                id = "r1",
+                clientName = "Ana Gonzalez",
+                location = "Centro Historico",
+                elapsedTime = "Hace 2 min",
+                duration = "60 min",
                 price = "$30.000 COP"
             ),
             PartnerRequest(
-                id = "r2", 
-                clientName = "Luis Herrera", 
-                location = "San Blas", 
-                elapsedTime = "Hace 5 min", 
-                duration = "90 min", 
+                id = "r2",
+                clientName = "Luis Herrera",
+                location = "San Blas",
+                elapsedTime = "Hace 5 min",
+                duration = "90 min",
                 price = "$45.000 COP"
             ),
             PartnerRequest(
-                id = "r3", 
-                clientName = "Maria Torres", 
-                location = "Sacsayhuaman", 
-                elapsedTime = "Hace 11 min", 
-                duration = "120 min", 
+                id = "r3",
+                clientName = "Maria Torres",
+                location = "Sacsayhuaman",
+                elapsedTime = "Hace 11 min",
+                duration = "120 min",
                 price = "$70.000 COP"
             )
         )
@@ -201,7 +209,7 @@ fun HomeContent(onLogout: () -> Unit) {
         ) {
             item { HeaderSection(partnerName = "Partner Name") }
             item { AvailabilityCard(isOnline = isOnline, onToggleOnline = { isOnline = it }) }
-            item { 
+            item {
                 OutlinedButton(
                     onClick = { LocationService.sendCurrentLocationOnce() },
                     modifier = Modifier.fillMaxWidth(),
@@ -231,7 +239,7 @@ fun HomeContent(onLogout: () -> Unit) {
                         duration = request.duration,
                         price = request.price,
                         onDecline = { },
-                        onAccept = { }
+                        onAccept = onRequestTour
                     )
                 }
             }

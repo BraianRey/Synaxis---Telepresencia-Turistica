@@ -1,7 +1,7 @@
 package com.sismptm.client.ui.screens
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,11 +32,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -49,30 +53,52 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.sismptm.client.ui.theme.AvailableBadgeBg
+import com.sismptm.client.ui.theme.AvailableBadgeText
+import com.sismptm.client.ui.theme.Background
+import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.DividerBorder
+import com.sismptm.client.ui.theme.FilterChipActiveBg
+import com.sismptm.client.ui.theme.FilterChipInactiveBg
+import com.sismptm.client.ui.theme.PrimaryAccent
+import com.sismptm.client.ui.theme.StarColor
+import com.sismptm.client.ui.theme.TextPrimary
+import com.sismptm.client.ui.theme.TextSecondary
 import java.text.Normalizer
 
 private data class PartnerUi(
     val id: String,
     val name: String,
-    val location: String,
+    val city: String,
     val rating: Double,
-    val responseTimeMin: Int,
-    val isOnline: Boolean
+    val reviewCount: Int,
+    val tags: List<String>,
+    val responseTime: String,
+    val isAvailable: Boolean
 )
 
 private val demoPartners = listOf(
-    PartnerUi("1", "Sofia Garcia", "Lima, Peru", 4.9, 8, true),
-    PartnerUi("2", "Miguel Torres", "Madrid, Espana", 4.7, 12, true),
-    PartnerUi("3", "Ava Thompson", "London, UK", 4.5, 15, false),
-    PartnerUi("4", "Daniel Kim", "Seoul, South Korea", 4.8, 10, true)
+    PartnerUi("1", "Sofia Garcia", "Lima, Peru", 4.9, 127, listOf("🎥 Live tours", "🏛 Historic", "⏱ ~45 min"), "2 min", true),
+    PartnerUi("2", "Miguel Torres", "Madrid, Spain", 4.7, 89, listOf("🎥 Live tours", "🏛 Historic"), "5 min", false),
+    PartnerUi("3", "Ava Thompson", "London, UK", 4.5, 56, listOf("🎥 Live tours", "⏱ ~30 min"), "10 min", true),
+    PartnerUi("4", "Daniel Kim", "Seoul, South Korea", 4.8, 203, listOf("🎥 Live tours", "🏛 Historic", "⏱ ~60 min"), "3 min", true)
 )
 
-private val filterOptions = listOf("All", "Top Rated")
+private val filterOptions = listOf("All", "Available now", "Top rated", "Adventure")
 
+/**
+ * Screen for searching and displaying available tour partners.
+ * Allows users to search by city/location, filter results, and request tours from partners.
+ *
+ * @param onCancelSearch Callback triggered when user navigates back from search.
+ * @param onRequestTour Callback triggered when user requests a tour from a partner.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PartnerSearchScreen(
-    onCancelSearch: () -> Unit = {}
+    onCancelSearch: () -> Unit = {},
+    onRequestTour: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(filterOptions.first()) }
@@ -80,24 +106,29 @@ fun PartnerSearchScreen(
     val filteredPartners = remember(searchQuery, selectedFilter) {
         val normalizedQuery = searchQuery.normalizeSearchToken()
         val base = if (normalizedQuery.isBlank()) {
-            emptyList()
+            demoPartners // For demo, show all if empty
         } else {
             demoPartners.filter {
                 it.name.normalizeSearchToken().contains(normalizedQuery) ||
-                    it.location.normalizeSearchToken().contains(normalizedQuery)
+                    it.city.normalizeSearchToken().contains(normalizedQuery)
             }
         }
 
-        if (selectedFilter == "Top Rated") base.filter { it.rating >= 4.8 } else base
+        when (selectedFilter) {
+            "Available now" -> base.filter { it.isAvailable }
+            "Top rated" -> base.filter { it.rating >= 4.8 }
+            "Adventure" -> base.filter { it.tags.any { tag -> tag.contains("Adventure") } } // Placeholder
+            else -> base
+        }
     }
 
     Scaffold(
-        containerColor = Color(0xFFF6F7FB),
+        containerColor = Background,
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(Background)
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -108,66 +139,137 @@ fun PartnerSearchScreen(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Buscar ciudad o partner", color = Color(0xFFB0B0B0)) },
+                        placeholder = { Text("Bogotá, Colombia", color = TextSecondary, fontSize = 14.sp) },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search icon",
-                                tint = Color(0xFFC7C7C7)
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = TextPrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        trailingIcon = {
+                            Text(
+                                text = "Cancel",
+                                color = PrimaryAccent,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(end = 16.dp)
                             )
                         },
                         singleLine = true,
-                        shape = RoundedCornerShape(28.dp),
+                        shape = RoundedCornerShape(24.dp),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF2C2C2E),
-                            unfocusedContainerColor = Color(0xFF2C2C2E),
+                            focusedContainerColor = CardBackground,
+                            unfocusedContainerColor = CardBackground,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
                         )
                     )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    TextButton(
-                        onClick = {
-                            searchQuery = ""
-                            onCancelSearch()
-                        }
-                    ) {
-                        Text(text = "Cancel", color = Color(0xFF1E88E5))
-                    }
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
+            }
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = Color(0xFF1A1A1A),
+                modifier = Modifier.height(56.dp)
+            ) {
+                val items = listOf("Explore", "Favorites", "Tours", "Messages", "Account")
+                val icons = listOf(
+                    Icons.Default.Home,
+                    Icons.Default.Favorite,
+                    Icons.Default.Star,
+                    Icons.Default.MailOutline,
+                    Icons.Default.Person
+                )
+                val selectedIndex = 0 // Explore is active
+                items.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = icons[index],
+                                contentDescription = item,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = item,
+                                fontSize = 12.sp
+                            )
+                        },
+                        selected = index == selectedIndex,
+                        onClick = { /* Handle navigation */ },
+                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                            selectedIconColor = PrimaryAccent,
+                            selectedTextColor = PrimaryAccent,
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary
+                        )
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Filter chips
+            item {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(filterOptions) { option ->
                         FilterChip(
                             selected = selectedFilter == option,
                             onClick = { selectedFilter = option },
-                            label = { Text(option) }
+                            label = {
+                                Text(
+                                    text = option,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = if (selectedFilter == option) FilterChipActiveBg else FilterChipInactiveBg,
+                                labelColor = if (selectedFilter == option) TextPrimary else TextSecondary
+                            ),
+                            border = if (selectedFilter != option) androidx.compose.foundation.BorderStroke(1.dp, DividerBorder) else null
                         )
                     }
                 }
             }
-        }
-    ) { innerPadding ->
-        // Ejemplo explicito del cambio de estado solicitado.
-        Crossfade(
-            targetState = searchQuery.isBlank(),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            label = "partner_search_state"
-        ) { isEmptySearch ->
-            if (isEmptySearch) {
-                EmptyPartnerState()
-            } else if (filteredPartners.isEmpty()) {
-                NoPartnersFoundState(searchQuery = searchQuery)
-            } else {
-                PartnerResultsList(partners = filteredPartners)
+
+            // Results header
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${filteredPartners.size} partners found",
+                        color = TextSecondary,
+                        fontSize = 13.sp
+                    )
+                    Text(
+                        text = "Sort by",
+                        color = PrimaryAccent,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+
+            // Partner cards
+            items(filteredPartners, key = { it.id }) { partner ->
+                PartnerCard(partner = partner, onRequestTour = onRequestTour)
             }
         }
     }
@@ -179,159 +281,141 @@ private fun String.normalizeSearchToken(): String {
         .lowercase()
 }
 
+/**
+ * Individual partner card component displaying partner information and request button.
+ * Shows partner avatar, name, location, rating, response time, and request tour button.
+ *
+ * @param partner The partner UI model containing partner information.
+ * @param onRequestTour Callback triggered when user clicks the "Request Tour" button.
+ */
 @Composable
-private fun EmptyPartnerState() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 28.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Location icon",
-                tint = Color(0xFFBAC4D6),
-                modifier = Modifier.size(76.dp)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Descubre servicios alrededor del mundo",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF1F2A37)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Ingresa una ciudad en la barra superior para encontrar expertos disponibles en tu zona.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7C8798)
-            )
-        }
-    }
-}
-
-@Composable
-private fun NoPartnersFoundState(searchQuery: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 28.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "No encontramos partners para \"${searchQuery.trim()}\"",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF1F2A37)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Prueba con otra ciudad o cambia el filtro para ver mas resultados.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF7C8798)
-            )
-        }
-    }
-}
-
-@Composable
-private fun PartnerResultsList(partners: List<PartnerUi>) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(partners, key = { it.id }) { partner ->
-            PartnerCard(partner = partner)
-        }
-    }
-}
-
-@Composable
-private fun PartnerCard(partner: PartnerUi) {
+private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(modifier = Modifier.padding(14.dp)) {
+        Box(modifier = Modifier.padding(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth()) {
+                // Avatar
                 Box {
                     Box(
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(52.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFE4EAF4)),
+                            .background(Color.Gray), // Placeholder for avatar
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Partner avatar",
-                            tint = Color(0xFF72839B),
-                            modifier = Modifier.size(30.dp)
+                            tint = TextSecondary,
+                            modifier = Modifier.size(26.dp)
                         )
                     }
-
-                    if (partner.isOnline) {
-                        Box(
-                            modifier = Modifier
-                                .size(14.dp)
-                                .align(Alignment.BottomEnd)
-                                .clip(CircleShape)
-                                .background(Color(0xFF2ECC71))
-                        )
-                    }
+                    // Green dot for online
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .align(Alignment.BottomEnd)
+                            .clip(CircleShape)
+                            .background(Color(0xFF4CAF50))
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
+                // Details
                 Column(modifier = Modifier.weight(1f)) {
+                    // Name
                     Text(
                         text = partner.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    // City
                     Text(
-                        text = partner.location,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF677489)
+                        text = partner.city,
+                        fontSize = 13.sp,
+                        color = TextSecondary
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Stars and rating
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
-                            tint = Color(0xFFFFC107),
-                            modifier = Modifier.size(18.dp)
+                            contentDescription = "Star",
+                            tint = StarColor,
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = partner.rating.toString(),
-                            color = Color(0xFF374151),
-                            style = MaterialTheme.typography.bodyMedium
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "(${partner.reviewCount})",
+                            fontSize = 14.sp,
+                            color = TextSecondary
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
+                    // Tags
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        partner.tags.forEach { tag ->
+                            Text(
+                                text = tag,
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Response time
                     Text(
-                        text = "Response time: ${partner.responseTimeMin} min",
-                        color = Color(0xFF10B981),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
+                        text = "Response time: ${partner.responseTime}",
+                        fontSize = 11.sp,
+                        color = TextSecondary
                     )
+                }
+
+                // Available badge
+                if (partner.isAvailable) {
+                    Box(
+                        modifier = Modifier
+                            .background(AvailableBadgeBg, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Available",
+                            color = AvailableBadgeText,
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
 
+            // Request Tour button
             Button(
-                onClick = { },
+                onClick = onRequestTour,
                 modifier = Modifier.align(Alignment.BottomEnd),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
-                shape = RoundedCornerShape(12.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                shape = RoundedCornerShape(24.dp),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
-                Text("Request Tour")
+                Text(
+                    text = "Request Tour",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
             }
         }
     }
