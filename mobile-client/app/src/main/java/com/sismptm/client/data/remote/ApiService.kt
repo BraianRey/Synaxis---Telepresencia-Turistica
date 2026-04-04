@@ -2,6 +2,7 @@ package com.sismptm.client.data.remote
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface ApiService {
@@ -13,6 +14,14 @@ interface ApiService {
     /** POST /api/auth/client/login */
     @POST("api/auth/client/login")
     suspend fun loginClient(@Body request: LoginRequest): Response<LoginResponse>
+
+    /** GET /api/clients/profile */
+    @GET("api/clients/profile")
+    suspend fun getUserProfile(): UserProfileResponse
+
+    /** GET /api/users/me */
+    @GET("api/users/me")
+    suspend fun getMyProfile(): UserProfileResponse
 }
 
 // ── Request DTO (espeja RegisterClientRequest del backend) ──────────────────
@@ -52,4 +61,11 @@ data class LoginResponse(
     val email: String,
     val name: String,
     val role: String
+)
+
+data class UserProfileResponse(
+    val id: Int,
+    val firstName: String,
+    val lastName: String,
+    val email: String
 )

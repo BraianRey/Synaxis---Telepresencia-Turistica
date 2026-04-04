@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.data.remote.LoginRequest
 import com.sismptm.client.data.remote.RetrofitClient
+import com.sismptm.client.data.remote.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +31,13 @@ class LoginViewModel : ViewModel() {
                     LoginRequest(email = email.trim(), password = password)
                 )
                 if (response.isSuccessful) {
+                    response.body()?.let { loginResponse ->
+                        TokenManager.saveSession(
+                            token = loginResponse.accessToken,
+                            name = loginResponse.name,
+                            id = loginResponse.id
+                        )
+                    }
                     _uiState.value = LoginUiState.Success
                 } else {
                     _uiState.value = LoginUiState.Error(parseError(response.code(), response.errorBody()?.string()))

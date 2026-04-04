@@ -9,12 +9,20 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = TourPresenceWhite,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    background = DarkBackground,
+    surface = Color(0xFF252525),
+    surfaceVariant = TourPresenceBeige,
+    onPrimary = TourPresenceBg,
+    onBackground = TourPresenceWhite,
+    onSurface = TourPresenceWhite,
+    onSurfaceVariant = OnBeigeText
 )
 
 private val LightColorScheme = lightColorScheme(

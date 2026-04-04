@@ -82,12 +82,7 @@ fun NavGraph() {
         }
         composable(Screen.Home.route) {
             HomeScreen(
-                onLogout = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
-                    }
-                },
-                onGoToPartnerSearch = {
+                onNavigateToPartnerSearch = {
                     navController.navigate(Screen.PartnerSearch.route)
                 }
             )
