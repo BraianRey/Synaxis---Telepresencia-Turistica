@@ -65,9 +65,13 @@ private data class PartnerRequest(
 /**
  * Main screen for the partner app, handling location permissions and content display.
  * @param onLogout Callback for logout action.
+ * @param onRequestTour Callback for accepting a tour request.
  */
 @Composable
-fun HomeScreen(onLogout: () -> Unit) {
+fun HomeScreen(
+    onLogout: () -> Unit,
+    onRequestTour: () -> Unit = {}
+) {
     val context = LocalContext.current
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -163,27 +167,27 @@ fun HomeContent(onLogout: () -> Unit) {
     val requests = remember {
         listOf(
             PartnerRequest(
-                id = "r1", 
-                clientName = "Ana Gonzalez", 
-                location = "Centro Historico", 
-                elapsedTime = "Hace 2 min", 
-                duration = "60 min", 
+                id = "r1",
+                clientName = "Ana Gonzalez",
+                location = "Centro Historico",
+                elapsedTime = "Hace 2 min",
+                duration = "60 min",
                 price = "$30.000 COP"
             ),
             PartnerRequest(
-                id = "r2", 
-                clientName = "Luis Herrera", 
-                location = "San Blas", 
-                elapsedTime = "Hace 5 min", 
-                duration = "90 min", 
+                id = "r2",
+                clientName = "Luis Herrera",
+                location = "San Blas",
+                elapsedTime = "Hace 5 min",
+                duration = "90 min",
                 price = "$45.000 COP"
             ),
             PartnerRequest(
-                id = "r3", 
-                clientName = "Maria Torres", 
-                location = "Sacsayhuaman", 
-                elapsedTime = "Hace 11 min", 
-                duration = "120 min", 
+                id = "r3",
+                clientName = "Maria Torres",
+                location = "Sacsayhuaman",
+                elapsedTime = "Hace 11 min",
+                duration = "120 min",
                 price = "$70.000 COP"
             )
         )
@@ -201,7 +205,7 @@ fun HomeContent(onLogout: () -> Unit) {
         ) {
             item { HeaderSection(partnerName = "Partner Name") }
             item { AvailabilityCard(isOnline = isOnline, onToggleOnline = { isOnline = it }) }
-            item { 
+            item {
                 OutlinedButton(
                     onClick = { LocationService.sendCurrentLocationOnce() },
                     modifier = Modifier.fillMaxWidth(),
@@ -231,7 +235,7 @@ fun HomeContent(onLogout: () -> Unit) {
                         duration = request.duration,
                         price = request.price,
                         onDecline = { },
-                        onAccept = { }
+                        onAccept = onRequestTour
                     )
                 }
             }

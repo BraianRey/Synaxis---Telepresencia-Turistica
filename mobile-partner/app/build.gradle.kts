@@ -5,11 +5,7 @@ plugins {
 
 android {
     namespace = "com.sismptm.partner"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.sismptm.partner"
@@ -19,6 +15,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = java.util.Properties().apply {
+            val file = rootProject.file("local.properties")
+            if (file.exists()) file.inputStream().use { load(it) }
+        }
+        val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
+        buildConfigField("String", "BASE_URL_API", "\"$baseUrlApi\"")
     }
 
     buildTypes {
@@ -49,7 +52,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
-    
+
     // Retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

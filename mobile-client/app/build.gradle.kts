@@ -3,6 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// ----------------------------------------------
+// 1. Leer local.properties (si existe)
+// ----------------------------------------------
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+// ----------------------------------------------
+// 2. Configuración de Android
+// ----------------------------------------------
 android {
     namespace = "com.sismptm.client"
     compileSdk = 36
@@ -15,6 +29,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // ----- Variables de entorno desde local.properties -----
+        val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
+        val baseUrlKeycloak: String = localProperties.getProperty("BASE_URL_KEYCLOAK") ?: ""
+
+        buildConfigField("String", "BASE_URL_API", "\"$baseUrlApi\"")
+        buildConfigField("String", "BASE_URL_KEYCLOAK", "\"$baseUrlKeycloak\"")
     }
 
     buildTypes {
@@ -32,9 +53,13 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true   // <--- Habilita la clase BuildConfig
     }
 }
 
+// ----------------------------------------------
+// 3. Dependencias (se mantienen igual)
+// ----------------------------------------------
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -8,6 +8,8 @@ import com.sismptm.client.ui.screens.HomeScreen
 import com.sismptm.client.ui.screens.LoginScreen
 import com.sismptm.client.ui.screens.PartnerSearchScreen
 import com.sismptm.client.ui.screens.RegisterScreen
+import com.sismptm.client.ui.screens.SolicitudScreen
+import com.sismptm.client.ui.screens.ServiceDetailScreen
 import com.sismptm.client.ui.screens.WelcomeScreen
 
 sealed class Screen(val route: String) {
@@ -16,6 +18,8 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Home : Screen("home")
     object PartnerSearch : Screen("partner_search")
+    object Solicitud : Screen("solicitud")
+    object ServiceDetail : Screen("service_detail")
 }
 
 @Composable
@@ -83,7 +87,24 @@ fun NavGraph() {
             PartnerSearchScreen(
                 onCancelSearch = {
                     navController.popBackStack()
+                },
+                onRequestTour = {
+                    navController.navigate(Screen.Solicitud.route)
                 }
+            )
+        }
+
+        composable(Screen.Solicitud.route) {
+            SolicitudScreen(
+                onViewDetails = { navController.navigate(Screen.ServiceDetail.route) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.ServiceDetail.route) {
+            ServiceDetailScreen(
+                onConfirm = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
             )
         }
     }

@@ -72,7 +72,8 @@ private val filterOptions = listOf("All", "Top Rated")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PartnerSearchScreen(
-    onCancelSearch: () -> Unit = {}
+    onCancelSearch: () -> Unit = {},
+    onRequestTour: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(filterOptions.first()) }
@@ -167,7 +168,7 @@ fun PartnerSearchScreen(
             } else if (filteredPartners.isEmpty()) {
                 NoPartnersFoundState(searchQuery = searchQuery)
             } else {
-                PartnerResultsList(partners = filteredPartners)
+                PartnerResultsList(partners = filteredPartners, onRequestTour = onRequestTour)
             }
         }
     }
@@ -235,20 +236,20 @@ private fun NoPartnersFoundState(searchQuery: String) {
 }
 
 @Composable
-private fun PartnerResultsList(partners: List<PartnerUi>) {
+private fun PartnerResultsList(partners: List<PartnerUi>, onRequestTour: () -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(partners, key = { it.id }) { partner ->
-            PartnerCard(partner = partner)
+            PartnerCard(partner = partner, onRequestTour = onRequestTour)
         }
     }
 }
 
 @Composable
-private fun PartnerCard(partner: PartnerUi) {
+private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -326,7 +327,7 @@ private fun PartnerCard(partner: PartnerUi) {
             }
 
             Button(
-                onClick = { },
+                onClick = onRequestTour,
                 modifier = Modifier.align(Alignment.BottomEnd),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
                 shape = RoundedCornerShape(12.dp)
