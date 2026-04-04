@@ -1,6 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Leer local.properties al nivel global
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 android {
@@ -16,10 +25,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val localProperties = java.util.Properties().apply {
-            val file = rootProject.file("local.properties")
-            if (file.exists()) file.inputStream().use { load(it) }
-        }
         val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
         buildConfigField("String", "BASE_URL_API", "\"$baseUrlApi\"")
     }
@@ -39,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

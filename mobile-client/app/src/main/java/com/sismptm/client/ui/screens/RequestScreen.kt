@@ -30,7 +30,7 @@ import com.sismptm.client.ui.theme.*
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SolicitudScreen(
+fun RequestScreen(
     onViewDetails: () -> Unit,
     onBack: () -> Unit
 ) {

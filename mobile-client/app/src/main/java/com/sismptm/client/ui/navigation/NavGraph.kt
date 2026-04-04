@@ -8,7 +8,7 @@ import com.sismptm.client.ui.screens.HomeScreen
 import com.sismptm.client.ui.screens.LoginScreen
 import com.sismptm.client.ui.screens.PartnerSearchScreen
 import com.sismptm.client.ui.screens.RegisterScreen
-import com.sismptm.client.ui.screens.SolicitudScreen
+import com.sismptm.client.ui.screens.RequestScreen
 import com.sismptm.client.ui.screens.ServiceDetailScreen
 import com.sismptm.client.ui.screens.WelcomeScreen
 
@@ -105,7 +105,7 @@ fun NavGraph() {
         }
 
         composable(Screen.Solicitud.route) {
-            SolicitudScreen(
+            RequestScreen(
                 onViewDetails = { navController.navigate(Screen.ServiceDetail.route) },
                 onBack = { navController.popBackStack() }
             )

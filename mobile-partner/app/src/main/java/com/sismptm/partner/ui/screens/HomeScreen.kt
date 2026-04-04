@@ -115,7 +115,7 @@ fun HomeScreen(
             )
         }
     } else {
-        HomeContent(onLogout = onLogout)
+        HomeContent(onLogout = onLogout, onRequestTour = onRequestTour)
     }
 }
 
@@ -162,9 +162,10 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
 /**
  * Main content of the Home screen, including availability toggle and requests list.
  * @param onLogout Callback for logout action.
+ * @param onRequestTour Callback triggered when partner accepts an incoming tour request.
  */
 @Composable
-fun HomeContent(onLogout: () -> Unit) {
+fun HomeContent(onLogout: () -> Unit, onRequestTour: () -> Unit = {}) {
     var isOnline by remember { mutableStateOf(false) }
 
     val requests = remember {

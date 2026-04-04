@@ -7,8 +7,8 @@ import androidx.navigation.compose.rememberNavController
 import com.sismptm.partner.ui.screens.HomeScreen
 import com.sismptm.partner.ui.screens.LoginScreen
 import com.sismptm.partner.ui.screens.RegisterScreen
-import com.sismptm.partner.ui.screens.SolicitudDetailScreen
-import com.sismptm.partner.ui.screens.ServicioDetailScreen
+import com.sismptm.partner.ui.screens.RequestDetailScreen
+import com.sismptm.partner.ui.screens.ServiceDetailScreen
 
 /**
  * Sealed class representing all navigation routes in the mobile-partner application.
@@ -74,7 +74,7 @@ fun PartnerNavGraph() {
         }
 
         composable(Screen.SolicitudDetail.route) {
-            SolicitudDetailScreen(
+            RequestDetailScreen(
                 onAccept = { navController.navigate(Screen.ServicioDetail.route) },
                 onReject = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
@@ -82,7 +82,7 @@ fun PartnerNavGraph() {
         }
 
         composable(Screen.ServicioDetail.route) {
-            ServicioDetailScreen(
+            ServiceDetailScreen(
                 onComplete = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )

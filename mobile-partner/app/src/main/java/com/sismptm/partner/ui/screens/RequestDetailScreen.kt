@@ -19,7 +19,7 @@ import androidx.compose.material.icons.filled.ArrowBack
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SolicitudDetailScreen(
+fun RequestDetailScreen(
     onAccept: () -> Unit,
     onReject: () -> Unit,
     onBack: () -> Unit

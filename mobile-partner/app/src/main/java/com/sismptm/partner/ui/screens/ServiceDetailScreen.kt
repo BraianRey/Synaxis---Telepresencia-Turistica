@@ -18,7 +18,7 @@ import androidx.compose.material.icons.filled.ArrowBack
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServicioDetailScreen(
+fun ServiceDetailScreen(
     onComplete: () -> Unit,
     onBack: () -> Unit
 ) {

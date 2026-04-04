@@ -1,4 +1,5 @@
 package com.sismptm.partner.utils
+import com.sismptm.partner.BuildConfig
 
 object NetworkConfig {
     // BuildConfig se genera automáticamente al compilar el proyecto, y contiene las constantes definidas en el archivo build.gradle
