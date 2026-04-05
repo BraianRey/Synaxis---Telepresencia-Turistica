@@ -35,7 +35,7 @@ class LoginViewModel : ViewModel() {
                     _uiState.value = LoginUiState.Error(parseError(response.code(), response.errorBody()?.string()))
                 }
             } catch (ex: Exception) {
-                _uiState.value = LoginUiState.Error("Error de conexion. Intenta nuevamente.")
+                _uiState.value = LoginUiState.Error(parseConnectionError(ex))
             }
         }
     }
@@ -59,5 +59,23 @@ class LoginViewModel : ViewModel() {
             "Error del servidor. Intenta nuevamente."
         }
     }
+
+    private fun parseConnectionError(exception: Exception): String {
+        return when {
+            exception.message?.contains("failed to connect") == true -> {
+                "No se pudo conectar. Backend debe estar en http://10.0.2.2:8080"
+            }
+            exception.message?.contains("timeout") == true -> {
+                "Tiempo de conexión agotado. Verifica tu red."
+            }
+            exception.message?.contains("Connection refused") == true -> {
+                "Backend rechazó la conexión. ¿Está corriendo?"
+            }
+            else -> {
+                "Error de conexión: ${exception.localizedMessage ?: "Error desconocido"}"
+            }
+        }
+    }
 }
+
 

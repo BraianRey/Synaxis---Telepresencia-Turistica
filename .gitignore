@@ -18,6 +18,7 @@ Thumbs.db
 
 # Secrets
 .env
+.env.example
 
 # Local helper for git commit message (git commit -F commit-message.txt)
 commit-message.txt

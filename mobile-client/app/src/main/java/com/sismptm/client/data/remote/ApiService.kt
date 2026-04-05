@@ -6,8 +6,8 @@ import retrofit2.http.POST
 
 interface ApiService {
 
-    /** POST /api/clients/register/client */
-    @POST("api/clients/register/client")
+    /** POST /api/clients/register */
+    @POST("api/clients/register")
     suspend fun registerClient(@Body request: RegisterClientRequest): Response<RegisterClientResponse>
 
     /** POST /api/auth/client/login */

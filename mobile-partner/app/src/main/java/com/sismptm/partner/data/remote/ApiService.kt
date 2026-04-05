@@ -11,8 +11,8 @@ interface ApiService {
     @GET("ping")
     suspend fun ping(): Response<PingResponse>
 
-    /** POST /api/partners/register/partner */
-    @POST("api/partners/register/partner")
+    /** POST /api/partners/register */
+    @POST("api/partners/register")
     suspend fun registerPartner(@Body request: RegisterPartnerRequest): Response<RegisterPartnerResponse>
 
     /** POST /api/auth/partner/login */

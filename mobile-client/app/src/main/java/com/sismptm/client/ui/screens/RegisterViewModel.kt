@@ -54,7 +54,7 @@ class RegisterViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _uiState.value = RegisterUiState.Error(
-                    e.localizedMessage ?: "Connection error"
+                    parseErrorMessage(e)
                 )
             }
         }
@@ -69,5 +69,23 @@ class RegisterViewModel : ViewModel() {
         400  -> "Invalid data. Check all fields."
         else -> "Server error ($code). Please try again."
     }
+
+    private fun parseErrorMessage(exception: Exception): String {
+        return when {
+            exception.message?.contains("failed to connect") == true -> {
+                "No se pudo conectar. Backend debe estar en http://10.0.2.2:8080"
+            }
+            exception.message?.contains("timeout") == true -> {
+                "Tiempo de conexión agotado. Verifica tu red."
+            }
+            exception.message?.contains("Connection refused") == true -> {
+                "Backend rechazó la conexión. ¿Está corriendo?"
+            }
+            else -> {
+                "Error: ${exception.localizedMessage ?: "Error desconocido"}"
+            }
+        }
+    }
 }
+
 
