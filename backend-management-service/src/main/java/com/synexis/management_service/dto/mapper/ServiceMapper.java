@@ -45,6 +45,7 @@ public class ServiceMapper {
         return new ServiceResponse(
                 service.getIdService(),
                 service.getClient().getId(),
+                service.getClient().getName(),
                 service.getPartner() != null ? service.getPartner().getId() : null,
                 service.getArea().getId(),
                 service.getStartLocationDescription(),

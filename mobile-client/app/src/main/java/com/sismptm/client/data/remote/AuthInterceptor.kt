@@ -1,21 +1,18 @@
 package com.sismptm.client.data.remote
 
+import com.sismptm.client.utils.SessionManager
 import okhttp3.Interceptor
 import okhttp3.Response
 
 class AuthInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val originalRequest = chain.request()
-        val requestBuilder = originalRequest.newBuilder()
+        val requestBuilder = chain.request().newBuilder()
+            .addHeader("Accept", "application/json")
+            .addHeader("Content-Type", "application/json")
 
-        requestBuilder.apply {
-            addHeader("Accept", "application/json")
-            addHeader("Content-Type", "application/json")
-            // Aquí se añadirá el JWT en el futuro
-            // val token = getToken()
-            // if (token != null) {
-            //     addHeader("Authorization", "Bearer $token")
-            // }
+        val token = SessionManager.accessToken
+        if (token.isNotEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
         }
 
         return chain.proceed(requestBuilder.build())

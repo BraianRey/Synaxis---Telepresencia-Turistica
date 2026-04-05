@@ -13,9 +13,27 @@ interface ApiService {
     /** POST /api/auth/client/login */
     @POST("api/auth/client/login")
     suspend fun loginClient(@Body request: LoginRequest): Response<LoginResponse>
+
+    /** POST /api/services/create  — requires CLIENT token */
+    @POST("api/services/create")
+    suspend fun createService(@Body request: CreateServiceRequest): Response<ServiceResponse>
 }
 
-// ── Request DTO (espeja RegisterClientRequest del backend) ──────────────────
+// ── Auth DTOs ────────────────────────────────────────────────────────────────
+data class LoginRequest(val email: String, val password: String)
+
+data class LoginResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String,
+    val expiresIn: Long,
+    val id: Long,
+    val email: String,
+    val name: String,
+    val role: String
+)
+
+// ── Register DTOs ─────────────────────────────────────────────────────────────
 data class RegisterClientRequest(
     val email: String,
     val password: String,
@@ -25,7 +43,6 @@ data class RegisterClientRequest(
     val picDirectory: String? = null
 )
 
-// ── Response DTO (espeja RegisterClientResponse del backend) ─────────────────
 data class RegisterClientResponse(
     val id: Long,
     val email: String,
@@ -38,18 +55,27 @@ data class RegisterClientResponse(
     val role: String
 )
 
-data class LoginRequest(
-    val email: String,
-    val password: String
+// ── Service DTOs ──────────────────────────────────────────────────────────────
+data class CreateServiceRequest(
+    val clientId: Long,
+    val areaId: Long,
+    val startLocationDescription: String?,
+    val agreedHours: Int,
+    val hourlyRate: Double
 )
 
-data class LoginResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val tokenType: String,
-    val expiresIn: Long,
-    val id: Long,
-    val email: String,
-    val name: String,
-    val role: String
+data class ServiceResponse(
+    val serviceId: Long,
+    val clientId: Long,
+    val partnerId: Long?,
+    val areaId: Long,
+    val startLocationDescription: String?,
+    val agreedHours: Int,
+    val hourlyRate: Double,
+    val status: String,
+    val requestedAt: String?,
+    val acceptedAt: String?,
+    val startedAt: String?,
+    val endedAt: String?
 )
+
