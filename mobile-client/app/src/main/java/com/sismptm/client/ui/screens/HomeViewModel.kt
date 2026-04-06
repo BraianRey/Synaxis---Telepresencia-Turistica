@@ -14,7 +14,7 @@ class HomeViewModel : ViewModel() {
     val uiState: StateFlow<HomeUiState> = _uiState
 
     init {
-        // Paso 1: mostrar nombre inmediatamente desde sesión local
+        // Step 1: Display name immediately from local session
         val localName = TokenManager.getUserName()
         _uiState.value = _uiState.value.copy(
             userName = if (localName.isNotBlank()) localName else "Viajero",
@@ -31,91 +31,17 @@ class HomeViewModel : ViewModel() {
             )
         )
 
-        // Paso 2: refrescar desde backend en segundo plano
+        // Step 2: Refresh from backend in background
         val apiService = RetrofitClient.apiService
         viewModelScope.launch {
             try {
                 val profile = apiService.getMyProfile()
-                val fullName = "${profile.firstName} ${profile.lastName}".trim()
+               val fullName = profile.name.trim()
                 if (fullName.isNotBlank()) {
                     _uiState.value = _uiState.value.copy(userName = fullName)
                 }
             } catch (e: Exception) {
-                // Mantiene el nombre local, no muestra error
-            }
-        }
-    }
-
-    private fun loadHomeData() {
-        viewModelScope.launch {
-            try {
-                // Cargar perfil del usuario
-                val userProfile = RetrofitClient.apiService.getUserProfile()
-
-                // Datos placeholder para destinations
-                val destinations = listOf(
-                    Destination(
-                        id = 1,
-                        city = "Popayán",
-                        country = "Colombia",
-                        placeName = "Puente del Humilladero",
-                        activePartners = 3
-                    ),
-                    Destination(
-                        id = 2,
-                        city = "París",
-                        country = "Francia",
-                        placeName = "Eiffel Tower",
-                        activePartners = 1
-                    ),
-                    Destination(
-                        id = 3,
-                        city = "Kyoto",
-                        country = "Japón",
-                        placeName = "Fushimi Inari",
-                        activePartners = 2
-                    )
-                )
-
-                // Datos placeholder para mapPins
-                val mapPins = listOf(
-                    MapPin(
-                        id = 1,
-                        city = "Popayán",
-                        activeGuides = 3,
-                        lat = 2.44f,
-                        lng = -76.61f
-                    ),
-                    MapPin(
-                        id = 2,
-                        city = "París",
-                        activeGuides = 1,
-                        lat = 48.86f,
-                        lng = 2.35f
-                    ),
-                    MapPin(
-                        id = 3,
-                        city = "Kyoto",
-                        activeGuides = 2,
-                        lat = 35.01f,
-                        lng = 135.77f
-                    )
-                )
-
-                // Actualizar estado
-                _uiState.value = HomeUiState(
-                    userName = "${userProfile.firstName} ${userProfile.lastName}",
-                    destinations = destinations,
-                    mapPins = mapPins,
-                    isLoading = false,
-                    error = null
-                )
-            } catch (e: Exception) {
-                // En caso de error, actualizar el estado con datos placeholder
-                _uiState.value = _uiState.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
+                // Keep local name, don't show error
             }
         }
     }

@@ -24,7 +24,7 @@ interface ApiService {
     suspend fun getMyProfile(): UserProfileResponse
 }
 
-// ── Request DTO (espeja RegisterClientRequest del backend) ──────────────────
+// Request DTO (mirrors RegisterClientRequest from backend)
 data class RegisterClientRequest(
     val email: String,
     val password: String,
@@ -34,7 +34,7 @@ data class RegisterClientRequest(
     val picDirectory: String? = null
 )
 
-// ── Response DTO (espeja RegisterClientResponse del backend) ─────────────────
+// Response DTO (mirrors RegisterClientResponse from backend)
 data class RegisterClientResponse(
     val id: Long,
     val email: String,
@@ -65,7 +65,10 @@ data class LoginResponse(
 
 data class UserProfileResponse(
     val id: Int,
-    val firstName: String,
-    val lastName: String,
-    val email: String
+    val name: String,
+    val email: String,
+    val status: String,
+    val language: String,
+    val role: String,
+    val picDirectory: String?
 )

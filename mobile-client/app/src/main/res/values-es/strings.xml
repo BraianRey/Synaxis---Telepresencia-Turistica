@@ -42,6 +42,26 @@
     <string name="no_tours_available">No hay tours disponibles por el momento.</string>
     <string name="search_placeholder">Busca un destino...</string>
 
+    <!-- Home Screen - New Hardcoded Strings -->
+    <string name="home_greeting">¡Hola, %1$s!</string>
+    <string name="home_subtitle">¿A dónde quieres viajar hoy?</string>
+    <string name="home_search_hint">Buscar ciudad o destino...</string>
+    <string name="home_city_guides">%1$s: %2$d guías</string>
+    <string name="home_destinations_title">DESTINOS DISPONIBLES AHORA</string>
+    <string name="home_active_partners">%1$d socios activos</string>
+    <string name="home_coming_soon">Próximamente</string>
+    <string name="home_profile">Perfil</string>
+    <string name="home_sign_out">Cerrar sesión</string>
+    <string name="home_explore">Explorar</string>
+
+    <!-- Partner Search Screen - New Hardcoded Strings -->
+    <string name="search_cancel">Cancelar</string>
+    <string name="search_partners_found">%1$d socios encontrados</string>
+    <string name="search_sort_by">Ordenar por</string>
+    <string name="search_response_time">Tiempo de respuesta: %1$s</string>
+    <string name="search_available">Disponible</string>
+    <string name="search_request_tour">Solicitar recorrido</string>
+
     <!-- Streaming Screen -->
     <string name="streaming_title">Transmisión en Vivo</string>
     <string name="connection_status_good">Conexión: Buena</string>

@@ -45,6 +45,26 @@
     <string name="no_tours_available">No tours available at the moment.</string>
     <string name="search_placeholder">Search for a destination...</string>
 
+    <!-- Home Screen - New Hardcoded Strings -->
+    <string name="home_greeting">Hello, %1$s!</string>
+    <string name="home_subtitle">Where do you want to travel today?</string>
+    <string name="home_search_hint">Search city or destination...</string>
+    <string name="home_city_guides">%1$s: %2$d guides</string>
+    <string name="home_destinations_title">DESTINATIONS AVAILABLE NOW</string>
+    <string name="home_active_partners">%1$d active partners</string>
+    <string name="home_coming_soon">Coming soon</string>
+    <string name="home_profile">Profile</string>
+    <string name="home_sign_out">Sign out</string>
+    <string name="home_explore">Explore</string>
+
+    <!-- Partner Search Screen - New Hardcoded Strings -->
+    <string name="search_cancel">Cancel</string>
+    <string name="search_partners_found">%1$d partners found</string>
+    <string name="search_sort_by">Sort by</string>
+    <string name="search_response_time">Response time: %1$s</string>
+    <string name="search_available">Available</string>
+    <string name="search_request_tour">Request Tour</string>
+
     <!-- Streaming Screen -->
     <string name="streaming_title">Live Stream</string>
     <string name="connection_status_good">Connection: Good</string>

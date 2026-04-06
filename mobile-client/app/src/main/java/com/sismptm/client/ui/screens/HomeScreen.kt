@@ -1,6 +1,7 @@
 package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.LocationOn
@@ -26,12 +28,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-
+import com.sismptm.client.data.remote.TokenManager
+import com.sismptm.client.R
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
+    onLogout: () -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -41,13 +46,13 @@ fun HomeScreen(
         bottomBar = {
             NavigationBar(
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                containerColor = Color(0xFF1A1A1A),
                 tonalElevation = 0.dp,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Explore, contentDescription = "Explorar") },
-                    label = { Text("Explorar") },
+                    icon = { Icon(Icons.Outlined.Explore, contentDescription = "Explore") },
+                    label = { Text(stringResource(R.string.home_explore)) },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     alwaysShowLabel = true,
@@ -74,8 +79,8 @@ fun HomeScreen(
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil") },
+                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
+                    label = { Text("Profile") },
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     alwaysShowLabel = true,
@@ -99,7 +104,7 @@ fun HomeScreen(
             when (selectedTab) {
                 0 -> ExploreTabContent(uiState, onNavigateToPartnerSearch)
                 1 -> ComingSoonTab()
-                2 -> ComingSoonTab()
+                2 -> ProfileTab(onLogout)
             }
         }
     }
@@ -148,13 +153,13 @@ private fun HomeHeader(userName: String) {
     ) {
         Column {
             Text(
-                text = "¡Hola, $userName!",
+                text = stringResource(R.string.home_greeting, userName),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color(0xFFFFFFFF)
             )
             Text(
-                text = "¿A dónde quieres viajar hoy?",
+                text = stringResource(R.string.home_subtitle),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFFCCCCCC)
@@ -172,7 +177,7 @@ private fun HomeHeader(userName: String) {
             Icon(
                 imageVector = Icons.Outlined.Person,
                 contentDescription = "Avatar",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = Color(0xFF666666),
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -190,7 +195,7 @@ private fun SearchBar() {
             .height(48.dp),
         placeholder = {
             Text(
-                text = "Buscar ciudad o destino...",
+                text = stringResource(R.string.home_search_hint),
                 color = Color(0xFF888888),
                 fontSize = 14.sp
             )
@@ -212,7 +217,7 @@ private fun SearchBar() {
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedBorderColor = Color.Transparent,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            focusedBorderColor = Color(0xFF444444),
             unfocusedContainerColor = Color(0xFF2C2C2C),
             focusedContainerColor = Color(0xFF333333),
             unfocusedTextColor = Color(0xFFDDDDDD),
@@ -307,13 +312,13 @@ private fun MapPlaceholder(mapPins: List<MapPin>, onNavigateToPartnerSearch: () 
                 onClick = onNavigateToPartnerSearch,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(12.dp),
+                    .padding(end = 12.dp, bottom = 48.dp),
                 containerColor = Color(0xFF2196F3),
                 contentColor = Color(0xFFFFFFFF)
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Explore,
-                    contentDescription = "Solicitar recorrido",
+                    contentDescription = "Request tour",
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -357,7 +362,7 @@ private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifie
             )
         ) {
             Text(
-                text = "$city: $guides guías",
+                text = stringResource(R.string.home_city_guides, city, guides),
                 fontSize = 10.sp,
                 color = Color.White,
                 modifier = Modifier.padding(6.dp)
@@ -374,7 +379,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
             .padding(horizontal = 20.dp)
     ) {
         Text(
-            text = "DESTINOS DISPONIBLES AHORA",
+            text = stringResource(R.string.home_destinations_title),
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.2.sp,
@@ -385,6 +390,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
 
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(destinations) { destination ->
@@ -416,7 +422,7 @@ private fun DestinationCard(destination: Destination) {
                 .fillMaxSize()
                 .background(Brush.verticalGradient(gradientColors))
         ) {
-            // Texto superior: ciudad bold
+            // Top text: city bold
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -434,7 +440,7 @@ private fun DestinationCard(destination: Destination) {
                     color = Color(0xFFAAAAAA)
                 )
             }
-            // Texto inferior: lugar + socios
+            // Bottom text: place + partners
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -447,7 +453,7 @@ private fun DestinationCard(destination: Destination) {
                     color = Color(0xFFFFFFFF)
                 )
                 Text(
-                    text = "${destination.activePartners} socios activos",
+                    text = stringResource(R.string.home_active_partners, destination.activePartners),
                     fontSize = 11.sp,
                     color = Color(0xFF00CC44)
                 )
@@ -465,9 +471,62 @@ private fun ComingSoonTab() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Próximamente",
+            text = stringResource(R.string.home_coming_soon),
             fontSize = 20.sp,
             color = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+@Composable
+private fun ProfileTab(onLogout: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1A1A1A)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = null,
+                tint = Color(0xFF666666),
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.home_profile),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFFFFFF)
+            )
+            Spacer(Modifier.height(32.dp))
+            OutlinedButton(
+                onClick = {
+                    TokenManager.clearSession()
+                    onLogout()
+                },
+                border = BorderStroke(1.dp, Color(0xFF666666)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = Color(0xFFAAAAAA),
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_sign_out),
+                    color = Color(0xFFAAAAAA)
+                )
+            }
+        }
     }
 }

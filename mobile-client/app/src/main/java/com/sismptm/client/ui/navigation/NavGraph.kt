@@ -88,6 +88,11 @@ fun NavGraph() {
             HomeScreen(
                 onNavigateToPartnerSearch = {
                     navController.navigate(Screen.PartnerSearch.route)
+                },
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
