@@ -25,3 +25,8 @@ commit-message.txt
 
 # H2 file database (local dev)
 backend-management-service/data/
+
+.idea/
+*.xml
+backend-management-service/mvnw
+mobile-client/gradlew
