@@ -2,7 +2,8 @@ package com.sismptm.client.utils
 import com.sismptm.client.BuildConfig
 
 object NetworkConfig {
-    // BuildConfig se genera automáticamente al compilar el proyecto, y contiene las constantes definidas en el archivo build.gradle
+    // BuildConfig is auto-generated at compile time
+    // and contains constants defined in build.gradle
     const val BASE_URL = BuildConfig.BASE_URL_API
     const val KEYCLOAK_URL = BuildConfig.BASE_URL_KEYCLOAK
     const val CONNECT_TIMEOUT = 30L

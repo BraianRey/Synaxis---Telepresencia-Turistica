@@ -2,6 +2,7 @@ package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -100,6 +102,8 @@ fun PartnerSearchScreen(
     onCancelSearch: () -> Unit = {},
     onRequestTour: () -> Unit = {}
 ) {
+    BackHandler { onCancelSearch() }
+
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(filterOptions.first()) }
 
@@ -141,12 +145,19 @@ fun PartnerSearchScreen(
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Bogotá, Colombia", color = TextSecondary, fontSize = 14.sp) },
                         leadingIcon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = TextPrimary,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .clickable { onCancelSearch() }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         },
                         trailingIcon = {
                             Text(
