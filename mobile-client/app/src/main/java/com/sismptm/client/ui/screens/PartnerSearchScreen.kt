@@ -56,6 +56,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.sismptm.client.R
 import com.sismptm.client.ui.theme.AvailableBadgeBg
 import com.sismptm.client.ui.theme.AvailableBadgeText
 import com.sismptm.client.ui.theme.Background
@@ -161,7 +163,7 @@ fun PartnerSearchScreen(
                         },
                         trailingIcon = {
                             Text(
-                                text = "Cancel",
+                                text = stringResource(R.string.search_cancel),
                                 color = PrimaryAccent,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(end = 16.dp)
@@ -266,12 +268,12 @@ fun PartnerSearchScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${filteredPartners.size} partners found",
+                        text = stringResource(R.string.search_partners_found, filteredPartners.size),
                         color = TextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "Sort by",
+                        text = stringResource(R.string.search_sort_by),
                         color = PrimaryAccent,
                         fontSize = 13.sp
                     )
@@ -391,7 +393,7 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                     Spacer(modifier = Modifier.height(4.dp))
                     // Response time
                     Text(
-                        text = "Response time: ${partner.responseTime}",
+                        text = stringResource(R.string.search_response_time, partner.responseTime),
                         fontSize = 11.sp,
                         color = TextSecondary
                     )
@@ -405,7 +407,7 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "Available",
+                            text = stringResource(R.string.search_available),
                             color = AvailableBadgeText,
                             fontSize = 11.sp
                         )
@@ -422,7 +424,7 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "Request Tour",
+                    text = stringResource(R.string.search_request_tour),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary

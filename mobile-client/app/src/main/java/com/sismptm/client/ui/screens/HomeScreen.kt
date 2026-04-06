@@ -28,10 +28,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.data.remote.TokenManager
-
+import com.sismptm.client.R
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
@@ -51,7 +52,7 @@ fun HomeScreen(
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Outlined.Explore, contentDescription = "Explore") },
-                    label = { Text("Explore") },
+                    label = { Text(stringResource(R.string.home_explore)) },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     alwaysShowLabel = true,
@@ -152,13 +153,13 @@ private fun HomeHeader(userName: String) {
     ) {
         Column {
             Text(
-                text = "Hello, $userName!",
+                text = stringResource(R.string.home_greeting, userName),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color(0xFFFFFFFF)
             )
             Text(
-                text = "Where do you want to travel today?",
+                text = stringResource(R.string.home_subtitle),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFFCCCCCC)
@@ -194,7 +195,7 @@ private fun SearchBar() {
             .height(48.dp),
         placeholder = {
             Text(
-                text = "Search city or destination...",
+                text = stringResource(R.string.home_search_hint),
                 color = Color(0xFF888888),
                 fontSize = 14.sp
             )
@@ -361,7 +362,7 @@ private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifie
             )
         ) {
             Text(
-                text = "$city: $guides guides",
+                text = stringResource(R.string.home_city_guides, city, guides),
                 fontSize = 10.sp,
                 color = Color.White,
                 modifier = Modifier.padding(6.dp)
@@ -378,7 +379,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
             .padding(horizontal = 20.dp)
     ) {
         Text(
-            text = "DESTINATIONS AVAILABLE NOW",
+            text = stringResource(R.string.home_destinations_title),
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.2.sp,
@@ -452,7 +453,7 @@ private fun DestinationCard(destination: Destination) {
                     color = Color(0xFFFFFFFF)
                 )
                 Text(
-                    text = "${destination.activePartners} active partners",
+                    text = stringResource(R.string.home_active_partners, destination.activePartners),
                     fontSize = 11.sp,
                     color = Color(0xFF00CC44)
                 )
@@ -470,7 +471,7 @@ private fun ComingSoonTab() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Coming soon",
+            text = stringResource(R.string.home_coming_soon),
             fontSize = 20.sp,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -497,7 +498,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Profile",
+                text = stringResource(R.string.home_profile),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFFFFFFF)
@@ -522,7 +523,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Sign out",
+                    text = stringResource(R.string.home_sign_out),
                     color = Color(0xFFAAAAAA)
                 )
             }
