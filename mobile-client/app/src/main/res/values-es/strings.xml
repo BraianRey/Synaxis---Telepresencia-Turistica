@@ -41,4 +41,14 @@
     <string name="my_bookings">Mis Reservas</string>
     <string name="no_tours_available">No hay tours disponibles por el momento.</string>
     <string name="search_placeholder">Busca un destino...</string>
+
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Transmisión en Vivo</string>
+    <string name="connection_status_good">Conexión: Buena</string>
+    <string name="connection_status_poor">Conexión: Débil</string>
+    <string name="control_up">ARRIBA</string>
+    <string name="control_down">ABAJO</string>
+    <string name="control_left">IZQUIERDA</string>
+    <string name="control_right">DERECHA</string>
+    <string name="end_session">Finalizar Sesión</string>
 </resources>

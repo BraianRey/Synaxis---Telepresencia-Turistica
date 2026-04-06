@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             // This is the user's "language" attribute.
             // In a real scenario, this would come from a database, DataStore, or SharedPreferences.
-            val userLanguage by remember { mutableStateOf("es") } // Default "en"
+            val userLanguage by remember { mutableStateOf("en") } // Default "en"
 
             LanguageContext(languageCode = userLanguage) {
                 SISPTMPartnerTheme {

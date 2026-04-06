@@ -47,4 +47,16 @@
 
     <!-- Actions -->
     <string name="send_location">Enviar ubicación actual</string>
+
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Transmisión en Vivo</string>
+    <string name="debug_streaming">Probar Streaming</string>
+    <string name="connection_quality">Calidad de Conexión</string>
+    <string name="instruction_up">ADELANTE</string>
+    <string name="instruction_down">RETROCEDE</string>
+    <string name="instruction_left">IZQUIERDA</string>
+    <string name="instruction_right">DERECHA</string>
+    <string name="waiting_instructions">Esperando instrucciones…</string>
+    <string name="camera_mic_permission_required">Cámara y Micrófono Requeridos</string>
+    <string name="camera_mic_permission_explanation">Esta aplicación requiere acceso a la cámara y al micrófono para iniciar la transmisión. Por favor, habilítalos para continuar.</string>
 </resources>

@@ -4,7 +4,7 @@ plugins {
 }
 
 // ----------------------------------------------
-// 1. Leer local.properties (si existe)
+// 1. Read local.properties (if exists)
 // ----------------------------------------------
 import java.util.Properties
 
@@ -15,7 +15,7 @@ if (localPropertiesFile.exists()) {
 }
 
 // ----------------------------------------------
-// 2. Configuración de Android
+// 2. Android Configuration
 // ----------------------------------------------
 android {
     namespace = "com.sismptm.client"
@@ -30,7 +30,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ----- Variables de entorno desde local.properties -----
+        // ----- Environment variables from local.properties -----
         val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
         val baseUrlKeycloak: String = localProperties.getProperty("BASE_URL_KEYCLOAK") ?: ""
 
@@ -53,12 +53,12 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true   // <--- Habilita la clase BuildConfig
+        buildConfig = true
     }
 }
 
 // ----------------------------------------------
-// 3. Dependencias (se mantienen igual)
+// 3. Dependencies
 // ----------------------------------------------
 dependencies {
     implementation(libs.androidx.core.ktx)

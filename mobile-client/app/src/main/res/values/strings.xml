@@ -44,4 +44,14 @@
     <string name="my_bookings">My Bookings</string>
     <string name="no_tours_available">No tours available at the moment.</string>
     <string name="search_placeholder">Search for a destination...</string>
+
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Live Stream</string>
+    <string name="connection_status_good">Connection: Good</string>
+    <string name="connection_status_poor">Connection: Poor</string>
+    <string name="control_up">UP</string>
+    <string name="control_down">DOWN</string>
+    <string name="control_left">LEFT</string>
+    <string name="control_right">RIGHT</string>
+    <string name="end_session">End Session</string>
 </resources>
