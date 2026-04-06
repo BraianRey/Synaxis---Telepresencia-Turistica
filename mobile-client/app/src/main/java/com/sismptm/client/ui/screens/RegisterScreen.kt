@@ -42,7 +42,7 @@ fun RegisterScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading
 
-    // Navegar al home cuando el registro sea exitoso
+    // Navigate to home when registration is successful
     LaunchedEffect(uiState) {
         if (uiState is RegisterViewModel.RegisterUiState.Success) {
             onRegisterSuccess()
@@ -182,7 +182,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Mostrar error si la llamada al backend falla
+        // Show error if backend call fails
         if (uiState is RegisterViewModel.RegisterUiState.Error) {
             val errorMsg = (uiState as RegisterViewModel.RegisterUiState.Error).message
             Card(

@@ -2,6 +2,7 @@ package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +56,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.sismptm.client.R
 import com.sismptm.client.ui.theme.AvailableBadgeBg
 import com.sismptm.client.ui.theme.AvailableBadgeText
 import com.sismptm.client.ui.theme.Background
@@ -100,6 +104,8 @@ fun PartnerSearchScreen(
     onCancelSearch: () -> Unit = {},
     onRequestTour: () -> Unit = {}
 ) {
+    BackHandler { onCancelSearch() }
+
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(filterOptions.first()) }
 
@@ -141,16 +147,23 @@ fun PartnerSearchScreen(
                         modifier = Modifier.weight(1f),
                         placeholder = { Text("Bogotá, Colombia", color = TextSecondary, fontSize = 14.sp) },
                         leadingIcon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = TextPrimary,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .clickable { onCancelSearch() }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         },
                         trailingIcon = {
                             Text(
-                                text = "Cancel",
+                                text = stringResource(R.string.search_cancel),
                                 color = PrimaryAccent,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(end = 16.dp)
@@ -255,12 +268,12 @@ fun PartnerSearchScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${filteredPartners.size} partners found",
+                        text = stringResource(R.string.search_partners_found, filteredPartners.size),
                         color = TextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "Sort by",
+                        text = stringResource(R.string.search_sort_by),
                         color = PrimaryAccent,
                         fontSize = 13.sp
                     )
@@ -380,7 +393,7 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                     Spacer(modifier = Modifier.height(4.dp))
                     // Response time
                     Text(
-                        text = "Response time: ${partner.responseTime}",
+                        text = stringResource(R.string.search_response_time, partner.responseTime),
                         fontSize = 11.sp,
                         color = TextSecondary
                     )
@@ -394,7 +407,7 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "Available",
+                            text = stringResource(R.string.search_available),
                             color = AvailableBadgeText,
                             fontSize = 11.sp
                         )
@@ -411,7 +424,7 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "Request Tour",
+                    text = stringResource(R.string.search_request_tour),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
