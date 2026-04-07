@@ -1,15 +1,18 @@
 package com.sismptm.client.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.sismptm.client.ui.screens.HomeScreen
 import com.sismptm.client.ui.screens.LoginScreen
 import com.sismptm.client.ui.screens.PartnerSearchScreen
 import com.sismptm.client.ui.screens.RegisterScreen
 import com.sismptm.client.ui.screens.RequestScreen
 import com.sismptm.client.ui.screens.ServiceDetailScreen
+import com.sismptm.client.ui.screens.ServiceWaitingScreen
 import com.sismptm.client.ui.screens.StreamingScreen
 import com.sismptm.client.ui.screens.WelcomeScreen
 
@@ -25,6 +28,9 @@ sealed class Screen(val route: String) {
     object PartnerSearch : Screen("partner_search")
     object Solicitud : Screen("solicitud")
     object ServiceDetail : Screen("service_detail")
+    object ServiceWaiting : Screen("service_waiting/{serviceId}") {
+        fun createRoute(serviceId: Long): String = "service_waiting/$serviceId"
+    }
     object Streaming : Screen("streaming")
 }
 
@@ -110,8 +116,26 @@ fun NavGraph() {
 
         composable(Screen.Solicitud.route) {
             RequestScreen(
-                onViewDetails = { navController.navigate(Screen.ServiceDetail.route) },
+                onViewDetails = { serviceId ->
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
+                },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.ServiceWaiting.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+            ServiceWaitingScreen(
+                serviceId = serviceId,
+                onBackHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

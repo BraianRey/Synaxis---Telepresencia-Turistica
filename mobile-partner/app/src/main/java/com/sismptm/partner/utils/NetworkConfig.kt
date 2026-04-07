@@ -1,10 +1,9 @@
 package com.sismptm.partner.utils
-import com.sismptm.partner.BuildConfig
 
 object NetworkConfig {
-    // BuildConfig se genera automáticamente al compilar el proyecto, y contiene las constantes definidas en el archivo build.gradle
-    const val BASE_URL = BuildConfig.BASE_URL_API
-    const val CONNECT_TIMEOUT = 30L
-    const val READ_TIMEOUT = 30L
-    const val WRITE_TIMEOUT = 30L
+    // Usar configuración de ambiente para emulador/dispositivo físico.
+    val BASE_URL: String = EnvironmentConfig.BACKEND_URL
+    const val CONNECT_TIMEOUT = 60L
+    const val READ_TIMEOUT = 60L
+    const val WRITE_TIMEOUT = 60L
 }

@@ -9,6 +9,8 @@ public record ServiceResponse(
 
         Long clientId,
 
+        String clientName,
+
         Long partnerId,
 
         Long areaId,
@@ -30,11 +32,13 @@ public record ServiceResponse(
         LocalDateTime endedAt
 
 ) {
-    public ServiceResponse(Long serviceId, Long clientId, Long partnerId, Long areaId, String startLocationDescription,
+    public ServiceResponse(Long serviceId, Long clientId, String clientName, Long partnerId, Long areaId,
+            String startLocationDescription,
             Integer agreedHours, BigDecimal hourlyRate, String status, LocalDateTime requestedAt,
             LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.serviceId = serviceId;
         this.clientId = clientId;
+        this.clientName = clientName;
         this.partnerId = partnerId;
         this.areaId = areaId;
         this.startLocationDescription = startLocationDescription;
