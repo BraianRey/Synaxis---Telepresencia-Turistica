@@ -61,4 +61,14 @@
     <string name="search_response_time">Tiempo de respuesta: %1$s</string>
     <string name="search_available">Disponible</string>
     <string name="search_request_tour">Solicitar recorrido</string>
+
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Transmisión en Vivo</string>
+    <string name="connection_status_good">Conexión: Buena</string>
+    <string name="connection_status_poor">Conexión: Débil</string>
+    <string name="control_up">ARRIBA</string>
+    <string name="control_down">ABAJO</string>
+    <string name="control_left">IZQUIERDA</string>
+    <string name="control_right">DERECHA</string>
+    <string name="end_session">Finalizar Sesión</string>
 </resources>

@@ -13,6 +13,7 @@ import com.sismptm.client.ui.screens.RegisterScreen
 import com.sismptm.client.ui.screens.RequestScreen
 import com.sismptm.client.ui.screens.ServiceDetailScreen
 import com.sismptm.client.ui.screens.ServiceWaitingScreen
+import com.sismptm.client.ui.screens.StreamingScreen
 import com.sismptm.client.ui.screens.WelcomeScreen
 
 /**
@@ -30,13 +31,13 @@ sealed class Screen(val route: String) {
     object ServiceWaiting : Screen("service_waiting/{serviceId}") {
         fun createRoute(serviceId: Long): String = "service_waiting/$serviceId"
     }
+    object Streaming : Screen("streaming")
 }
 
 /**
  * Main navigation graph composable for the mobile-client application.
  * Defines the navigation structure and relationships between all screens.
- * Manages the NavController and handles navigation between Welcome, Login, Register,
- * Home, PartnerSearch, Solicitud, and ServiceDetail screens.
+ * Manages the NavController and handles navigation between all application screens.
  */
 @Composable
 fun NavGraph() {
@@ -57,6 +58,9 @@ fun NavGraph() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
+                },
+                onNavigateToStreaming = {
+                    navController.navigate(Screen.Streaming.route)
                 }
             )
         }
@@ -138,6 +142,12 @@ fun NavGraph() {
         composable(Screen.ServiceDetail.route) {
             ServiceDetailScreen(
                 onConfirm = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Streaming.route) {
+            StreamingScreen(
                 onBack = { navController.popBackStack() }
             )
         }

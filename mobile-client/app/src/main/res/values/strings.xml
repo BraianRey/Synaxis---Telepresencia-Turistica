@@ -64,4 +64,14 @@
     <string name="search_response_time">Response time: %1$s</string>
     <string name="search_available">Available</string>
     <string name="search_request_tour">Request Tour</string>
+
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Live Stream</string>
+    <string name="connection_status_good">Connection: Good</string>
+    <string name="connection_status_poor">Connection: Poor</string>
+    <string name="control_up">UP</string>
+    <string name="control_down">DOWN</string>
+    <string name="control_left">LEFT</string>
+    <string name="control_right">RIGHT</string>
+    <string name="end_session">End Session</string>
 </resources>
