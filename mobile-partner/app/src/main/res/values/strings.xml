@@ -49,4 +49,16 @@
 
     <!-- Actions -->
     <string name="send_location">Send Current Location</string>
+
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Live Streaming</string>
+    <string name="debug_streaming">Debug Streaming</string>
+    <string name="connection_quality">Connection Quality</string>
+    <string name="instruction_up">FORWARD</string>
+    <string name="instruction_down">BACKWARD</string>
+    <string name="instruction_left">LEFT</string>
+    <string name="instruction_right">RIGHT</string>
+    <string name="waiting_instructions">Waiting for instructions...</string>
+    <string name="camera_mic_permission_required">Camera &amp; Microphone Required</string>
+    <string name="camera_mic_permission_explanation">This app requires camera and microphone access to start streaming. Please enable them to continue.</string>
 </resources>

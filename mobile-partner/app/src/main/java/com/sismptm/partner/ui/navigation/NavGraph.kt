@@ -9,6 +9,7 @@ import com.sismptm.partner.ui.screens.LoginScreen
 import com.sismptm.partner.ui.screens.RegisterScreen
 import com.sismptm.partner.ui.screens.RequestDetailScreen
 import com.sismptm.partner.ui.screens.ServiceDetailScreen
+import com.sismptm.partner.ui.screens.StreamingScreen
 
 /**
  * Sealed class representing all navigation routes in the mobile-partner application.
@@ -20,13 +21,14 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object SolicitudDetail : Screen("solicitud_detail")
     object ServicioDetail : Screen("servicio_detail")
+    object Streaming : Screen("streaming")
 }
 
 /**
  * Main navigation graph composable for the mobile-partner application.
  * Defines the navigation structure and relationships between all screens.
  * Manages the NavController and handles navigation between Login, Register, Home,
- * SolicitudDetail, and ServicioDetail screens.
+ * SolicitudDetail, ServicioDetail, and Streaming screens.
  */
 @Composable
 fun PartnerNavGraph() {
@@ -45,6 +47,9 @@ fun PartnerNavGraph() {
                 },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
+                },
+                onNavigateToStreaming = {
+                    navController.navigate(Screen.Streaming.route)
                 }
             )
         }
@@ -84,6 +89,12 @@ fun PartnerNavGraph() {
         composable(Screen.ServicioDetail.route) {
             ServiceDetailScreen(
                 onComplete = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Streaming.route) {
+            StreamingScreen(
                 onBack = { navController.popBackStack() }
             )
         }
