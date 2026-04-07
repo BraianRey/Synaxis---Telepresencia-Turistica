@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ApiService {
 
@@ -26,6 +27,18 @@ interface ApiService {
     /** GET /api/users/me */
     @GET("api/users/me")
     suspend fun getMyProfile(): UserProfileResponse
+
+    /** GET /api/services/client/{clientId} - requires CLIENT token */
+    @GET("api/services/client/{clientId}")
+    suspend fun getServicesByClient(@Path("clientId") clientId: Long): Response<List<ServiceResponse>>
+
+    /** GET /api/services/{serviceId} - requires CLIENT/PARTNER token */
+    @GET("api/services/{serviceId}")
+    suspend fun getServiceById(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    /** POST /api/services/{serviceId}/cancel - requires CLIENT token */
+    @POST("api/services/{serviceId}/cancel")
+    suspend fun cancelService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 }
 
 // -- Auth DTOs -----------------------------------------------------------------

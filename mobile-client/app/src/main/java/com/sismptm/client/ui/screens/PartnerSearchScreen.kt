@@ -83,20 +83,20 @@ private data class PartnerUi(
 )
 
 private val demoPartners = listOf(
-    PartnerUi("1", "Sofia Garcia", "Lima, Peru", 4.9, 127, listOf("🎥 Live tours", "🏛 Historic", "⏱ ~45 min"), "2 min", true),
-    PartnerUi("2", "Miguel Torres", "Madrid, Spain", 4.7, 89, listOf("🎥 Live tours", "🏛 Historic"), "5 min", false),
-    PartnerUi("3", "Ava Thompson", "London, UK", 4.5, 56, listOf("🎥 Live tours", "⏱ ~30 min"), "10 min", true),
-    PartnerUi("4", "Daniel Kim", "Seoul, South Korea", 4.8, 203, listOf("🎥 Live tours", "🏛 Historic", "⏱ ~60 min"), "3 min", true)
+    PartnerUi("1", "Sofia Garcia", "Popayan, Colombia", 4.9, 127, listOf("🎥 Live tours", "🏛 Historic", "⏱ ~45 min"), "2 min", true),
+    PartnerUi("2", "Miguel Torres", "Cali, Colombia", 4.7, 89, listOf("🎥 Live tours", "🏛 Historic"), "5 min", false),
+    PartnerUi("3", "Brayan Meneses", "Medellin, Colombia", 4.5, 56, listOf("🎥 Live tours", "⏱ ~30 min"), "10 min", true),
+    PartnerUi("4", "Samuel De Luque", "Bogota, Colombia", 4.8, 203, listOf("🎥 Live tours", "🏛 Historic", "⏱ ~60 min"), "3 min", true)
 )
 
-private val filterOptions = listOf("All", "Available now", "Top rated", "Adventure")
+private val filterOptions = listOf("All", "Available now", "Top rated")
 
 /**
  * Screen for searching and displaying available tour partners.
- * Allows users to search by city/location, filter results, and request tours from partners.
+ * Allows users to search by city/location and request tours as a global (unassigned) action.
  *
  * @param onCancelSearch Callback triggered when user navigates back from search.
- * @param onRequestTour Callback triggered when user requests a tour from a partner.
+ * @param onRequestTour Callback triggered when user requests a global tour.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +123,6 @@ fun PartnerSearchScreen(
         when (selectedFilter) {
             "Available now" -> base.filter { it.isAvailable }
             "Top rated" -> base.filter { it.rating >= 4.8 }
-            "Adventure" -> base.filter { it.tags.any { tag -> tag.contains("Adventure") } } // Placeholder
             else -> base
         }
     }
@@ -258,6 +257,25 @@ fun PartnerSearchScreen(
                 }
             }
 
+            item {
+                Button(
+                    onClick = onRequestTour,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                    shape = RoundedCornerShape(14.dp),
+                    contentPadding = PaddingValues(vertical = 10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.search_request_tour),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+            }
+
             // Results header
             item {
                 Row(
@@ -282,7 +300,7 @@ fun PartnerSearchScreen(
 
             // Partner cards
             items(filteredPartners, key = { it.id }) { partner ->
-                PartnerCard(partner = partner, onRequestTour = onRequestTour)
+                PartnerCard(partner = partner)
             }
         }
     }
@@ -295,14 +313,13 @@ private fun String.normalizeSearchToken(): String {
 }
 
 /**
- * Individual partner card component displaying partner information and request button.
- * Shows partner avatar, name, location, rating, response time, and request tour button.
+ * Individual partner card component displaying partner information.
+ * Shows partner avatar, name, location, rating, response time, and tags.
  *
  * @param partner The partner UI model containing partner information.
- * @param onRequestTour Callback triggered when user clicks the "Request Tour" button.
  */
 @Composable
-private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
+private fun PartnerCard(partner: PartnerUi) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -415,21 +432,6 @@ private fun PartnerCard(partner: PartnerUi, onRequestTour: () -> Unit) {
                 }
             }
 
-            // Request Tour button
-            Button(
-                onClick = onRequestTour,
-                modifier = Modifier.align(Alignment.BottomEnd),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                shape = RoundedCornerShape(24.dp),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.search_request_tour),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-            }
         }
     }
 }

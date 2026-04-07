@@ -11,31 +11,40 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.text.Normalizer
 
 /** Maps city names to their backend area IDs. */
 val CITY_AREA_MAP: Map<String, Long> = mapOf(
-    "Popayán"  to 1L,
+    "Popayan"  to 1L,
     "Cali"     to 2L,
-    "Medellín" to 3L,
-    "Bogotá"   to 4L
+    "Medellin" to 3L,
+    "Bogota"   to 4L
 )
 
 /** Returns the area ID for the given city name (case-insensitive, accent-insensitive). */
 fun cityNameToAreaId(cityName: String): Long? {
-    val normalized = cityName.trim().lowercase()
+    val normalized = cityName.normalizeCityToken()
     return CITY_AREA_MAP.entries.firstOrNull {
-        it.key.lowercase() == normalized ||
-        it.key.lowercase().contains(normalized) ||
-        normalized.contains(it.key.lowercase())
+        val cityKey = it.key.normalizeCityToken()
+        cityKey == normalized || cityKey.contains(normalized) || normalized.contains(cityKey)
     }?.value
 }
 
+private fun String.normalizeCityToken(): String {
+    return Normalizer.normalize(trim(), Normalizer.Form.NFD)
+        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+        .lowercase()
+}
+
 class RequestTourViewModel : ViewModel() {
+
+    private val activeStatuses = setOf("REQUESTED", "ACCEPTED", "STARTED")
 
     sealed interface RequestUiState {
         object Idle : RequestUiState
         object Loading : RequestUiState
         data class Success(val service: ServiceResponse) : RequestUiState
+        data class ActiveService(val service: ServiceResponse, val message: String) : RequestUiState
         data class Error(val message: String) : RequestUiState
     }
 
@@ -81,24 +90,57 @@ class RequestTourViewModel : ViewModel() {
                     }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
-                    _uiState.value = RequestUiState.Error(
-                        when (response.code()) {
-                            403 -> "Forbidden (403). Token is valid, but backend denied CLIENT role access."
-                            401 -> "Unauthorized (401). Please log in again."
-                            409 -> parseBackendError(errorBody).ifBlank {
-                                "You already have an active service request."
-                            }
-                            else -> parseBackendError(errorBody).ifBlank {
+                    when (response.code()) {
+                        409 -> resolveActiveServiceConflict(errorBody)
+                        403 -> _uiState.value = RequestUiState.Error(
+                            "Forbidden (403). Token is valid, but backend denied CLIENT role access."
+                        )
+                        401 -> _uiState.value = RequestUiState.Error("Unauthorized (401). Please log in again.")
+                        else -> _uiState.value = RequestUiState.Error(
+                            parseBackendError(errorBody).ifBlank {
                                 "Error ${response.code()}: $errorBody"
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.value = RequestUiState.Error(
                     e.localizedMessage ?: "Connection error"
                 )
             }
+        }
+    }
+
+    private suspend fun resolveActiveServiceConflict(errorBody: String) {
+        val clientId = SessionManager.clientId
+        val conflictMessage = parseBackendError(errorBody).ifBlank {
+            "You already have an active service request."
+        }
+
+        if (clientId == 0L) {
+            _uiState.value = RequestUiState.Error(conflictMessage)
+            return
+        }
+
+        runCatching {
+            RetrofitClient.apiService.getServicesByClient(clientId)
+        }.onSuccess { servicesResponse ->
+            if (!servicesResponse.isSuccessful) {
+                _uiState.value = RequestUiState.Error(conflictMessage)
+                return
+            }
+
+            val activeService = servicesResponse.body()
+                ?.filter { it.status.uppercase() in activeStatuses }
+                ?.maxByOrNull { it.serviceId }
+
+            if (activeService != null) {
+                _uiState.value = RequestUiState.ActiveService(activeService, conflictMessage)
+            } else {
+                _uiState.value = RequestUiState.Error(conflictMessage)
+            }
+        }.onFailure {
+            _uiState.value = RequestUiState.Error(conflictMessage)
         }
     }
 

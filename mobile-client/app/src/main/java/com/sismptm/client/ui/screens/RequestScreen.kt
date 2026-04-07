@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.data.remote.ServiceResponse
 import com.sismptm.client.ui.theme.Background
 import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.DividerBorder
 import com.sismptm.client.ui.theme.PrimaryAccent
 import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
@@ -63,21 +65,22 @@ private data class RequestAreaOption(
 )
 
 private val requestAreaOptions = listOf(
-    RequestAreaOption(1L, "Popayán"),
+    RequestAreaOption(1L, "Popayan"),
     RequestAreaOption(2L, "Cali"),
-    RequestAreaOption(3L, "Medellín"),
-    RequestAreaOption(4L, "Bogotá")
+    RequestAreaOption(3L, "Medellin"),
+    RequestAreaOption(4L, "Bogota")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestScreen(
-    onViewDetails: () -> Unit,
+    onViewDetails: (Long) -> Unit,
     onBack: () -> Unit,
     viewModel: RequestTourViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val successState = uiState as? RequestTourViewModel.RequestUiState.Success
+    val activeServiceState = uiState as? RequestTourViewModel.RequestUiState.ActiveService
     val errorState = uiState as? RequestTourViewModel.RequestUiState.Error
     val isLoading = uiState is RequestTourViewModel.RequestUiState.Loading
 
@@ -94,6 +97,18 @@ fun RequestScreen(
         hourlyRate != null && hourlyRate > 0.0 &&
         !isLoading
 
+    val requestFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = TextPrimary,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextSecondary,
+        unfocusedPlaceholderColor = TextSecondary,
+        cursorColor = PrimaryAccent,
+        focusedBorderColor = PrimaryAccent,
+        unfocusedBorderColor = DividerBorder
+    )
+
     if (successState != null) {
         RequestCreatedDialog(
             service = successState.service,
@@ -102,7 +117,19 @@ fun RequestScreen(
             onDismiss = { viewModel.resetState() },
             onConfirm = {
                 viewModel.resetState()
-                onViewDetails()
+                onViewDetails(successState.service.serviceId)
+            }
+        )
+    }
+
+    if (activeServiceState != null) {
+        ActiveServiceDialog(
+            service = activeServiceState.service,
+            message = activeServiceState.message,
+            onDismiss = { viewModel.resetState() },
+            onConfirm = {
+                viewModel.resetState()
+                onViewDetails(activeServiceState.service.serviceId)
             }
         )
     }
@@ -178,7 +205,8 @@ fun RequestScreen(
                             modifier = Modifier
                                 .menuAnchor()
                                 .fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = requestFieldColors
                         )
                         DropdownMenu(
                             expanded = areaExpanded,
@@ -205,7 +233,8 @@ fun RequestScreen(
                         placeholder = { Text("Example: 2") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = requestFieldColors
                     )
 
                     OutlinedTextField(
@@ -220,7 +249,8 @@ fun RequestScreen(
                         placeholder = { Text("Example: 45000") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = requestFieldColors
                     )
 
                     OutlinedTextField(
@@ -230,7 +260,8 @@ fun RequestScreen(
                         placeholder = { Text("Optional: Historic center, plaza, museum entrance...") },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = requestFieldColors
                     )
                 }
             }
@@ -362,6 +393,37 @@ private fun RequestCreatedDialog(
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text("Done")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Stay here")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ActiveServiceDialog(
+    service: ServiceResponse,
+    message: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("You already have an active request") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(message)
+                Text("Service ID: ${service.serviceId}")
+                Text("Status: ${service.status}")
+                Text("Open the waiting screen to track or cancel this request.")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Go to waiting screen")
             }
         },
         dismissButton = {
