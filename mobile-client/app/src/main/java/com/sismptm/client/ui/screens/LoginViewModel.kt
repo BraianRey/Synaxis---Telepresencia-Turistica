@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.data.remote.LoginRequest
 import com.sismptm.client.data.remote.RetrofitClient
+import com.sismptm.client.data.remote.TokenManager
+import com.sismptm.client.utils.NetworkConfig
 import com.sismptm.client.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,14 +33,18 @@ class LoginViewModel : ViewModel() {
                     LoginRequest(email = email.trim(), password = password)
                 )
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
+                    response.body()?.let { loginResponse ->
                         SessionManager.saveSession(
-                            token = body.accessToken,
-                            id = body.id,
-                            name = body.name,
-                            email = body.email,
-                            role = body.role
+                            token = loginResponse.accessToken,
+                            id = loginResponse.id,
+                            name = loginResponse.name,
+                            email = loginResponse.email,
+                            role = loginResponse.role
+                        )
+                        TokenManager.saveSession(
+                            token = loginResponse.accessToken,
+                            name = loginResponse.name,
+                            id = loginResponse.id
                         )
                     }
                     _uiState.value = LoginUiState.Success
@@ -65,11 +71,16 @@ class LoginViewModel : ViewModel() {
         return if (code == 401) "Invalid credentials." else "Server error. Please try again."
     }
 
-    private fun parseConnectionError(exception: Exception): String = when {
-        exception.message?.contains("failed to connect") == true ->
-            "Connection failed. Is the backend running?"
-        exception.message?.contains("timeout") == true ->
-            "Connection timeout. Check your network."
-        else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
+    private fun parseConnectionError(exception: Exception): String {
+        val backendUrl = NetworkConfig.BASE_URL
+        return when {
+            exception.message?.contains("failed to connect", ignoreCase = true) == true ->
+                "Connection failed to $backendUrl. Is the backend running?"
+            exception.message?.contains("timeout", ignoreCase = true) == true ->
+                "Connection timeout to $backendUrl. Check your network."
+            exception.message?.contains("connection refused", ignoreCase = true) == true ->
+                "Connection refused by $backendUrl. Is the backend running?"
+            else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
+        }
     }
 }

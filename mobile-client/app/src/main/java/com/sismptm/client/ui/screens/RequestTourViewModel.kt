@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.data.remote.CreateServiceRequest
 import com.sismptm.client.data.remote.RetrofitClient
+import com.sismptm.client.data.remote.ServiceResponse
 import com.sismptm.client.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 /** Maps city names to their backend area IDs. */
 val CITY_AREA_MAP: Map<String, Long> = mapOf(
@@ -33,7 +35,7 @@ class RequestTourViewModel : ViewModel() {
     sealed interface RequestUiState {
         object Idle : RequestUiState
         object Loading : RequestUiState
-        object Success : RequestUiState
+        data class Success(val service: ServiceResponse) : RequestUiState
         data class Error(val message: String) : RequestUiState
     }
 
@@ -64,7 +66,6 @@ class RequestTourViewModel : ViewModel() {
             _uiState.value = RequestUiState.Loading
             try {
                 val request = CreateServiceRequest(
-                    clientId = clientId,
                     areaId = areaId,
                     startLocationDescription = locationDescription?.ifBlank { null },
                     agreedHours = agreedHours,
@@ -72,14 +73,24 @@ class RequestTourViewModel : ViewModel() {
                 )
                 val response = RetrofitClient.apiService.createService(request)
                 if (response.isSuccessful) {
-                    _uiState.value = RequestUiState.Success
+                    val service = response.body()
+                    if (service != null) {
+                        _uiState.value = RequestUiState.Success(service)
+                    } else {
+                        _uiState.value = RequestUiState.Error("Server returned an empty response.")
+                    }
                 } else {
                     val errorBody = response.errorBody()?.string().orEmpty()
                     _uiState.value = RequestUiState.Error(
                         when (response.code()) {
                             403 -> "Forbidden (403). Token is valid, but backend denied CLIENT role access."
                             401 -> "Unauthorized (401). Please log in again."
-                            else -> "Error ${response.code()}: $errorBody"
+                            409 -> parseBackendError(errorBody).ifBlank {
+                                "You already have an active service request."
+                            }
+                            else -> parseBackendError(errorBody).ifBlank {
+                                "Error ${response.code()}: $errorBody"
+                            }
                         }
                     )
                 }
@@ -94,4 +105,8 @@ class RequestTourViewModel : ViewModel() {
     fun resetState() {
         _uiState.value = RequestUiState.Idle
     }
+
+    private fun parseBackendError(body: String): String = runCatching {
+        if (body.isBlank()) "" else JSONObject(body).optString("error", "")
+    }.getOrDefault("")
 }

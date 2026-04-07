@@ -2,8 +2,10 @@ package com.synexis.management_service.exception;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -31,14 +33,14 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", ex.getMessage()));
     }
 
-    /** Duplicate email on register → {@code 409} with {@code {"error":"..."}}. */
+    /** Duplicate email on register -> {@code 409} with {@code {"error":"..."}}. */
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, String>> handleDuplicateEmail(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
     }
 
     /**
-     * Keycloak user creation failures → {@code 500} with {@code {"error":"..."}}.
+     * Keycloak user creation failures -> {@code 500} with {@code {"error":"..."}}.
      */
     @ExceptionHandler(KeycloakUserCreationException.class)
     public ResponseEntity<Map<String, String>> handleKeycloakUserCreation(KeycloakUserCreationException ex) {
@@ -46,7 +48,7 @@ public class RestExceptionHandler {
     }
 
     /**
-     * Bean Validation failures (bad email, short password, etc.) → {@code 400} with
+     * Bean Validation failures (bad email, short password, etc.) -> {@code 400} with
      * a joined field error message.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -57,9 +59,32 @@ public class RestExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("error", message));
     }
 
-    /** Resource not found → {@code 404} with {@code {"error":"..."}}. */
+    /** Resource not found -> {@code 404} with {@code {"error":"..."}}. */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    }
+
+    /**
+     * Business rule violations (invalid state transitions, unavailable partner,
+     * etc.) -> {@code 409 CONFLICT}.
+     */
+    @ExceptionHandler(BusinessRuleViolationException.class)
+    public ResponseEntity<Map<String, String>> handleBusinessRuleViolation(BusinessRuleViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenAccessException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
+    }
+
+    /**
+     * Concurrent update (e.g. two partners racing to accept) -> retry or refresh.
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, String>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", "Resource was modified by another request; please retry"));
     }
 }

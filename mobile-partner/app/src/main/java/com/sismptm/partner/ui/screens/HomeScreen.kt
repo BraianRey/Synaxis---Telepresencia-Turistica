@@ -94,6 +94,8 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
 
     val requestsState by homeViewModel.requestsState.collectAsState()
     val acceptedTour by homeViewModel.acceptedTour.collectAsState()
+    val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
+    val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
 
     // Load requests when areaId becomes set
     LaunchedEffect(SessionManager.areaId) {
@@ -114,6 +116,19 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
         AcceptedTourDialog(
             service = acceptedTour!!,
             onDismiss = { homeViewModel.clearAcceptedTour() }
+        )
+    }
+
+    if (acceptErrorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { homeViewModel.clearAcceptError() },
+            title = { Text("Could not accept request") },
+            text = { Text(acceptErrorMessage!!) },
+            confirmButton = {
+                TextButton(onClick = { homeViewModel.clearAcceptError() }) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
         )
     }
 
@@ -158,6 +173,8 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
                         items(state.requests, key = { it.serviceId }) { service ->
                             ServiceRequestCard(
                                 service = service,
+                                isAccepting = acceptingServiceId == service.serviceId,
+                                acceptEnabled = acceptingServiceId == null || acceptingServiceId == service.serviceId,
                                 onAccept = { homeViewModel.acceptTour(service) }
                             )
                         }
@@ -228,7 +245,12 @@ private fun AreaSelectorDialog(onAreaSelected: (Long) -> Unit) {
 }
 
 @Composable
-private fun ServiceRequestCard(service: ServiceResponse, onAccept: () -> Unit) {
+private fun ServiceRequestCard(
+    service: ServiceResponse,
+    isAccepting: Boolean,
+    acceptEnabled: Boolean,
+    onAccept: () -> Unit
+) {
     val areaName = AREA_NAMES[service.areaId] ?: "Area ${service.areaId}"
     val location = service.startLocationDescription?.ifBlank { areaName } ?: areaName
     val duration = "${service.agreedHours}h"
@@ -242,7 +264,9 @@ private fun ServiceRequestCard(service: ServiceResponse, onAccept: () -> Unit) {
         duration = duration,
         price = price,
         onDecline = { /* TODO: decline endpoint */ },
-        onAccept = onAccept
+        onAccept = onAccept,
+        isAccepting = isAccepting,
+        acceptEnabled = acceptEnabled
     )
 }
 

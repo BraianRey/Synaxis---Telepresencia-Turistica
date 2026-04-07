@@ -1,10 +1,15 @@
 package com.sismptm.client.utils
 
+import com.sismptm.client.BuildConfig
+
 object NetworkConfig {
-    // Si usas el emulador de Android, 10.0.2.2 apunta al localhost de tu máquina host.
-    // El backend corre en el puerto 8080 (ver application.yaml)
-    const val BASE_URL = "http://10.0.2.2:8080/"
-    const val CONNECT_TIMEOUT = 60L
-    const val READ_TIMEOUT = 60L
-    const val WRITE_TIMEOUT = 60L
+    private const val LOCAL_EMULATOR_URL = "http://10.0.2.2:8080/"
+
+    // Usa BASE_URL_API si viene configurada; en local cae a localhost del emulador.
+    val BASE_URL: String = BuildConfig.BASE_URL_API.takeIf { it.isNotBlank() } ?: LOCAL_EMULATOR_URL
+    val KEYCLOAK_URL: String = BuildConfig.BASE_URL_KEYCLOAK
+
+    const val CONNECT_TIMEOUT = 30L
+    const val READ_TIMEOUT = 30L
+    const val WRITE_TIMEOUT = 30L
 }

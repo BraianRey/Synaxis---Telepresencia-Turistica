@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
+import androidx.compose.ui.platform.LocalContext
 import com.sismptm.partner.location.LocationService
 
 /**

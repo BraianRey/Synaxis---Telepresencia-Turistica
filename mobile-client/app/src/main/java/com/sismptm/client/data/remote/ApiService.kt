@@ -2,6 +2,7 @@ package com.sismptm.client.data.remote
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface ApiService {
@@ -14,12 +15,20 @@ interface ApiService {
     @POST("api/auth/client/login")
     suspend fun loginClient(@Body request: LoginRequest): Response<LoginResponse>
 
-    /** POST /api/services/create  — requires CLIENT token */
+    /** POST /api/services/create  - requires CLIENT token */
     @POST("api/services/create")
     suspend fun createService(@Body request: CreateServiceRequest): Response<ServiceResponse>
+
+    /** GET /api/clients/profile */
+    @GET("api/clients/profile")
+    suspend fun getUserProfile(): UserProfileResponse
+
+    /** GET /api/users/me */
+    @GET("api/users/me")
+    suspend fun getMyProfile(): UserProfileResponse
 }
 
-// ── Auth DTOs ────────────────────────────────────────────────────────────────
+// -- Auth DTOs -----------------------------------------------------------------
 data class LoginRequest(val email: String, val password: String)
 
 data class LoginResponse(
@@ -33,16 +42,17 @@ data class LoginResponse(
     val role: String
 )
 
-// ── Register DTOs ─────────────────────────────────────────────────────────────
+// Request DTO (mirrors RegisterClientRequest from backend)
 data class RegisterClientRequest(
     val email: String,
     val password: String,
     val name: String,
     val termsAccepted: Boolean,
-    val language: String,        // "en" | "es"
+    val language: String,
     val picDirectory: String? = null
 )
 
+// Response DTO (mirrors RegisterClientResponse from backend)
 data class RegisterClientResponse(
     val id: Long,
     val email: String,
@@ -55,9 +65,8 @@ data class RegisterClientResponse(
     val role: String
 )
 
-// ── Service DTOs ──────────────────────────────────────────────────────────────
+// -- Service DTOs --------------------------------------------------------------
 data class CreateServiceRequest(
-    val clientId: Long,
     val areaId: Long,
     val startLocationDescription: String?,
     val agreedHours: Int,
@@ -67,6 +76,7 @@ data class CreateServiceRequest(
 data class ServiceResponse(
     val serviceId: Long,
     val clientId: Long,
+    val clientName: String? = null,
     val partnerId: Long?,
     val areaId: Long,
     val startLocationDescription: String?,
@@ -79,3 +89,12 @@ data class ServiceResponse(
     val endedAt: String?
 )
 
+data class UserProfileResponse(
+    val id: Int,
+    val name: String,
+    val email: String,
+    val status: String,
+    val language: String,
+    val role: String,
+    val picDirectory: String?
+)

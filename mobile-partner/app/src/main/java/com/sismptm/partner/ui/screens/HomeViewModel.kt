@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class HomeViewModel : ViewModel() {
 
@@ -25,6 +26,12 @@ class HomeViewModel : ViewModel() {
     private val _acceptedTour = MutableStateFlow<ServiceResponse?>(null)
     val acceptedTour: StateFlow<ServiceResponse?> = _acceptedTour.asStateFlow()
 
+    private val _acceptingServiceId = MutableStateFlow<Long?>(null)
+    val acceptingServiceId: StateFlow<Long?> = _acceptingServiceId.asStateFlow()
+
+    private val _acceptErrorMessage = MutableStateFlow<String?>(null)
+    val acceptErrorMessage: StateFlow<String?> = _acceptErrorMessage.asStateFlow()
+
     /** Load available (unassigned) service requests for the partner's area. */
     fun loadAvailableRequests() {
         val areaId = SessionManager.areaId
@@ -39,7 +46,9 @@ class HomeViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     _requestsState.value = RequestsUiState.Success(response.body() ?: emptyList())
                 } else {
-                    _requestsState.value = RequestsUiState.Error("Error ${response.code()}")
+                    _requestsState.value = RequestsUiState.Error(
+                        parseBackendError(response.code(), response.errorBody()?.string())
+                    )
                 }
             } catch (e: Exception) {
                 _requestsState.value = RequestsUiState.Error(
@@ -49,22 +58,56 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Local accept flow (no backend endpoint yet):
-     * - removes accepted request from inbox
-     * - exposes accepted request details to show confirmation dialog
-     */
     fun acceptTour(service: ServiceResponse) {
-        val current = _requestsState.value
-        if (current is RequestsUiState.Success) {
-            _requestsState.value = current.copy(
-                requests = current.requests.filterNot { it.serviceId == service.serviceId }
-            )
+        viewModelScope.launch {
+            _acceptingServiceId.value = service.serviceId
+            _acceptErrorMessage.value = null
+            try {
+                val response = RetrofitClient.apiService.acceptService(service.serviceId)
+                if (response.isSuccessful) {
+                    val acceptedService = response.body() ?: service.copy(status = "ACCEPTED")
+                    val current = _requestsState.value
+                    if (current is RequestsUiState.Success) {
+                        _requestsState.value = current.copy(
+                            requests = current.requests.filterNot { it.serviceId == service.serviceId }
+                        )
+                    }
+                    _acceptedTour.value = acceptedService
+                } else {
+                    _acceptErrorMessage.value = parseBackendError(
+                        response.code(),
+                        response.errorBody()?.string()
+                    )
+                }
+            } catch (e: Exception) {
+                _acceptErrorMessage.value = e.localizedMessage ?: "Connection error"
+            } finally {
+                _acceptingServiceId.value = null
+            }
         }
-        _acceptedTour.value = service
     }
 
     fun clearAcceptedTour() {
         _acceptedTour.value = null
+    }
+
+    fun clearAcceptError() {
+        _acceptErrorMessage.value = null
+    }
+
+    private fun parseBackendError(code: Int, body: String?): String {
+        val backendMessage = runCatching {
+            if (body.isNullOrBlank()) "" else JSONObject(body).optString("error", "")
+        }.getOrDefault("")
+
+        if (backendMessage.isNotBlank()) return backendMessage
+
+        return when (code) {
+            401 -> "Unauthorized. Please log in again."
+            403 -> "You do not have permission to perform this action."
+            404 -> "Service request not found."
+            409 -> "This request is no longer available. Refresh the list and try again."
+            else -> "Server error ($code). Please try again."
+        }
     }
 }

@@ -10,8 +10,9 @@ class AuthInterceptor : Interceptor {
             .addHeader("Accept", "application/json")
             .addHeader("Content-Type", "application/json")
 
-        val token = SessionManager.accessToken
-        if (token.isNotEmpty()) {
+        // Preferimos la sesión de Sprint 2 y usamos TokenManager como fallback.
+        val token = SessionManager.accessToken.ifBlank { TokenManager.getAccessToken() }
+        if (token.isNotBlank()) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }
 

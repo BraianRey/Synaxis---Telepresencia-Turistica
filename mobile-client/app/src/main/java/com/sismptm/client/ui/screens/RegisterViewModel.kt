@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.data.remote.RegisterClientRequest
 import com.sismptm.client.data.remote.RetrofitClient
+import com.sismptm.client.utils.NetworkConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,20 +67,21 @@ class RegisterViewModel : ViewModel() {
 
     private fun parseErrorMessage(code: Int, body: String?): String = when (code) {
         409  -> "Email already registered."
-        400  -> "Invalid data. Check all fields."
-        else -> "Server error ($code). Please try again."
+        400  -> body?.takeIf { it.isNotBlank() } ?: "Invalid data. Check all fields."
+        else -> body?.takeIf { it.isNotBlank() } ?: "Server error ($code). Please try again."
     }
 
     private fun parseErrorMessage(exception: Exception): String {
+        val backendUrl = NetworkConfig.BASE_URL
         return when {
-            exception.message?.contains("failed to connect") == true -> {
-                "No se pudo conectar. Backend debe estar en http://10.0.2.2:8080"
+            exception.message?.contains("failed to connect", ignoreCase = true) == true -> {
+                "No se pudo conectar al backend en $backendUrl"
             }
-            exception.message?.contains("timeout") == true -> {
-                "Tiempo de conexión agotado. Verifica tu red."
+            exception.message?.contains("timeout", ignoreCase = true) == true -> {
+                "Tiempo de conexión agotado hacia $backendUrl. Verifica tu red."
             }
-            exception.message?.contains("Connection refused") == true -> {
-                "Backend rechazó la conexión. ¿Está corriendo?"
+            exception.message?.contains("Connection refused", ignoreCase = true) == true -> {
+                "El backend rechazó la conexión en $backendUrl. ¿Está corriendo?"
             }
             else -> {
                 "Error: ${exception.localizedMessage ?: "Error desconocido"}"
@@ -87,5 +89,3 @@ class RegisterViewModel : ViewModel() {
         }
     }
 }
-
-

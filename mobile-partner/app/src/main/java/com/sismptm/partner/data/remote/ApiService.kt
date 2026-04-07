@@ -26,6 +26,10 @@ interface ApiService {
     /** GET /api/services/available/{areaId}  — requires PARTNER token */
     @GET("api/services/available/{areaId}")
     suspend fun getServicesAvailableByAreaId(@Path("areaId") areaId: Long): Response<List<ServiceResponse>>
+
+    /** POST /api/services/{serviceId}/accept  — requires PARTNER token */
+    @POST("api/services/{serviceId}/accept")
+    suspend fun acceptService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 }
 
 // ── Auth DTOs ─────────────────────────────────────────────────────────────────
