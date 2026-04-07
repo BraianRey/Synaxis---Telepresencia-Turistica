@@ -30,5 +30,3 @@ backend-management-service/data/
 backend-management-service/docs/
 
 .idea/
-backend-management-service/mvnw
-mobile-client/gradlew
