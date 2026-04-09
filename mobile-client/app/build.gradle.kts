@@ -78,6 +78,9 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
 
+    // WebRTC
+    implementation(libs.webrtc)
+
     // ViewModel
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.viewmodel.ktx)

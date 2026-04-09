@@ -66,6 +66,9 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
+    // WebRTC
+    implementation(libs.webrtc)
+
     // Retrofit
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

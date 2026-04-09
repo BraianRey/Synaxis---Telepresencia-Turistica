@@ -5,36 +5,86 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
+/**
+ * Interface defining the API endpoints for authentication, registration, and WebRTC signaling.
+ */
 interface ApiService {
 
-    /** POST /api/clients/register/client */
+    /** 
+     * Registers a new client in the system.
+     * POST /api/clients/register/client 
+     */
     @POST("api/clients/register/client")
     suspend fun registerClient(@Body request: RegisterClientRequest): Response<RegisterClientResponse>
 
-    /** POST /api/auth/client/login */
+    /** 
+     * Authenticates a client and returns session tokens.
+     * POST /api/auth/client/login 
+     */
     @POST("api/auth/client/login")
     suspend fun loginClient(@Body request: LoginRequest): Response<LoginResponse>
 
-    /** GET /api/clients/profile */
+    /** 
+     * Fetches the current user profile data.
+     * GET /api/clients/profile 
+     */
     @GET("api/clients/profile")
     suspend fun getUserProfile(): UserProfileResponse
 
-    /** GET /api/users/me */
+    /** 
+     * Fetches profile data for the authenticated user.
+     * GET /api/users/me 
+     */
     @GET("api/users/me")
     suspend fun getMyProfile(): UserProfileResponse
+
+    /* --- WebRTC Signaling Endpoints --- */
+
+    /**
+     * Sends an ICE Candidate to the peer via the signaling server.
+     */
+    @POST("api/webrtc/ice-candidate")
+    suspend fun sendIceCandidate(@Body candidate: IceCandidateModel): Response<Unit>
+
+    /**
+     * Sends an SDP Offer/Answer to the peer via the signaling server.
+     */
+    @POST("api/webrtc/sdp")
+    suspend fun sendSdp(@Body sdp: SdpModel): Response<Unit>
 }
 
-// Request DTO (mirrors RegisterClientRequest from backend)
+/* --- WebRTC Signaling Data Models --- */
+
+/**
+ * Data model for ICE Candidate exchange.
+ */
+data class IceCandidateModel(
+    val sdpMid: String,
+    val sdpMLineIndex: Int,
+    val sdp: String,
+    val targetUserId: String
+)
+
+/**
+ * Data model for SDP (Offer/Answer) exchange.
+ */
+data class SdpModel(
+    val type: String, // "OFFER" or "ANSWER"
+    val sdp: String,
+    val targetUserId: String
+)
+
+/* --- Auth & Profile Data Models --- */
+
 data class RegisterClientRequest(
     val email: String,
     val password: String,
     val name: String,
     val termsAccepted: Boolean,
-    val language: String,        // "en" | "es"
+    val language: String,
     val picDirectory: String? = null
 )
 
-// Response DTO (mirrors RegisterClientResponse from backend)
 data class RegisterClientResponse(
     val id: Long,
     val email: String,
