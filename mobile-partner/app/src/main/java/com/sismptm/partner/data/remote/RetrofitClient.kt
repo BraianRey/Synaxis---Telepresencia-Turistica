@@ -1,5 +1,6 @@
 package com.sismptm.partner.data.remote
 
+import com.sismptm.partner.utils.EnvironmentConfig
 import com.sismptm.partner.utils.NetworkConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -10,7 +11,11 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (EnvironmentConfig.ENABLE_NETWORK_LOGGING) {
+            HttpLoggingInterceptor.Level.BODY
+        } else {
+            HttpLoggingInterceptor.Level.NONE
+        }
     }
 
     private val authInterceptor = AuthInterceptor()
@@ -21,6 +26,8 @@ object RetrofitClient {
         .connectTimeout(NetworkConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
         .readTimeout(NetworkConfig.READ_TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(NetworkConfig.WRITE_TIMEOUT, TimeUnit.SECONDS)
+        // Agregar reintentos automáticos
+        .retryOnConnectionFailure(true)
         .build()
 
     private val retrofit: Retrofit by lazy {

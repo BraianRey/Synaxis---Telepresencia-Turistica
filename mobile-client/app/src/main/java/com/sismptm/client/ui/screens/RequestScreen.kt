@@ -1,416 +1,435 @@
 package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sismptm.client.ui.theme.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sismptm.client.data.remote.ServiceResponse
+import com.sismptm.client.ui.theme.Background
+import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.DividerBorder
+import com.sismptm.client.ui.theme.PrimaryAccent
+import com.sismptm.client.ui.theme.TextPrimary
+import com.sismptm.client.ui.theme.TextSecondary
 
-/**
- * Screen displaying tour request confirmation and details.
- * Allows users to review their tour request, configure request options,
- * and proceed to view service details.
- *
- * @param onViewDetails Callback triggered when user confirms and views service details.
- * @param onBack Callback triggered when user navigates back.
- */
+private data class RequestAreaOption(
+    val id: Long,
+    val label: String
+)
+
+private val requestAreaOptions = listOf(
+    RequestAreaOption(1L, "Popayan"),
+    RequestAreaOption(2L, "Cali"),
+    RequestAreaOption(3L, "Medellin"),
+    RequestAreaOption(4L, "Bogota")
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestScreen(
-    onViewDetails: () -> Unit,
-    onBack: () -> Unit
+    onViewDetails: (Long) -> Unit,
+    onBack: () -> Unit,
+    viewModel: RequestTourViewModel = viewModel()
 ) {
-    var isDurationEnabled by remember { mutableStateOf(true) }
-    var selectedWhen by remember { mutableStateOf("Now") }
-    var specialInstructions by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+    val successState = uiState as? RequestTourViewModel.RequestUiState.Success
+    val activeServiceState = uiState as? RequestTourViewModel.RequestUiState.ActiveService
+    val errorState = uiState as? RequestTourViewModel.RequestUiState.Error
+    val isLoading = uiState is RequestTourViewModel.RequestUiState.Loading
+
+    var areaExpanded by remember { mutableStateOf(false) }
+    var selectedArea by remember { mutableStateOf<RequestAreaOption?>(null) }
+    var agreedHoursText by remember { mutableStateOf("1") }
+    var hourlyRateText by remember { mutableStateOf("") }
+    var meetingPointText by remember { mutableStateOf("") }
+
+    val agreedHours = agreedHoursText.toIntOrNull()
+    val hourlyRate = hourlyRateText.toDoubleOrNull()
+    val canSubmit = selectedArea != null &&
+        agreedHours != null && agreedHours > 0 &&
+        hourlyRate != null && hourlyRate > 0.0 &&
+        !isLoading
+
+    val requestFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = TextPrimary,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextSecondary,
+        unfocusedPlaceholderColor = TextSecondary,
+        cursorColor = PrimaryAccent,
+        focusedBorderColor = PrimaryAccent,
+        unfocusedBorderColor = DividerBorder
+    )
+
+    if (successState != null) {
+        RequestCreatedDialog(
+            service = successState.service,
+            areaName = requestAreaOptions.firstOrNull { it.id == successState.service.areaId }?.label
+                ?: "Area ${successState.service.areaId}",
+            onDismiss = { viewModel.resetState() },
+            onConfirm = {
+                viewModel.resetState()
+                onViewDetails(successState.service.serviceId)
+            }
+        )
+    }
+
+    if (activeServiceState != null) {
+        ActiveServiceDialog(
+            service = activeServiceState.service,
+            message = activeServiceState.message,
+            onDismiss = { viewModel.resetState() },
+            onConfirm = {
+                viewModel.resetState()
+                onViewDetails(activeServiceState.service.serviceId)
+            }
+        )
+    }
 
     Scaffold(
+        containerColor = Background,
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
-                        text = "Request Tour",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        text = "Create service request",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
                     )
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Background
-                )
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = TextPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
             )
-        },
-        containerColor = Background
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Partner Summary Card
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Avatar
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Partner avatar",
-                        tint = TextSecondary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Details
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Carlos Medina",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Bogotá, Colombia",
-                        fontSize = 13.sp,
-                        color = TextSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        repeat(5) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Star",
-                                tint = StarColor,
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "4.9",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
-                        )
-                    }
-                }
-
-                // Available badge
-                Box(
-                    modifier = Modifier
-                        .background(AvailableBadgeBg, RoundedCornerShape(20.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "Available",
-                        color = AvailableBadgeText,
-                        fontSize = 11.sp
-                    )
-                }
-            }
-
-            // Tour Details
-            Text(
-                text = "Tour Details",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = CardBackground)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // Destination
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Text(
+                        text = "Tell us what service you need",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Create a tour request and available partners in the selected area will be able to accept it.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = areaExpanded,
+                        onExpandedChange = { areaExpanded = !areaExpanded }
                     ) {
-                        Text(
-                            text = "Destination",
-                            fontSize = 14.sp,
-                            color = TextSecondary
+                        OutlinedTextField(
+                            value = selectedArea?.label.orEmpty(),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Destination area") },
+                            placeholder = { Text("Select a city") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = requestFieldColors
                         )
-                        Text(
-                            text = "Bogotá Historic Center",
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-
-                    Divider(color = DividerBorder, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-
-                    // Duration
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Duration",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Switch(
-                                checked = isDurationEnabled,
-                                onCheckedChange = { isDurationEnabled = it },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = TextPrimary,
-                                    checkedTrackColor = PrimaryAccent,
-                                    uncheckedThumbColor = TextSecondary,
-                                    uncheckedTrackColor = ToggleInactive
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "60 min",
-                                fontSize = 14.sp,
-                                color = TextPrimary
-                            )
-                        }
-                    }
-
-                    Divider(color = DividerBorder, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-
-                    // Tour type
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Tour type",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = "Historic City",
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-
-                    Divider(color = DividerBorder, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-
-                    // When
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "When",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = { selectedWhen = "Now" },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedWhen == "Now") PrimaryAccent else ToggleInactive
-                                ),
-                                shape = RoundedCornerShape(20.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = "Now",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (selectedWhen == "Now") TextPrimary else TextSecondary
-                                )
-                            }
-                            Button(
-                                onClick = { selectedWhen = "Schedule" },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedWhen == "Schedule") PrimaryAccent else ToggleInactive
-                                ),
-                                shape = RoundedCornerShape(20.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = "Schedule",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (selectedWhen == "Schedule") TextPrimary else TextSecondary
+                        DropdownMenu(
+                            expanded = areaExpanded,
+                            onDismissRequest = { areaExpanded = false }
+                        ) {
+                            requestAreaOptions.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option.label) },
+                                    onClick = {
+                                        selectedArea = option
+                                        areaExpanded = false
+                                    }
                                 )
                             }
                         }
                     }
+
+                    OutlinedTextField(
+                        value = agreedHoursText,
+                        onValueChange = { value ->
+                            agreedHoursText = value.filter { it.isDigit() }.take(2)
+                        },
+                        label = { Text("Agreed hours") },
+                        placeholder = { Text("Example: 2") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = requestFieldColors
+                    )
+
+                    OutlinedTextField(
+                        value = hourlyRateText,
+                        onValueChange = { value ->
+                            hourlyRateText = value.filter { it.isDigit() || it == '.' }.let { filtered ->
+                                val parts = filtered.split('.')
+                                if (parts.size <= 2) filtered else parts[0] + "." + parts[1]
+                            }
+                        },
+                        label = { Text("Hourly rate (COP)") },
+                        placeholder = { Text("Example: 45000") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = requestFieldColors
+                    )
+
+                    OutlinedTextField(
+                        value = meetingPointText,
+                        onValueChange = { meetingPointText = it.take(255) },
+                        label = { Text("Meeting point / notes") },
+                        placeholder = { Text("Optional: Historic center, plaza, museum entrance...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = requestFieldColors
+                    )
                 }
             }
 
-            // Special Instructions
-            Text(
-                text = "Special Instructions",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            if (errorState != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(
+                        text = errorState.message,
+                        color = Color(0xFFC62828),
+                        modifier = Modifier.padding(14.dp)
+                    )
+                }
+            }
+
+            RequestSummaryCard(
+                areaName = selectedArea?.label ?: "Not selected",
+                agreedHours = agreedHoursText.ifBlank { "-" },
+                hourlyRate = hourlyRateText.ifBlank { "-" },
+                meetingPoint = meetingPointText.ifBlank { "No additional notes" }
             )
 
-            TextField(
-                value = specialInstructions,
-                onValueChange = { specialInstructions = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(100.dp),
-                placeholder = {
-                    Text(
-                        text = "Any specific places you want to visit or instructions for your guide...",
-                        fontSize = 13.sp,
-                        color = TextSecondary
+            Button(
+                onClick = {
+                    viewModel.requestTour(
+                        areaId = selectedArea!!.id,
+                        agreedHours = agreedHours!!,
+                        hourlyRate = hourlyRate!!,
+                        locationDescription = meetingPointText
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = CardBackground,
-                    unfocusedContainerColor = CardBackground,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                supportingText = {
-                    Text(
-                        text = "${specialInstructions.length} / 200",
-                        fontSize = 11.sp,
-                        color = TextSecondary,
-                        modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
-                    )
-                }
-            )
-
-            // Tour Summary
-            Text(
-                text = "Tour Summary",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // Duration
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Duration",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = "60 minutes",
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-
-                    Divider(color = DividerBorder, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-
-                    // Tour type
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Tour type",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = "Historic City",
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-
-                    Divider(color = DividerBorder, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-
-                    // Partner
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Partner",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = "Carlos Medina",
-                            fontSize = 14.sp,
-                            color = TextPrimary
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Bottom Button
-            Button(
-                onClick = onViewDetails,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                enabled = canSubmit,
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
                 shape = RoundedCornerShape(28.dp),
                 contentPadding = PaddingValues(vertical = 14.dp)
             ) {
-                Text(
-                    text = "Request Tour",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Create service",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun RequestSummaryCard(
+    areaName: String,
+    agreedHours: String,
+    hourlyRate: String,
+    meetingPoint: String
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "Request summary",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+            SummaryRow(label = "Area", value = areaName)
+            SummaryRow(label = "Hours", value = agreedHours)
+            SummaryRow(label = "Hourly rate", value = if (hourlyRate == "-") hourlyRate else "$hourlyRate COP")
+            SummaryRow(label = "Notes", value = meetingPoint)
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, color = TextSecondary)
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = value,
+            color = TextPrimary,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(start = 12.dp)
+        )
+    }
+}
+
+@Composable
+private fun RequestCreatedDialog(
+    service: ServiceResponse,
+    areaName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Service created successfully") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Your request is now visible to available partners.")
+                Text("Service ID: ${service.serviceId}")
+                Text("Area: $areaName")
+                Text("Status: ${service.status}")
+                Text("Hours: ${service.agreedHours}")
+                Text("Hourly rate: ${service.hourlyRate} COP")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Done")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Stay here")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ActiveServiceDialog(
+    service: ServiceResponse,
+    message: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("You already have an active request") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(message)
+                Text("Service ID: ${service.serviceId}")
+                Text("Status: ${service.status}")
+                Text("Open the waiting screen to track or cancel this request.")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Go to waiting screen")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Stay here")
+            }
+        }
+    )
 }

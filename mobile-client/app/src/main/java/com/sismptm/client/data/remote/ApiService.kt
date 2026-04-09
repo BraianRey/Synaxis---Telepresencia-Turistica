@@ -4,39 +4,44 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * Interface defining the API endpoints for authentication, registration, and WebRTC signaling.
  */
 interface ApiService {
 
-    /** 
-     * Registers a new client in the system.
-     * POST /api/clients/register/client 
-     */
-    @POST("api/clients/register/client")
+    /** POST /api/clients/register */
+    @POST("api/clients/register")
     suspend fun registerClient(@Body request: RegisterClientRequest): Response<RegisterClientResponse>
 
-    /** 
-     * Authenticates a client and returns session tokens.
-     * POST /api/auth/client/login 
-     */
+    /** POST /api/auth/client/login */
     @POST("api/auth/client/login")
     suspend fun loginClient(@Body request: LoginRequest): Response<LoginResponse>
 
-    /** 
-     * Fetches the current user profile data.
-     * GET /api/clients/profile 
-     */
+    /** POST /api/services/create  - requires CLIENT token */
+    @POST("api/services/create")
+    suspend fun createService(@Body request: CreateServiceRequest): Response<ServiceResponse>
+
+    /** GET /api/clients/profile */
     @GET("api/clients/profile")
     suspend fun getUserProfile(): UserProfileResponse
 
-    /** 
-     * Fetches profile data for the authenticated user.
-     * GET /api/users/me 
-     */
+    /** GET /api/users/me */
     @GET("api/users/me")
     suspend fun getMyProfile(): UserProfileResponse
+
+    /** GET /api/services/client/{clientId} - requires CLIENT token */
+    @GET("api/services/client/{clientId}")
+    suspend fun getServicesByClient(@Path("clientId") clientId: Long): Response<List<ServiceResponse>>
+
+    /** GET /api/services/{serviceId} - requires CLIENT/PARTNER token */
+    @GET("api/services/{serviceId}")
+    suspend fun getServiceById(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    /** POST /api/services/{serviceId}/cancel - requires CLIENT token */
+    @POST("api/services/{serviceId}/cancel")
+    suspend fun cancelService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 
     /* --- WebRTC Signaling Endpoints --- */
 
@@ -52,6 +57,20 @@ interface ApiService {
     @POST("api/webrtc/sdp")
     suspend fun sendSdp(@Body sdp: SdpModel): Response<Unit>
 }
+
+// -- Auth DTOs -----------------------------------------------------------------
+data class LoginRequest(val email: String, val password: String)
+
+data class LoginResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String,
+    val expiresIn: Long,
+    val id: Long,
+    val email: String,
+    val name: String,
+    val role: String
+)
 
 /* --- WebRTC Signaling Data Models --- */
 
@@ -97,20 +116,28 @@ data class RegisterClientResponse(
     val role: String
 )
 
-data class LoginRequest(
-    val email: String,
-    val password: String
+// -- Service DTOs --------------------------------------------------------------
+data class CreateServiceRequest(
+    val areaId: Long,
+    val startLocationDescription: String?,
+    val agreedHours: Int,
+    val hourlyRate: Double
 )
 
-data class LoginResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val tokenType: String,
-    val expiresIn: Long,
-    val id: Long,
-    val email: String,
-    val name: String,
-    val role: String
+data class ServiceResponse(
+    val serviceId: Long,
+    val clientId: Long,
+    val clientName: String? = null,
+    val partnerId: Long?,
+    val areaId: Long,
+    val startLocationDescription: String?,
+    val agreedHours: Int,
+    val hourlyRate: Double,
+    val status: String,
+    val requestedAt: String?,
+    val acceptedAt: String?,
+    val startedAt: String?,
+    val endedAt: String?
 )
 
 data class UserProfileResponse(

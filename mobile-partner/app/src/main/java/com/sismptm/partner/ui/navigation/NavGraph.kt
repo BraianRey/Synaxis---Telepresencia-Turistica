@@ -71,9 +71,6 @@ fun PartnerNavGraph() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
-                },
-                onRequestTour = {
-                    navController.navigate(Screen.SolicitudDetail.route)
                 }
             )
         }
