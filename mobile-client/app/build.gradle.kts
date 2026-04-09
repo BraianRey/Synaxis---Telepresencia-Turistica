@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,8 +8,6 @@ plugins {
 // ----------------------------------------------
 // 1. Read local.properties (if exists)
 // ----------------------------------------------
-import java.util.Properties
-
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -33,9 +33,11 @@ android {
         // ----- Environment variables from local.properties -----
         val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
         val baseUrlKeycloak: String = localProperties.getProperty("BASE_URL_KEYCLOAK") ?: ""
+        val baseWebRtc: String = localProperties.getProperty("BASE_WEBRTC") ?: ""
 
         buildConfigField("String", "BASE_URL_API", "\"$baseUrlApi\"")
         buildConfigField("String", "BASE_URL_KEYCLOAK", "\"$baseUrlKeycloak\"")
+        buildConfigField("String", "BASE_WEBRTC", "\"$baseWebRtc\"")
     }
 
     buildTypes {
