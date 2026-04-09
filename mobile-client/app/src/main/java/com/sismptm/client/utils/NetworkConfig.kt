@@ -1,9 +1,8 @@
 package com.sismptm.client.utils
+
 import com.sismptm.client.BuildConfig
 
-/**
- * Network configuration constants for the application.
- */
+/** Network configuration constants for the application. */
 object NetworkConfig {
     private const val LOCAL_EMULATOR_URL = "http://10.0.2.2:8080/"
 
@@ -13,7 +12,7 @@ object NetworkConfig {
     val KEYCLOAK_URL: String = BuildConfig.BASE_URL_KEYCLOAK
 
     /** WebSocket URL for WebRTC Signaling */
-    const val WS_SIGNALING_URL = BuildConfig.BASE_URL_API
+    const val WS_SIGNALING_URL = BuildConfig.BASE_WEBRTC
 
     const val CONNECT_TIMEOUT = 30L
     const val READ_TIMEOUT = 30L
