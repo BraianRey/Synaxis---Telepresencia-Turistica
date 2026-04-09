@@ -149,6 +149,32 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedButton(
+            onClick = { viewModel.ping() },
+            enabled = !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF4CAF50))
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color(0xFF4CAF50),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Ping Management Service",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(
             onClick = onNavigateToStreaming,
             modifier = Modifier
                 .fillMaxWidth()

@@ -1,0 +1,21 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: streaming-service
+
+jwt:
+  secret: ${JWT_SECRET:synexis-signaling-secret-key-change-in-prod}
+
+signaling:
+  allowed-origins: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

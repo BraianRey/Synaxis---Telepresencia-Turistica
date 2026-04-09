@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.sismptm.client.data.remote.LoginRequest
 import com.sismptm.client.data.remote.RetrofitClient
 import com.sismptm.client.data.remote.TokenManager
-import com.sismptm.client.utils.NetworkConfig
-import com.sismptm.client.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,13 +32,6 @@ class LoginViewModel : ViewModel() {
                 )
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
-                        SessionManager.saveSession(
-                            token = loginResponse.accessToken,
-                            id = loginResponse.id,
-                            name = loginResponse.name,
-                            email = loginResponse.email,
-                            role = loginResponse.role
-                        )
                         TokenManager.saveSession(
                             token = loginResponse.accessToken,
                             name = loginResponse.name,
@@ -49,12 +40,10 @@ class LoginViewModel : ViewModel() {
                     }
                     _uiState.value = LoginUiState.Success
                 } else {
-                    _uiState.value = LoginUiState.Error(
-                        parseError(response.code(), response.errorBody()?.string())
-                    )
+                    _uiState.value = LoginUiState.Error(parseError(response.code(), response.errorBody()?.string()))
                 }
             } catch (ex: Exception) {
-                _uiState.value = LoginUiState.Error(parseConnectionError(ex))
+                _uiState.value = LoginUiState.Error("Error de conexion. Intenta nuevamente.")
             }
         }
     }
@@ -65,22 +54,18 @@ class LoginViewModel : ViewModel() {
 
     private fun parseError(code: Int, body: String?): String {
         val backendMessage = runCatching {
-            if (body.isNullOrBlank()) "" else JSONObject(body).optString("error", "")
-        }.getOrDefault("")
-        if (backendMessage.isNotBlank()) return backendMessage
-        return if (code == 401) "Invalid credentials." else "Server error. Please try again."
-    }
+            if (body.isNullOrBlank()) null else JSONObject(body).optString("error", null)
+        }.getOrNull()
 
-    private fun parseConnectionError(exception: Exception): String {
-        val backendUrl = NetworkConfig.BASE_URL
-        return when {
-            exception.message?.contains("failed to connect", ignoreCase = true) == true ->
-                "Connection failed to $backendUrl. Is the backend running?"
-            exception.message?.contains("timeout", ignoreCase = true) == true ->
-                "Connection timeout to $backendUrl. Check your network."
-            exception.message?.contains("connection refused", ignoreCase = true) == true ->
-                "Connection refused by $backendUrl. Is the backend running?"
-            else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
+        if (!backendMessage.isNullOrBlank()) {
+            return backendMessage
+        }
+
+        return if (code == 401) {
+            "Las credenciales no son correctas."
+        } else {
+            "Error del servidor. Intenta nuevamente."
         }
     }
 }
+

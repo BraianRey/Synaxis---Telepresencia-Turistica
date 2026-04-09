@@ -20,16 +20,14 @@ class HomeViewModel : ViewModel() {
             userName = if (localName.isNotBlank()) localName else "Viajero",
             isLoading = false,
             destinations = listOf(
-                Destination(1, "Popayan", "Colombia", "Puente del Humilladero", 3),
-                Destination(2, "Cali", "Colombia", "Cristo Rey", 2),
-                Destination(3, "Medellin", "Colombia", "Comuna 13", 4),
-                Destination(4, "Bogota", "Colombia", "La Candelaria", 5)
+                Destination(1, "Popayán", "Colombia", "Puente del Humilladero", 3),
+                Destination(2, "París", "Francia", "Eiffel Tower", 1),
+                Destination(3, "Kyoto", "Japón", "Fushimi Inari", 2)
             ),
             mapPins = listOf(
-                MapPin(1, "Popayan", 3, 0.3f, 0.6f),
-                MapPin(2, "Cali", 2, 0.7f, 0.3f),
-                MapPin(3, "Medellin", 4, 0.6f, 0.7f),
-                MapPin(4, "Bogota", 5, 0.2f, 0.8f)
+                MapPin(1, "Popayán", 3, 0.3f, 0.6f),
+                MapPin(2, "París", 1, 0.7f, 0.3f),
+                MapPin(3, "Kyoto", 2, 0.6f, 0.7f)
             )
         )
 

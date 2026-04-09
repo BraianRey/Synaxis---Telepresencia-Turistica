@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.data.remote.RegisterPartnerRequest
 import com.sismptm.partner.data.remote.RetrofitClient
-import com.sismptm.partner.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,8 +47,6 @@ class RegisterViewModel : ViewModel() {
                 )
                 val response = RetrofitClient.apiService.registerPartner(request)
                 if (response.isSuccessful) {
-                    // Save areaId so HomeScreen can load requests immediately after register
-                    SessionManager.areaId = areaId.toLong()
                     _uiState.value = RegisterUiState.Success
                 } else {
                     val errorBody = response.errorBody()?.string()
@@ -58,7 +55,9 @@ class RegisterViewModel : ViewModel() {
                     )
                 }
             } catch (e: Exception) {
-                _uiState.value = RegisterUiState.Error(parseErrorMessage(e))
+                _uiState.value = RegisterUiState.Error(
+                    e.localizedMessage ?: "Connection error"
+                )
             }
         }
     }
@@ -68,16 +67,9 @@ class RegisterViewModel : ViewModel() {
     }
 
     private fun parseErrorMessage(code: Int, body: String?): String = when (code) {
-        409 -> "Email already registered."
-        400 -> "Invalid data. Check all fields."
+        409  -> "Email already registered."
+        400  -> "Invalid data. Check all fields."
         else -> "Server error ($code). Please try again."
     }
-
-    private fun parseErrorMessage(exception: Exception): String = when {
-        exception.message?.contains("failed to connect") == true ->
-            "Connection failed. Is the backend running?"
-        exception.message?.contains("timeout") == true ->
-            "Connection timeout. Check your network."
-        else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
-    }
 }
+

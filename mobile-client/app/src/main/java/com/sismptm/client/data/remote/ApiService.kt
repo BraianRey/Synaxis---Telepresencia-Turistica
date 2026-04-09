@@ -4,58 +4,78 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.Path
 
+/**
+ * Interface defining the API endpoints for authentication, registration, and WebRTC signaling.
+ */
 interface ApiService {
 
-    /** POST /api/clients/register */
-    @POST("api/clients/register")
+    /** 
+     * Registers a new client in the system.
+     * POST /api/clients/register/client 
+     */
+    @POST("api/clients/register/client")
     suspend fun registerClient(@Body request: RegisterClientRequest): Response<RegisterClientResponse>
 
-    /** POST /api/auth/client/login */
+    /** 
+     * Authenticates a client and returns session tokens.
+     * POST /api/auth/client/login 
+     */
     @POST("api/auth/client/login")
     suspend fun loginClient(@Body request: LoginRequest): Response<LoginResponse>
 
-    /** POST /api/services/create  - requires CLIENT token */
-    @POST("api/services/create")
-    suspend fun createService(@Body request: CreateServiceRequest): Response<ServiceResponse>
-
-    /** GET /api/clients/profile */
+    /** 
+     * Fetches the current user profile data.
+     * GET /api/clients/profile 
+     */
     @GET("api/clients/profile")
     suspend fun getUserProfile(): UserProfileResponse
 
-    /** GET /api/users/me */
+    /** 
+     * Fetches profile data for the authenticated user.
+     * GET /api/users/me 
+     */
     @GET("api/users/me")
     suspend fun getMyProfile(): UserProfileResponse
 
-    /** GET /api/services/client/{clientId} - requires CLIENT token */
-    @GET("api/services/client/{clientId}")
-    suspend fun getServicesByClient(@Path("clientId") clientId: Long): Response<List<ServiceResponse>>
+    /* --- WebRTC Signaling Endpoints --- */
 
-    /** GET /api/services/{serviceId} - requires CLIENT/PARTNER token */
-    @GET("api/services/{serviceId}")
-    suspend fun getServiceById(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+    /**
+     * Sends an ICE Candidate to the peer via the signaling server.
+     */
+    @POST("api/webrtc/ice-candidate")
+    suspend fun sendIceCandidate(@Body candidate: IceCandidateModel): Response<Unit>
 
-    /** POST /api/services/{serviceId}/cancel - requires CLIENT token */
-    @POST("api/services/{serviceId}/cancel")
-    suspend fun cancelService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+    /**
+     * Sends an SDP Offer/Answer to the peer via the signaling server.
+     */
+    @POST("api/webrtc/sdp")
+    suspend fun sendSdp(@Body sdp: SdpModel): Response<Unit>
 }
 
-// -- Auth DTOs -----------------------------------------------------------------
-data class LoginRequest(val email: String, val password: String)
+/* --- WebRTC Signaling Data Models --- */
 
-data class LoginResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val tokenType: String,
-    val expiresIn: Long,
-    val id: Long,
-    val email: String,
-    val name: String,
-    val role: String
+/**
+ * Data model for ICE Candidate exchange.
+ */
+data class IceCandidateModel(
+    val sdpMid: String,
+    val sdpMLineIndex: Int,
+    val sdp: String,
+    val targetUserId: String
 )
 
-// Request DTO (mirrors RegisterClientRequest from backend)
+/**
+ * Data model for SDP (Offer/Answer) exchange.
+ */
+data class SdpModel(
+    val type: String, // "OFFER" or "ANSWER"
+    val sdp: String,
+    val targetUserId: String
+)
+
+/* --- Auth & Profile Data Models --- */
+
 data class RegisterClientRequest(
     val email: String,
     val password: String,
@@ -65,7 +85,6 @@ data class RegisterClientRequest(
     val picDirectory: String? = null
 )
 
-// Response DTO (mirrors RegisterClientResponse from backend)
 data class RegisterClientResponse(
     val id: Long,
     val email: String,
@@ -78,28 +97,20 @@ data class RegisterClientResponse(
     val role: String
 )
 
-// -- Service DTOs --------------------------------------------------------------
-data class CreateServiceRequest(
-    val areaId: Long,
-    val startLocationDescription: String?,
-    val agreedHours: Int,
-    val hourlyRate: Double
+data class LoginRequest(
+    val email: String,
+    val password: String
 )
 
-data class ServiceResponse(
-    val serviceId: Long,
-    val clientId: Long,
-    val clientName: String? = null,
-    val partnerId: Long?,
-    val areaId: Long,
-    val startLocationDescription: String?,
-    val agreedHours: Int,
-    val hourlyRate: Double,
-    val status: String,
-    val requestedAt: String?,
-    val acceptedAt: String?,
-    val startedAt: String?,
-    val endedAt: String?
+data class LoginResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String,
+    val expiresIn: Long,
+    val id: Long,
+    val email: String,
+    val name: String,
+    val role: String
 )
 
 data class UserProfileResponse(

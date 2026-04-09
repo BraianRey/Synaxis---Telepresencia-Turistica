@@ -16,7 +16,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -41,9 +40,7 @@ fun RequestCard(
     duration: String,
     price: String,
     onDecline: () -> Unit,
-    onAccept: () -> Unit,
-    isAccepting: Boolean = false,
-    acceptEnabled: Boolean = true
+    onAccept: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -109,7 +106,6 @@ fun RequestCard(
             ) {
                 OutlinedButton(
                     onClick = onDecline,
-                    enabled = !isAccepting,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
@@ -120,7 +116,6 @@ fun RequestCard(
 
                 Button(
                     onClick = onAccept,
-                    enabled = acceptEnabled,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -128,15 +123,7 @@ fun RequestCard(
                         contentColor = Color.White
                     )
                 ) {
-                    if (isAccepting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(text = stringResource(id = R.string.accept), fontWeight = FontWeight.SemiBold)
-                    }
+                    Text(text = stringResource(id = R.string.accept), fontWeight = FontWeight.SemiBold)
                 }
             }
         }

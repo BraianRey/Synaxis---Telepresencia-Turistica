@@ -33,9 +33,11 @@ android {
         // ----- Environment variables from local.properties -----
         val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
         val baseUrlKeycloak: String = localProperties.getProperty("BASE_URL_KEYCLOAK") ?: ""
+        val baseWebrtc: String = localProperties.getProperty("BASE_WEBRTC") ?: ""
 
         buildConfigField("String", "BASE_URL_API", "\"$baseUrlApi\"")
         buildConfigField("String", "BASE_URL_KEYCLOAK", "\"$baseUrlKeycloak\"")
+        buildConfigField("String", "BASE_WEBRTC", "\"$baseWebrtc\"")
     }
 
     buildTypes {
@@ -77,6 +79,9 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
+
+    // WebRTC
+    implementation(libs.webrtc)
 
     // ViewModel
     implementation(libs.lifecycle.viewmodel.compose)
