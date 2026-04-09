@@ -1,4 +1,4 @@
-# Synaxis---Telepresencia-Turistica
+# Synexis---Telepresencia-Turistica
 
 # SIS-PTM — Real-Time Telepresence System
 
@@ -11,7 +11,7 @@ The system is composed of multiple independent yet integrated components:
 * **Client Mobile Application** — for end users requesting telepresence services
 * **Partner Mobile Application** — for service providers delivering telepresence experiences
 * **Backend API (Spring Boot)** — `backend-management-service` (REST API, BCrypt, registration by role)
-* **Database (H2)** — embedded file database for development; optional web console at `/h2-console` when the API is running
+* **Database (PostgreSQL)** — * **Database (PostgreSQL)** — relational database running in a Docker container; used for development and production, configured via environment variables and accessible through the configured port.
 
 This repository contains mobile applications, the **Spring Boot** management API, and shared development configuration.
 
