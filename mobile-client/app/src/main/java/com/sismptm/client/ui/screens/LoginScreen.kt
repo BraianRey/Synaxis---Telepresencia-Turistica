@@ -1,32 +1,32 @@
+                scope.launch {
+                    isLoading = true
+                    try {
+                        println("Login attempt: $email")
+                    } catch (e: Exception) {
+                        println("Login error: ${e.message}")
+                    } finally {
+                        isLoading = false
+                        onLoginSuccess()
+                    }
+                }
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
+    onNavigateToRegister: () -> Unit
+import kotlinx.coroutines.launch
 package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+    onNavigateToRegister: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sismptm.client.R
-
-@Composable
-fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit,
-    viewModel: LoginViewModel = viewModel()
-) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     val uiState by viewModel.uiState.collectAsState()
     val isLoading = uiState is LoginViewModel.LoginUiState.Loading
@@ -37,6 +37,20 @@ fun LoginScreen(
             viewModel.resetState()
         }
     }
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+
+@Composable
+fun LoginScreen(
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -108,20 +122,6 @@ fun LoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            Text(
-                text = stringResource(R.string.forgot_password),
-                fontSize = 13.sp,
-                color = Color(0xFF1E88E5),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.clickable { /* TODO: Navigate to forgot password */ }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
         if (uiState is LoginViewModel.LoginUiState.Error) {
             val errorMsg = (uiState as LoginViewModel.LoginUiState.Error).message
             Card(
@@ -139,10 +139,24 @@ fun LoginScreen(
             }
         }
 
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+                viewModel.login(email = email, password = password)
         // Sign In Button
         Button(
             onClick = {
-                viewModel.login(email = email, password = password)
+                scope.launch {
+                    isLoading = true
+                    try {
+                        println("Login attempt: $email")
+                    } catch (e: Exception) {
+                        println("Login error: ${e.message}")
+                    } finally {
+                        isLoading = false
+                        onLoginSuccess()
+                    }
+                }
             },
             enabled = email.isNotEmpty() && password.isNotEmpty() && !isLoading,
             modifier = Modifier

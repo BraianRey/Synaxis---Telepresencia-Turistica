@@ -1,3 +1,4 @@
+    public ServiceResponse(Long serviceId, Long clientId, Long partnerId, Long areaId, String startLocationDescription,
 package com.synexis.management_service.dto.response;
 
 import java.math.BigDecimal;
@@ -8,10 +9,9 @@ public record ServiceResponse(
         Long serviceId,
 
         Long clientId,
-
         String clientName,
 
-        Long partnerId,
+
 
         Long areaId,
 
