@@ -10,7 +10,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,12 +20,19 @@ import java.util.regex.Pattern;
  * WebSocket RAW handler for WebRTC signaling.
  *
  * Protocol:
- *  - Client connects with ?peerId=XXX in the URL.
- *  - Messages are JSON with a "targetId" field for routing.
- *  - Examples:
- *    Offer:     {"type":"offer",    "sdp":"...",      "senderId":"PARTNER_01","targetId":"CLIENT_01"}
- *    Answer:    {"type":"answer",   "sdp":"...",      "senderId":"CLIENT_01", "targetId":"PARTNER_01"}
- *    Candidate: {"type":"candidate","candidate":{...},"senderId":"CLIENT_01", "targetId":"PARTNER_01"}
+ * - Client connects with ?peerId=XXX in the URL.
+ * - Messages are JSON with a "targetId" field for routing.
+ * - Examples:
+ * Offer: {"type":"offer", "sdp":"...",
+ * "senderId":"PARTNER_01","targetId":"CLIENT_01"}
+ * Answer: {"type":"answer", "sdp":"...", "senderId":"CLIENT_01",
+ * "targetId":"PARTNER_01"}
+ * Candidate: {"type":"candidate","candidate":{...},"senderId":"CLIENT_01",
+ * "targetId":"PARTNER_01"}
+ *
+ * FEATURE: Pending message queue
+ * - If target peer is not connected, message is queued
+ * - When peer connects, all pending messages are delivered
  */
 @Component
 public class RawWebSocketHandler extends TextWebSocketHandler {
@@ -31,11 +40,15 @@ public class RawWebSocketHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(RawWebSocketHandler.class);
 
     /** Regex to extract the value of "targetId" from a JSON string */
-    private static final Pattern TARGET_ID_PATTERN =
-        Pattern.compile("\"targetId\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern TARGET_ID_PATTERN = Pattern.compile("\"targetId\"\\s*:\\s*\"([^\"]+)\"");
 
     /** Thread-safe map of peerId → active WebSocket session */
     private final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+
+    /**
+     * Pending messages queue: peerId → List of messages to deliver when connected
+     */
+    private final ConcurrentHashMap<String, Queue<String>> pendingMessages = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -48,6 +61,25 @@ public class RawWebSocketHandler extends TextWebSocketHandler {
         sessions.put(peerId, session);
         log.info("✅ Connected — peerId='{}' sessionId={} | Active peers: {}",
                 peerId, session.getId(), sessions.keySet());
+
+        // Deliver any pending messages queued while disconnected
+        Queue<String> pending = pendingMessages.remove(peerId);
+        if (pending != null && !pending.isEmpty()) {
+            log.info("📬 Delivering {} pending messages to '{}'", pending.size(), peerId);
+            synchronized (session) {
+                while (!pending.isEmpty()) {
+                    String pendingMessage = pending.poll();
+                    try {
+                        session.sendMessage(new TextMessage(pendingMessage));
+                        log.debug("✅ Delivered pending message to '{}'", peerId);
+                    } catch (IOException e) {
+                        log.error("❌ Failed to deliver pending message to '{}': {}", peerId, e.getMessage());
+                        pending.offer(pendingMessage); // Re-queue if failed
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -64,12 +96,21 @@ public class RawWebSocketHandler extends TextWebSocketHandler {
         }
 
         WebSocketSession targetSession = sessions.get(targetId);
+
         if (targetSession == null || !targetSession.isOpen()) {
-            log.warn("⚠️  Target peer '{}' not found or disconnected. Available: {}", targetId, sessions.keySet());
-            sendError(senderSession, "Peer '" + targetId + "' is not connected. Available: " + sessions.keySet());
+            // TARGET NOT CONNECTED: Queue the message
+            log.warn("⚠️  Target peer '{}' not connected. Queueing message for later delivery. Available: {}",
+                    targetId, sessions.keySet());
+
+            Queue<String> queue = pendingMessages.computeIfAbsent(targetId, k -> new ConcurrentLinkedQueue<>());
+            queue.offer(payload);
+
+            log.info("📥 Message queued for '{}' — Queue size: {}", targetId, queue.size());
+            sendInfo(senderSession, "Message queued. Peer '" + targetId + "' will receive it when connected.");
             return;
         }
 
+        // TARGET IS CONNECTED: Relay immediately
         log.info("🔀 Relaying message from '{}' → '{}'", senderPeerId, targetId);
         synchronized (targetSession) {
             try {
@@ -105,9 +146,11 @@ public class RawWebSocketHandler extends TextWebSocketHandler {
      */
     private String extractPeerId(WebSocketSession session) {
         URI uri = session.getUri();
-        if (uri == null) return null;
+        if (uri == null)
+            return null;
         String query = uri.getQuery();
-        if (query == null) return null;
+        if (query == null)
+            return null;
         for (String param : query.split("&")) {
             if (param.startsWith("peerId=")) {
                 String value = param.substring("peerId=".length());
@@ -127,12 +170,21 @@ public class RawWebSocketHandler extends TextWebSocketHandler {
     }
 
     private void sendError(WebSocketSession session, String errorMessage) {
-        if (session == null || !session.isOpen()) return;
+        sendJsonMessage(session, "error", errorMessage);
+    }
+
+    private void sendInfo(WebSocketSession session, String infoMessage) {
+        sendJsonMessage(session, "info", infoMessage);
+    }
+
+    private void sendJsonMessage(WebSocketSession session, String type, String message) {
+        if (session == null || !session.isOpen())
+            return;
         try {
-            String errorJson = "{\"type\":\"error\",\"message\":\"" + errorMessage.replace("\"", "'") + "\"}";
-            session.sendMessage(new TextMessage(errorJson));
+            String json = "{\"type\":\"" + type + "\",\"message\":\"" + message.replace("\"", "'") + "\"}";
+            session.sendMessage(new TextMessage(json));
         } catch (IOException e) {
-            log.error("Failed to send error to session: {}", e.getMessage());
+            log.error("Failed to send {} message to session: {}", type, e.getMessage());
         }
     }
 }
