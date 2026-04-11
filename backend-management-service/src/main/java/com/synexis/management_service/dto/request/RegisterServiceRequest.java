@@ -5,15 +5,17 @@ import java.math.BigDecimal;
 
 public record RegisterServiceRequest(
 
-        @NotNull Long clientId,
+                @NotNull Long clientId,
 
-        @NotNull Long areaId,
+                @NotNull Double longitude,
 
-        @Size(max = 255) String startLocationDescription,
+                @NotNull Double latitude,
 
-        @NotNull @Min(1) Integer agreedHours,
+                @Size(max = 255) String startLocationDescription,
 
-        @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal hourlyRate
+                @NotNull @Min(1) Integer agreedHours,
+
+                @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal hourlyRate
 
 ) {
 }

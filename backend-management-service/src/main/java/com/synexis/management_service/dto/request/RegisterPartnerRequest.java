@@ -14,18 +14,20 @@ import jakarta.validation.constraints.Size;
  */
 public record RegisterPartnerRequest(
 
-        @NotBlank @Email @Size(max = 255) String email,
+                @NotBlank @Email @Size(max = 255) String email,
 
-        @NotBlank @Size(min = 8, max = 100) String password,
+                @NotBlank @Size(min = 8, max = 100) String password,
 
-        @NotBlank @Size(max = 100) String name,
+                @NotBlank @Size(max = 100) String name,
 
-        @NotNull Integer areaId,
+                @NotNull double longitude,
 
-        @NotNull @AssertTrue Boolean termsAccepted,
+                @NotNull double latitude,
 
-        UserLanguage language,
+                @NotNull @AssertTrue Boolean termsAccepted,
 
-        @Size(max = 255) String picDirectory) {
+                UserLanguage language,
+
+                @Size(max = 255) String picDirectory) {
 
 }

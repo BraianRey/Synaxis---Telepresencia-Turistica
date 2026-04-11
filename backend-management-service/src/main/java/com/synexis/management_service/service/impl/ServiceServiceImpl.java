@@ -52,9 +52,7 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     public List<ServiceResponse> getServicesAvailableByAreaId(Long areaId) {
-        // Implementation for fetching available services by area ID
-        List<ServiceEntity> services = serviceRepository.findByArea_IdAndStatus(areaId, ServiceStatus.REQUESTED);
-        return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
+        throw new UnsupportedOperationException("Unimplemented method 'getServicesAvailableByAreaId'");
     }
 
     @Override
