@@ -9,6 +9,8 @@ public record ServiceResponse(
 
         Long clientId,
 
+        String clientName,
+
         Long partnerId,
 
         Double longitude,
@@ -38,6 +40,7 @@ public record ServiceResponse(
             LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.serviceId = serviceId;
         this.clientId = clientId;
+        this.clientName = clientName;
         this.partnerId = partnerId;
         this.longitude = longitude;
         this.latitude = latitude;

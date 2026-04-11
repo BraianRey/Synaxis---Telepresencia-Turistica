@@ -46,4 +46,31 @@
     <string name="wants_tour">Wants a tour in %1$s</string>
     <string name="accept">Accept</string>
     <string name="decline">Decline</string>
+
+    <!-- Actions -->
+    <string name="send_location">Send Current Location</string>
+
+    <!-- Tour accepted dialog -->
+    <string name="tour_accepted_title">Tour accepted</string>
+    <string name="tour_accepted_message">The requested tour has been accepted successfully.</string>
+    <string name="tour_detail_service_id">Service ID</string>
+    <string name="tour_detail_client">Client</string>
+    <string name="tour_detail_area">Area</string>
+    <string name="tour_detail_meeting_point">Meeting point</string>
+    <string name="tour_detail_duration">Duration</string>
+    <string name="tour_detail_hourly_rate">Hourly rate</string>
+    <string name="tour_detail_requested_at">Requested at</string>
+    <string name="tour_detail_status">Status</string>
+    <string name="ok">OK</string>
+    <!-- Streaming Screen -->
+    <string name="streaming_title">Live Streaming</string>
+    <string name="debug_streaming">Debug Streaming</string>
+    <string name="connection_quality">Connection Quality</string>
+    <string name="instruction_up">FORWARD</string>
+    <string name="instruction_down">BACKWARD</string>
+    <string name="instruction_left">LEFT</string>
+    <string name="instruction_right">RIGHT</string>
+    <string name="waiting_instructions">Waiting for instructions...</string>
+    <string name="camera_mic_permission_required">Camera &amp; Microphone Required</string>
+    <string name="camera_mic_permission_explanation">This app requires camera and microphone access to start streaming. Please enable them to continue.</string>
 </resources>

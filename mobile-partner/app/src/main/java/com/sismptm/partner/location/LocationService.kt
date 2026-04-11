@@ -17,24 +17,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-/**
- * Singleton service to manage GPS location tracking and reporting to the server.
- */
+/** Singleton service to manage GPS location tracking and reporting to the server. */
 object LocationService {
     private const val TAG = "LocationService"
-    private const val UPDATE_INTERVAL_SECONDS = 30L 
+    private const val UPDATE_INTERVAL_SECONDS = 30L
 
     private var fusedLocationClient: FusedLocationProviderClient? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            for (location in locationResult.locations) {
-                handleLocationUpdate(location)
+    private val locationCallback =
+            object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    for (location in locationResult.locations) {
+                        handleLocationUpdate(location)
+                    }
+                }
             }
-        }
-    }
 
     /**
      * Initializes the FusedLocationProviderClient.
@@ -42,35 +42,60 @@ object LocationService {
      */
     fun init(context: Context) {
         if (fusedLocationClient == null) {
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(context.applicationContext)
+            fusedLocationClient =
+                    LocationServices.getFusedLocationProviderClient(context.applicationContext)
         }
     }
 
     /**
-     * Starts receiving location updates.
-     * Uses balanced power priority to optimize battery consumption.
+     * Starts receiving location updates. Uses balanced power priority to optimize battery
+     * consumption.
      */
     @SuppressLint("MissingPermission")
     fun startLocationUpdates() {
-        val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-            UPDATE_INTERVAL_SECONDS * 1000
-        ).build()
+        val locationRequest =
+                LocationRequest.Builder(
+                                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                                UPDATE_INTERVAL_SECONDS * 1000
+                        )
+                        .build()
 
         fusedLocationClient?.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
         )
         Log.d(TAG, "Location updates started (Battery Optimized)")
     }
 
-    /**
-     * Stops receiving location updates.
-     */
+    /** Stops receiving location updates. */
     fun stopLocationUpdates() {
         fusedLocationClient?.removeLocationUpdates(locationCallback)
         Log.d(TAG, "Location updates stopped")
+    }
+
+    /** Requests the current location once and sends it to the server. */
+    @SuppressLint("MissingPermission")
+    fun sendCurrentLocationOnce() {
+        serviceScope.launch {
+            try {
+                val location =
+                        fusedLocationClient
+                                ?.getCurrentLocation(
+                                        Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                                        null
+                                )
+                                ?.await()
+                if (location != null) {
+                    handleLocationUpdate(location)
+                    Log.d(TAG, "Single location update sent successfully")
+                } else {
+                    Log.w(TAG, "Could not retrieve current location for single update")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error requesting single location update", e)
+            }
+        }
     }
 
     /**
@@ -80,14 +105,15 @@ object LocationService {
     private fun handleLocationUpdate(location: Location) {
         val lat = location.latitude
         val lng = location.longitude
-        
+
         Log.d(TAG, "Location Update: Lat: $lat, Lng: $lng")
 
         serviceScope.launch {
             try {
-                val response = RetrofitClient.apiService.updateLocation(
-                    LocationUpdateRequest(latitude = lat, longitude = lng)
-                )
+                val response =
+                        RetrofitClient.apiService.updateLocation(
+                                LocationUpdateRequest(latitude = lat, longitude = lng)
+                        )
                 if (response.isSuccessful) {
                     Log.d(TAG, "Location sent to server")
                 } else {

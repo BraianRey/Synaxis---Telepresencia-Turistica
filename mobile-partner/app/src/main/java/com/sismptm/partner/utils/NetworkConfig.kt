@@ -1,9 +1,9 @@
 package com.sismptm.partner.utils
 
 object NetworkConfig {
-    // Si usas el emulador de Android, 10.0.2.2 apunta al localhost de tu máquina host.
-    const val BASE_URL = "http://10.0.2.2:8087/"
-    const val CONNECT_TIMEOUT = 30L
-    const val READ_TIMEOUT = 30L
-    const val WRITE_TIMEOUT = 30L
+    // Usar configuración de ambiente para emulador/dispositivo físico.
+    val BASE_URL: String = EnvironmentConfig.BACKEND_URL
+    const val CONNECT_TIMEOUT = 60L
+    const val READ_TIMEOUT = 60L
+    const val WRITE_TIMEOUT = 60L
 }
