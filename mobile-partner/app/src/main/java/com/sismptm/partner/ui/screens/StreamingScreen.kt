@@ -31,7 +31,6 @@ import org.webrtc.SurfaceViewRenderer
 
 /**
  * Streaming screen for the Partner (broadcaster).
- *
  * Key fix: the EglBase is owned by the ViewModel (not created here),
  * so the SurfaceViewRenderer is initialized with the exact same EGL context
  * that the PeerConnectionFactory uses. Mismatch between EGL contexts was

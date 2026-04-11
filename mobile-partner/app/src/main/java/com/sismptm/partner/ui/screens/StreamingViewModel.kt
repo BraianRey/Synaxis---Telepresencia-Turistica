@@ -1,31 +1,27 @@
 package com.sismptm.partner.ui.screens
 
 import android.app.Application
+import android.media.MediaPlayer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.BuildConfig
+import com.sismptm.partner.R
 import com.sismptm.partner.data.remote.IceCandidateModel
 import com.sismptm.partner.data.remote.SignalingClient
 import com.sismptm.partner.data.remote.SignalingMessage
 import com.sismptm.partner.webrtc.WebRTCManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import org.webrtc.*
 
 /**
  * ViewModel for the Partner streaming screen.
- *
- * Lifecycle:
- * - Created once when entering StreamingScreen
- * - Cleared when leaving (disposes WebRTC + closes WebSocket)
- *
- * Signaling flow:
- * 1. initStreaming(surface, partnerId) → camera preview starts + WS connects
- * 2. onJoinReceived(clientId) → Partner receives join request from client
- * 3. Partner calls createOffer() targeting the specific clientId
- * 4. onLocalSdpCreated(offer) → send to clientId via server
- * 5. onAnswerReceived(sdp) → setRemoteDescription (partner receives answer)
- * 6. ICE candidates exchanged → P2P established
  */
 class StreamingViewModel(application: Application) :
         AndroidViewModel(application),
@@ -34,15 +30,17 @@ class StreamingViewModel(application: Application) :
 
     private val TAG = "StreamingViewModel"
 
-    /** Dynamic target: determined when a client sends a 'join' message */
     private var targetClientId: String? = null
-
     private var partnerId = "PARTNER_01"
     private var signalingClient: SignalingClient? = null
+    private var mediaPlayer: MediaPlayer? = null
+    
+    // Reconexion Logic
+    private var reconnectionAttempts = 0
+    private val maxReconnectionAttempts = 5
+    private var reconnectionJob: Job? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
 
-    // EglBase is created HERE (in the ViewModel) so it survives recompositions.
-    // It is shared with WebRTCManager to ensure the same EGL context is used
-    // for both the PeerConnectionFactory and the SurfaceViewRenderer.
     val eglBase: EglBase = EglBase.create()
 
     private val webRTCManager =
@@ -57,25 +55,12 @@ class StreamingViewModel(application: Application) :
     private val _lastCommand = MutableStateFlow<String?>(null)
     val lastCommand: StateFlow<String?> = _lastCommand
 
-    /**
-     * Call once when the streaming screen is ready. Starts the camera preview and connects to the
-     * signaling server.
-     *
-     * @param surfaceViewRenderer The surface to show the local camera.
-     * @param customId The Partner ID entered by the user.
-     */
     fun initStreaming(surfaceViewRenderer: SurfaceViewRenderer, customId: String) {
         this.partnerId = customId
-        Log.d(TAG, "initStreaming — partnerId='$partnerId'")
-
-        // Start camera (immediate preview + sets up PeerConnection + DataChannel)
         webRTCManager.startLocalCapture(surfaceViewRenderer)
 
-        // Connect to signaling server with peerId query param
         val baseUrl = BuildConfig.BASE_WEBRTC
         val signalingUrl = buildUrl(baseUrl, partnerId)
-        Log.d(TAG, "Signaling URL: $signalingUrl")
-
         signalingClient = SignalingClient(signalingUrl, this)
         signalingClient?.connect()
     }
@@ -87,82 +72,43 @@ class StreamingViewModel(application: Application) :
     // ─── SignalingClient.SignalingListener ───────────────────────────────────
 
     override fun onConnected() {
-        Log.d(TAG, "Signaling connected — waiting for client to join...")
+        Log.d(TAG, "Signaling connected")
     }
 
     override fun onJoinReceived(senderId: String) {
-        Log.d(TAG, "Client '$senderId' joined — creating offer")
+        Log.d(TAG, "Client '$senderId' joined")
         this.targetClientId = senderId
+        reconnectionAttempts = 0 // Reset on successful join
         webRTCManager.createOffer()
     }
 
-    /**
-     * Called when an SDP offer is received (unexpected for Partner).
-     *
-     * Partner is the caller role and should NOT receive offers. This is a safety check.
-     *
-     * @param sdp The received offer SDP
-     */
-    override fun onOfferReceived(sdp: String) {
-        // Partner is the CALLER, it should not receive offers
-        Log.w(TAG, "Unexpected offer received on Partner — ignoring")
-    }
+    override fun onOfferReceived(sdp: String) {}
 
-    /**
-     * Called when an SDP answer is received from the Client.
-     *
-     * Sets the remote description to complete the SDP negotiation.
-     *
-     * @param sdp The answer SDP from the Client
-     */
     override fun onAnswerReceived(sdp: String) {
-        Log.d(TAG, "Answer received — setting remote description")
         webRTCManager.setRemoteDescription(sdp, isOffer = false)
     }
 
-    /**
-     * Called when an ICE candidate is received from the Client.
-     *
-     * Converts the model to IceCandidate and passes to WebRTCManager.
-     *
-     * @param candidate The received ICE candidate
-     */
     override fun onIceCandidateReceived(candidate: IceCandidateModel) {
-        val iceCandidate =
-                IceCandidate(candidate.sdpMid, candidate.sdpMLineIndex, candidate.candidate)
+        val iceCandidate = IceCandidate(candidate.sdpMid, candidate.sdpMLineIndex, candidate.candidate)
         webRTCManager.addIceCandidate(iceCandidate)
     }
 
-    /** Called when the signaling WebSocket is disconnected. */
     override fun onDisconnected() {
-        Log.d(TAG, "Signaling disconnected")
+        Log.w(TAG, "Signaling disconnected - monitoring WebRTC state")
     }
 
-    /**
-     * Called when a signaling error occurs.
-     *
-     * @param error Error message describing the failure
-     */
     override fun onError(error: String) {
         Log.e(TAG, "Signaling error: $error")
     }
 
     // ─── WebRTCManager.WebRTCListener Implementation ───────────────────────────────────
 
-    /**
-     * Called when a local ICE candidate is discovered.
-     *
-     * Sends the candidate to the target Client via signaling.
-     *
-     * @param candidate The discovered ICE candidate
-     */
     override fun onIceCandidate(candidate: IceCandidate) {
         val target = targetClientId ?: return
         signalingClient?.sendMessage(
                 SignalingMessage(
                         type = "candidate",
-                        candidate =
-                                IceCandidateModel(
+                        candidate = IceCandidateModel(
                                         sdpMid = candidate.sdpMid,
                                         sdpMLineIndex = candidate.sdpMLineIndex,
                                         candidate = candidate.sdp,
@@ -174,17 +120,9 @@ class StreamingViewModel(application: Application) :
         )
     }
 
-    /**
-     * Called when the local SDP (offer) is successfully created.
-     *
-     * Sends the SDP to the target Client via signaling.
-     *
-     * @param sdp The created SDP offer
-     */
     override fun onLocalSdpCreated(sdp: SessionDescription) {
         val target = targetClientId ?: return
         val type = if (sdp.type == SessionDescription.Type.OFFER) "offer" else "answer"
-        Log.d(TAG, "Local SDP ready (type=$type) → sending to '$target'")
         signalingClient?.sendMessage(
                 SignalingMessage(
                         type = type,
@@ -195,37 +133,98 @@ class StreamingViewModel(application: Application) :
         )
     }
 
-    /**
-     * Called when a command is received from the Client via DataChannel.
-     *
-     * Updates the last command and maintains a history.
-     *
-     * @param command The received command string
-     */
     override fun onCommandReceived(command: String) {
         _lastCommand.value = command
         _commands.value = (_commands.value + command).takeLast(3)
+        playInstructionAudio(command.lowercase())
+    }
+
+    private fun playInstructionAudio(command: String) {
+        try {
+            mediaPlayer?.let {
+                if (it.isPlaying) it.stop()
+                it.release()
+            }
+            mediaPlayer = null
+
+            val resId = when (command) {
+                "up" -> R.raw.up
+                "down" -> R.raw.down
+                "left" -> R.raw.left
+                "right" -> R.raw.right
+                else -> null
+            }
+
+            resId?.let {
+                mediaPlayer = MediaPlayer.create(getApplication(), it).apply {
+                    setOnCompletionListener { mp -> 
+                        mp.release()
+                        if (mediaPlayer == mp) mediaPlayer = null
+                    }
+                    start()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing audio: ${e.message}")
+        }
     }
 
     /**
-     * Called when the PeerConnection state changes.
-     *
-     * @param state The new PeerConnection state
+     * WebRTC Connection State Monitor.
+     * Logic: If disconnected, wait 3s. If still disconnected, trigger ICE Restart.
      */
     override fun onConnectionStateChange(state: PeerConnection.PeerConnectionState) {
         Log.d(TAG, "PeerConnection → $state")
         _connectionState.value = state
+
+        when (state) {
+            PeerConnection.PeerConnectionState.CONNECTED -> {
+                reconnectionJob?.cancel()
+                reconnectionAttempts = 0
+            }
+            PeerConnection.PeerConnectionState.DISCONNECTED, 
+            PeerConnection.PeerConnectionState.FAILED -> {
+                startReconnectionTimer()
+            }
+            else -> {}
+        }
     }
 
-    /**
-     * Lifecycle cleanup when the ViewModel is destroyed.
-     *
-     * Disposes WebRTC resources and closes signaling connection.
-     */
+    private fun startReconnectionTimer() {
+        if (reconnectionJob?.isActive == true) return
+        
+        reconnectionJob = viewModelScope.launch {
+            Log.d(TAG, "Connection lost. Waiting 3s for auto-recovery...")
+            delay(3000)
+            
+            if (_connectionState.value != PeerConnection.PeerConnectionState.CONNECTED) {
+                attemptRenegotiation()
+            }
+        }
+    }
+
+    private fun attemptRenegotiation() {
+        if (reconnectionAttempts >= maxReconnectionAttempts) {
+            Log.e(TAG, "Max reconnection attempts reached ($maxReconnectionAttempts)")
+            return
+        }
+
+        reconnectionAttempts++
+        Log.i(TAG, "Attempting Renegotiation (ICE Restart) #$reconnectionAttempts...")
+        
+        // Trigger a new offer from the Partner
+        webRTCManager.createOffer() 
+    }
+
     override fun onCleared() {
         super.onCleared()
-        Log.d(TAG, "ViewModel cleared — disposing resources")
-        webRTCManager.dispose() // also releases eglBase
+        reconnectionJob?.cancel()
+        mediaPlayer?.let {
+            if (it.isPlaying) it.stop()
+            it.release()
+        }
+        mediaPlayer = null
+        webRTCManager.dispose()
         signalingClient?.disconnect()
     }
 }
