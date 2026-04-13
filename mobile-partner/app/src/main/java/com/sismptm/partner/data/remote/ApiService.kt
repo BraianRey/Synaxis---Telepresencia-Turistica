@@ -44,7 +44,8 @@ data class LoginResponse(
     val id: Long,
     val email: String,
     val name: String,
-    val role: String
+    val role: String,
+    val areaId: Long? = null
 )
 
 // ── Register DTOs ─────────────────────────────────────────────────────────────

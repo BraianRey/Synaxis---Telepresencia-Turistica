@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,6 +84,17 @@ fun RequestScreen(
     val activeServiceState = uiState as? RequestTourViewModel.RequestUiState.ActiveService
     val errorState = uiState as? RequestTourViewModel.RequestUiState.Error
     val isLoading = uiState is RequestTourViewModel.RequestUiState.Loading
+
+    LaunchedEffect(Unit) {
+        // Prevent creation loop: if there is already an active service, jump to waiting screen.
+        viewModel.checkActiveServiceBeforeCreate()
+    }
+
+    LaunchedEffect(activeServiceState?.service?.serviceId) {
+        val activeServiceId = activeServiceState?.service?.serviceId ?: return@LaunchedEffect
+        onViewDetails(activeServiceId)
+        viewModel.resetState()
+    }
 
     var areaExpanded by remember { mutableStateOf(false) }
     var selectedArea by remember { mutableStateOf<RequestAreaOption?>(null) }

@@ -8,7 +8,6 @@ class AuthInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val requestBuilder = chain.request().newBuilder()
             .addHeader("Accept", "application/json")
-            .addHeader("Content-Type", "application/json")
 
         val token = SessionManager.accessToken
         if (token.isNotEmpty()) {

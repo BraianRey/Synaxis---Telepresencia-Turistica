@@ -1,4 +1,5 @@
 package com.sismptm.client.ui.screens
+                        StatusBadge(status = service.status)
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -260,7 +261,7 @@ fun ServiceWaitingScreen(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Service ID: ${service.serviceId}", color = TextPrimary)
+                        StatusBadge(status = service.status)
                         Text("Status: ${service.status}", color = TextPrimary, fontWeight = FontWeight.SemiBold)
                         Text(
                             text = when (status) {
@@ -309,7 +310,28 @@ fun ServiceWaitingScreen(
                 Text("Back to home")
             }
         }
+
+
+@Composable
+private fun StatusBadge(status: String) {
+    val normalized = status.uppercase()
+    val label = if (normalized == "REQUESTED") "CREATED" else normalized
+    val (bg, fg) = when (normalized) {
+        "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
+        "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
+        "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
+        else -> Color(0xFF37474F) to Color(0xFFECEFF1)
+    }
+
+    Card(colors = CardDefaults.cardColors(containerColor = bg)) {
+        Text(
+            text = label,
+            color = fg,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
     }
 }
-
 

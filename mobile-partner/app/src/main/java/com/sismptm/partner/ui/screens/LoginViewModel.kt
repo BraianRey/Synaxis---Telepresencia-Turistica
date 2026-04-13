@@ -37,7 +37,8 @@ class LoginViewModel : ViewModel() {
                             token = body.accessToken,
                             id = body.id,
                             name = body.name,
-                            email = body.email
+                            email = body.email,
+                            areaId = body.areaId ?: 0L
                         )
                     }
                     _uiState.value = LoginUiState.Success

@@ -111,14 +111,46 @@ class RequestTourViewModel : ViewModel() {
         }
     }
 
-    private suspend fun resolveActiveServiceConflict(errorBody: String) {
+    fun checkActiveServiceBeforeCreate() {
         val clientId = SessionManager.clientId
+        if (clientId == 0L) {
+            return
+        }
+
+        viewModelScope.launch {
+            runCatching {
+                RetrofitClient.apiService.getServicesByClient(clientId)
+            }.onSuccess { servicesResponse ->
+                if (!servicesResponse.isSuccessful) {
+                    return@onSuccess
+                }
+
+                val activeService = servicesResponse.body()
+                    ?.filter { it.status.uppercase() in activeStatuses }
+                    ?.maxByOrNull { it.serviceId }
+
+                if (activeService != null) {
+                    _uiState.value = RequestUiState.ActiveService(
+                        activeService,
+                        "You already have an active service request."
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun resolveActiveServiceConflict(errorBody: String) {
         val conflictMessage = parseBackendError(errorBody).ifBlank {
             "You already have an active service request."
         }
+        resolveActiveService(conflictMessage)
+    }
+
+    private suspend fun resolveActiveService(message: String) {
+        val clientId = SessionManager.clientId
 
         if (clientId == 0L) {
-            _uiState.value = RequestUiState.Error(conflictMessage)
+            _uiState.value = RequestUiState.Error(message)
             return
         }
 
@@ -126,7 +158,7 @@ class RequestTourViewModel : ViewModel() {
             RetrofitClient.apiService.getServicesByClient(clientId)
         }.onSuccess { servicesResponse ->
             if (!servicesResponse.isSuccessful) {
-                _uiState.value = RequestUiState.Error(conflictMessage)
+                _uiState.value = RequestUiState.Error(message)
                 return
             }
 
@@ -135,12 +167,12 @@ class RequestTourViewModel : ViewModel() {
                 ?.maxByOrNull { it.serviceId }
 
             if (activeService != null) {
-                _uiState.value = RequestUiState.ActiveService(activeService, conflictMessage)
+                _uiState.value = RequestUiState.ActiveService(activeService, message)
             } else {
-                _uiState.value = RequestUiState.Error(conflictMessage)
+                _uiState.value = RequestUiState.Error(message)
             }
         }.onFailure {
-            _uiState.value = RequestUiState.Error(conflictMessage)
+            _uiState.value = RequestUiState.Error(message)
         }
     }
 

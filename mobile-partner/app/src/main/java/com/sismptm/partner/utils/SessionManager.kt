@@ -11,11 +11,12 @@ object SessionManager {
 
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
 
-    fun saveSession(token: String, id: Long, name: String, email: String) {
+    fun saveSession(token: String, id: Long, name: String, email: String, areaId: Long = 0L) {
         accessToken = token
         partnerId = id
         partnerName = name
         partnerEmail = email
+        this.areaId = areaId
     }
 
     fun clearSession() {

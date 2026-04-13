@@ -1,4 +1,3 @@
-    fun saveSession(token: String, id: Long, name: String, email: String) {
 package com.sismptm.client.utils
 
 /** In-memory session store. Survives within the app process but clears on re-launch. */
@@ -10,13 +9,18 @@ object SessionManager {
     var clientEmail: String = ""
 
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
+
     fun saveSession(token: String, id: Long, name: String, email: String, role: String) {
-    fun saveSession(token: String, id: Long, name: String, email: String) {
         accessToken = token
         clientId = id
         clientName = name
         userRole = role
         clientEmail = email
+    }
+
+    // Backward-compatible overload for callers that still do not provide role.
+    fun saveSession(token: String, id: Long, name: String, email: String) {
+        saveSession(token = token, id = id, name = name, email = email, role = "")
     }
 
     fun clearSession() {
@@ -26,5 +30,4 @@ object SessionManager {
         userRole = ""
         clientEmail = ""
     }
-
-
+}

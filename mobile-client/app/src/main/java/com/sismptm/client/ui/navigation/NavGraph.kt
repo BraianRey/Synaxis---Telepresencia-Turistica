@@ -95,7 +95,9 @@ fun NavGraph() {
                 onNavigateToPartnerSearch = {
                     navController.navigate(Screen.PartnerSearch.route)
                 },
-                onLogout = {
+                onOpenServiceWaiting = { serviceId ->
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
+                },
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
