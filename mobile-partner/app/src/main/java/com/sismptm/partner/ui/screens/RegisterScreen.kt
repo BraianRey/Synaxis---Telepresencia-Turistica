@@ -4,45 +4,62 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
-import androidx.compose.ui.platform.LocalContext
-import com.sismptm.partner.location.LocationService
+
+private data class AreaOption(val id: Int, val label: String)
+
+private val areaOptions = listOf(
+    AreaOption(1, "Popayán"),
+    AreaOption(2, "Cali"),
+    AreaOption(3, "Medellín"),
+    AreaOption(4, "Bogotá")
+)
 
 /**
  * Screen for new partner registration.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
     viewModel: RegisterViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var areaIdText by remember { mutableStateOf("") }
+    var selectedArea by remember { mutableStateOf<AreaOption?>(null) }
+    var areaExpanded by remember { mutableStateOf(false) }
     var acceptedTerms by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     val emailHasError = email.isNotBlank() && !RegisterFormValidator.isValidEmail(email)
     val passwordMismatch = confirmPassword.isNotBlank() && password != confirmPassword
-    val areaId = areaIdText.toIntOrNull()
 
     val uiState by viewModel.uiState.collectAsState()
     val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading
@@ -53,7 +70,7 @@ fun RegisterScreen(
         password = password,
         confirmPassword = confirmPassword,
         acceptedTerms = acceptedTerms
-    ) && areaId != null
+    ) && selectedArea != null
 
     LaunchedEffect(uiState) {
         if (uiState is RegisterViewModel.RegisterUiState.Success) {
@@ -89,8 +106,20 @@ fun RegisterScreen(
             value = name,
             onValueChange = { name = it },
             label = { Text(stringResource(id = R.string.full_name)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1565C0),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -101,8 +130,20 @@ fun RegisterScreen(
             label = { Text(stringResource(id = R.string.email)) },
             isError = emailHasError,
             supportingText = { if (emailHasError) Text(stringResource(R.string.invalid_email)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1565C0),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -111,9 +152,29 @@ fun RegisterScreen(
             value = password,
             onValueChange = { password = it },
             label = { Text(stringResource(id = R.string.password)) },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1565C0),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -122,24 +183,72 @@ fun RegisterScreen(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = { Text(stringResource(id = R.string.confirm_password)) },
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                    Icon(
+                        imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                    )
+                }
+            },
             isError = passwordMismatch,
             supportingText = { if (passwordMismatch) Text(stringResource(R.string.passwords_do_not_match)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF1565C0),
+                unfocusedBorderColor = Color(0xFFE0E0E0)
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = areaIdText,
-            onValueChange = { areaIdText = it.filter { c -> c.isDigit() } },
-            label = { Text(stringResource(id = R.string.area_id)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            isError = areaIdText.isNotBlank() && areaId == null,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
-        )
+        ExposedDropdownMenuBox(
+            expanded = areaExpanded,
+            onExpandedChange = { areaExpanded = !areaExpanded }
+        ) {
+            OutlinedTextField(
+                value = selectedArea?.label.orEmpty(),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text(stringResource(id = R.string.area_id)) },
+                placeholder = { Text(stringResource(id = R.string.select_area)) },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF1565C0),
+                    unfocusedBorderColor = Color(0xFFE0E0E0)
+                )
+            )
+            DropdownMenu(
+                expanded = areaExpanded,
+                onDismissRequest = { areaExpanded = false }
+            ) {
+                areaOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = {
+                            selectedArea = option
+                            areaExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -185,7 +294,7 @@ fun RegisterScreen(
                     name = name,
                     email = email,
                     password = password,
-                    areaId = areaId ?: 0,
+                    areaId = selectedArea?.id ?: 0,
                     termsAccepted = acceptedTerms
                 )
             },
