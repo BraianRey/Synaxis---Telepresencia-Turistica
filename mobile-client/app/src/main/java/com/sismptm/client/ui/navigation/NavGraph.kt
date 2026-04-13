@@ -98,6 +98,7 @@ fun NavGraph() {
                 onOpenServiceWaiting = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
                 },
+                onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -119,7 +120,11 @@ fun NavGraph() {
         composable(Screen.Solicitud.route) {
             RequestScreen(
                 onViewDetails = { serviceId ->
-                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                        // Remove the Solicitud screen from backstack so pressing Back
+                        // goes to PartnerSearch/Home instead of looping back here.
+                        popUpTo(Screen.Solicitud.route) { inclusive = true }
+                    }
                 },
                 onBack = { navController.popBackStack() }
             )

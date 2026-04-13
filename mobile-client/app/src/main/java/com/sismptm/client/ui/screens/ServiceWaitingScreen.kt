@@ -1,5 +1,4 @@
 package com.sismptm.client.ui.screens
-                        StatusBadge(status = service.status)
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,7 +45,7 @@ import org.json.JSONObject
 private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED")
 private val terminalStatuses = setOf("COMPLETED", "CANCELLED")
 
-private data class ServiceWaitingUiState(
+data class ServiceWaitingUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val isCancelling: Boolean = false,
@@ -55,7 +54,7 @@ private data class ServiceWaitingUiState(
     val infoMessage: String? = null
 )
 
-private class ServiceWaitingViewModel : ViewModel() {
+class ServiceWaitingViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ServiceWaitingUiState())
     val uiState: StateFlow<ServiceWaitingUiState> = _uiState.asStateFlow()
@@ -310,7 +309,8 @@ fun ServiceWaitingScreen(
                 Text("Back to home")
             }
         }
-
+    }
+}
 
 @Composable
 private fun StatusBadge(status: String) {

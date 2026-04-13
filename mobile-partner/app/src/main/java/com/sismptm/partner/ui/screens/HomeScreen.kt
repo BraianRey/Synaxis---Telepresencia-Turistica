@@ -32,6 +32,7 @@ import com.sismptm.partner.data.remote.ServiceResponse
 import com.sismptm.partner.location.LocationService
 import com.sismptm.partner.ui.components.RequestCard
 import com.sismptm.partner.utils.SessionManager
+import kotlinx.coroutines.delay
 import java.math.BigDecimal
 
 /** Area ID → name mapping */
@@ -97,9 +98,15 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
     val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
     val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
 
-    // Load requests when areaId becomes set
-    LaunchedEffect(SessionManager.areaId) {
-        if (SessionManager.areaId != 0L) homeViewModel.loadAvailableRequests()
+    // Load requests when areaId becomes set AND partner is online; poll every 10s.
+    LaunchedEffect(SessionManager.areaId, isOnline) {
+        if (SessionManager.areaId != 0L && isOnline) {
+            homeViewModel.loadAvailableRequests()          // first load with spinner
+            while (true) {
+                delay(10_000)
+                homeViewModel.loadAvailableRequests(silent = true)  // silent refresh
+            }
+        }
     }
 
     if (showAreaDialog) {
@@ -151,6 +158,37 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
             item { StatsGrid() }
 
             // ── Incoming requests section ──────────────────────────────────
+            if (!isOnline) {
+                // Partner is OFFLINE → show message, hide requests
+                item { IncomingRequestsHeader(newCount = 0) }
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "You are currently offline",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFFEF4444),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Toggle your availability status to start receiving tour requests.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFB9C0CB),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            } else {
+            // Partner is ONLINE → show live requests
             when (val state = requestsState) {
                 is HomeViewModel.RequestsUiState.Loading -> {
                     item {
@@ -206,6 +244,7 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
                     }
                 }
             }
+            } // close else (isOnline)
         }
 
         Button(

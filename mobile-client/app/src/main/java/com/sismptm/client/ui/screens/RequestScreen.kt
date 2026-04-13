@@ -85,15 +85,23 @@ fun RequestScreen(
     val errorState = uiState as? RequestTourViewModel.RequestUiState.Error
     val isLoading = uiState is RequestTourViewModel.RequestUiState.Loading
 
+    // Track whether we already navigated away so we don't re-trigger on recompose.
+    var hasNavigatedToWaiting by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
-        // Prevent creation loop: if there is already an active service, jump to waiting screen.
-        viewModel.checkActiveServiceBeforeCreate()
+        // Only check once per screen entry; skip if we already handled it.
+        if (!hasNavigatedToWaiting) {
+            viewModel.checkActiveServiceBeforeCreate()
+        }
     }
 
     LaunchedEffect(activeServiceState?.service?.serviceId) {
         val activeServiceId = activeServiceState?.service?.serviceId ?: return@LaunchedEffect
-        onViewDetails(activeServiceId)
-        viewModel.resetState()
+        if (!hasNavigatedToWaiting) {
+            hasNavigatedToWaiting = true
+            onViewDetails(activeServiceId)
+            viewModel.resetState()
+        }
     }
 
     var areaExpanded by remember { mutableStateOf(false) }
