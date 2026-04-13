@@ -5,6 +5,7 @@ build/
 # Android
 local.properties
 *.apk
+*.aab
 *.iml
 
 # VS Code
@@ -18,7 +19,6 @@ Thumbs.db
 
 # Secrets
 .env
-.env.example
 
 # Local helper for git commit message (git commit -F commit-message.txt)
 commit-message.txt
@@ -29,6 +29,14 @@ backend-management-service/data/
 # Management service docs (local / generated)
 backend-management-service/docs/
 
+# Eclipse IDE output directory (should not be part of source control)
+backend-management-service/bin/
+
+# Build log artifact
+mobile-client/build.log
+
+# Profile pictures uploaded during local development
+backend-management-service/picProfile/*
+!backend-management-service/picProfile/.gitkeep
+
 .idea/
-backend-management-service/mvnw
-mobile-client/gradlew

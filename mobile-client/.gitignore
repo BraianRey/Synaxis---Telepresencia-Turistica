@@ -1,5 +1,5 @@
 *.iml
-.gradle
+.gradle/
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -14,3 +14,4 @@
 .cxx
 local.properties
 .env
+build.log
