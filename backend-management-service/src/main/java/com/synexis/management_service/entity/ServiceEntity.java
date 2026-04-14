@@ -17,13 +17,7 @@ public class ServiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idService;
 
-    /**
-     * Optimistic lock for concurrent updates (e.g. two partners racing to accept).
-     */
-    @Version
-    private Long version;
-
-    // Relaciones
+    // RELATIONSHIPS
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
@@ -32,25 +26,37 @@ public class ServiceEntity {
     @JoinColumn(name = "partner_id")
     private Partner partner;
 
-    @ManyToOne
-    @JoinColumn(name = "area_id", nullable = false)
-    private Area area;
-
-    // Campos
-    @Column(length = 255)
+    // FIELDS
+    @Column(name = "start_location_description", nullable = false, length = 255)
     private String startLocationDescription;
 
+    @Column(name = "agreed_hours", nullable = false)
     private Integer agreedHours;
 
-    @Column(precision = 10, scale = 2)
+    @Column(name = "hourly_rate", precision = 10, scale = 2)
     private BigDecimal hourlyRate;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ServiceStatus status;
 
+    // Longitude and latitude of the service's starting point.
+    @Column(nullable = false)
+    private double longitude;
+
+    @Column(nullable = false)
+    private double latitude;
+
+    @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
+
+    @Column(name = "accepted_at", nullable = false)
     private LocalDateTime acceptedAt;
+
+    @Column(name = "started_at", nullable = false)
     private LocalDateTime startedAt;
+
+    @Column(name = "ended_at", nullable = false)
     private LocalDateTime endedAt;
 
 }

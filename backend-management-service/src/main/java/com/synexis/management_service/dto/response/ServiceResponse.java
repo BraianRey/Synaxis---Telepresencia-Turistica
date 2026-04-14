@@ -13,7 +13,9 @@ public record ServiceResponse(
 
         Long partnerId,
 
-        Long areaId,
+        Double longitude,
+
+        Double latitude,
 
         String startLocationDescription,
 
@@ -32,7 +34,7 @@ public record ServiceResponse(
         LocalDateTime endedAt
 
 ) {
-    public ServiceResponse(Long serviceId, Long clientId, String clientName, Long partnerId, Long areaId,
+    public ServiceResponse(Long serviceId, Long clientId, Long partnerId, Double longitude, Double latitude,
             String startLocationDescription,
             Integer agreedHours, BigDecimal hourlyRate, String status, LocalDateTime requestedAt,
             LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
@@ -40,7 +42,8 @@ public record ServiceResponse(
         this.clientId = clientId;
         this.clientName = clientName;
         this.partnerId = partnerId;
-        this.areaId = areaId;
+        this.longitude = longitude;
+        this.latitude = latitude;
         this.startLocationDescription = startLocationDescription;
         this.agreedHours = agreedHours;
         this.hourlyRate = hourlyRate;

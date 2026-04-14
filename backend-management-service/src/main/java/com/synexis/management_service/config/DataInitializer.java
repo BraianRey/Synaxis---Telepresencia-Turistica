@@ -2,15 +2,11 @@ package com.synexis.management_service.config;
 
 import com.synexis.management_service.dto.request.RegisterClientRequest;
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
-import com.synexis.management_service.entity.Area;
 import com.synexis.management_service.entity.UserLanguage;
-import com.synexis.management_service.repository.AreaRepository;
 import com.synexis.management_service.repository.ClientRepository;
 import com.synexis.management_service.repository.PartnerRepository;
 import com.synexis.management_service.service.ClientService;
 import com.synexis.management_service.service.PartnerService;
-
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,55 +28,23 @@ public class DataInitializer implements ApplicationRunner {
     private final PartnerService partnerService;
     private final ClientRepository clientRepository;
     private final PartnerRepository partnerRepository;
-    private final AreaRepository areaRepository;
 
     public DataInitializer(ClientService clientService,
             PartnerService partnerService,
             ClientRepository clientRepository,
-            PartnerRepository partnerRepository,
-            AreaRepository areaRepository) {
+            PartnerRepository partnerRepository) {
         this.clientService = clientService;
         this.partnerService = partnerService;
         this.clientRepository = clientRepository;
         this.partnerRepository = partnerRepository;
-        this.areaRepository = areaRepository;
     }
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("=== DataInitializer: starting seed ===");
-        seedAreas();
+        log.info("\n\n=== DataInitializer: starting seed ===\n\n");
         seedClients();
         seedPartners();
-        log.info("=== DataInitializer: seed complete ===");
-    }
-
-    // ------------------------------------------------------------------
-    // AREAS — inserted via data.sql, just log count here
-    // ------------------------------------------------------------------
-    // Reemplaza el método seedAreas() por este:
-    private void seedAreas() {
-        if (areaRepository.count() > 0) {
-            log.info("Areas already seeded, skipping ({} found)", areaRepository.count());
-            return;
-        }
-        areaRepository.saveAll(List.of(
-                createArea("Colombia", "Cauca", "Popayán", 2.4448, -76.6147),
-                createArea("Colombia", "Valle", "Cali", 3.4516, -76.5320),
-                createArea("Colombia", "Antioquia", "Medellín", 6.2442, -75.5812),
-                createArea("Colombia", "Cundinamarca", "Bogotá", 4.7110, -74.0721)));
-        log.info("Areas seeded: 4");
-    }
-
-    private Area createArea(String country, String state,
-            String municipality, Double lat, Double lng) {
-        Area area = new Area();
-        area.setCountry(country);
-        area.setState(state);
-        area.setMunicipality(municipality);
-        area.setCenterLat(lat);
-        area.setCenterLng(lng);
-        return area;
+        log.info("\n\n=== DataInitializer: seed complete ===\n\n");
     }
 
     // ------------------------------------------------------------------
@@ -111,21 +75,25 @@ public class DataInitializer implements ApplicationRunner {
     // PARTNERS
     // ------------------------------------------------------------------
     private void seedPartners() {
-        seedPartner("Carlos Guía", "carlos.seed@gmail.com", "password12", 1, UserLanguage.es);
-        seedPartner("Laura Viajes", "laura.seed@gmail.com", "password12", 2, UserLanguage.es);
-        seedPartner("Pedro Tours", "pedro.seed@gmail.com", "password12", 3, UserLanguage.es);
-        seedPartner("Sofia Explora", "sofia.seed@gmail.com", "password12", 4, UserLanguage.en);
+        seedPartner("Carlos Guía", "carlos.seed@gmail.com", "password12", 3.4264923857971477, -76.51027679495554,
+                UserLanguage.es);
+        seedPartner("Laura Viajes", "laura.seed@gmail.com", "password12", 6.2105754412572605, -75.56777001137677,
+                UserLanguage.es);
+        seedPartner("Pedro Tours", "pedro.seed@gmail.com", "password12", -1.244937522470218, -78.62342836431088,
+                UserLanguage.es);
+        seedPartner("Sofia Explora", "sofia.seed@gmail.com", "password12", 22.166251011084302, -100.97583711187319,
+                UserLanguage.en);
     }
 
     private void seedPartner(String name, String email, String password,
-            Integer areaId, UserLanguage language) {
+            Double latitude, Double longitude, UserLanguage language) {
         if (partnerRepository.findByEmailIgnoreCase(email).isPresent()) {
             log.info("Partner already exists, skipping: {}", email);
             return;
         }
         try {
             partnerService.registerPartner(new RegisterPartnerRequest(
-                    email, password, name, areaId, true, language, null));
+                    email, password, name, longitude, latitude, true, language, null));
             log.info("Partner seeded: {}", email);
         } catch (Exception e) {
             log.warn("Could not seed partner {}: {}", email, e.getMessage());
