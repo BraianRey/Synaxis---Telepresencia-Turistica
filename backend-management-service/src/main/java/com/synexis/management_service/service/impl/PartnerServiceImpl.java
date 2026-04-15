@@ -1,5 +1,6 @@
 package com.synexis.management_service.service.impl;
 
+import com.synexis.management_service.client.NominatimClient;
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
 import com.synexis.management_service.dto.response.RegisterPartnerResponse;
 import com.synexis.management_service.entity.Area;
@@ -10,7 +11,6 @@ import com.synexis.management_service.entity.UserRole;
 import com.synexis.management_service.exception.EmailAlreadyExistsException;
 import com.synexis.management_service.exception.KeycloakUserCreationException;
 import com.synexis.management_service.repository.PartnerRepository;
-import com.synexis.management_service.service.AreaService;
 import com.synexis.management_service.service.PartnerService;
 
 import jakarta.ws.rs.core.Response;
@@ -36,12 +36,12 @@ public class PartnerServiceImpl implements PartnerService {
 
     private final PartnerRepository partnerRepository;
     private final Keycloak keycloak;
-    private final AreaService areaService;
+    private final NominatimClient nominatimClient;
 
-    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak, AreaService areaService) {
+    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak, NominatimClient nominatimClient) {
         this.partnerRepository = partnerRepository;
         this.keycloak = keycloak;
-        this.areaService = areaService;
+        this.nominatimClient = nominatimClient;
     }
 
     @Override
@@ -53,9 +53,6 @@ public class PartnerServiceImpl implements PartnerService {
         if (partnerRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new EmailAlreadyExistsException(normalizedEmail);
         }
-
-        // Validate referenced area before creating external user in Keycloak.
-        Area area = areaService.findById(request.areaId().longValue());
 
         UserRepresentation user = new UserRepresentation();
         user.setUsername(normalizedEmail);
@@ -114,6 +111,9 @@ public class PartnerServiceImpl implements PartnerService {
             throw new KeycloakUserCreationException("Failed to assign PARTNER role in Keycloak: " + ex.getMessage());
         }
 
+        // Get area details from Nominatim
+        Area area = nominatimClient.getAreaFromCoordinates(request.latitude(), request.longitude());
+
         Partner partner = new Partner();
         partner.setKeycloakId(userId);
         partner.setEmail(normalizedEmail);
@@ -138,7 +138,7 @@ public class PartnerServiceImpl implements PartnerService {
                 saved.getTermsAccepted(),
                 saved.getPicDirectory(),
                 saved.getRole(),
-                saved.getArea().getId().intValue(),
+                saved.getArea(),
                 saved.getAvailabilityStatus());
     }
 
