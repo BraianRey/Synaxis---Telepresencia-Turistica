@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -30,11 +31,12 @@ import org.webrtc.PeerConnection
 import org.webrtc.SurfaceViewRenderer
 
 /**
- * Streaming screen for the Partner (broadcaster).
- * Key fix: the EglBase is owned by the ViewModel (not created here),
- * so the SurfaceViewRenderer is initialized with the exact same EGL context
- * that the PeerConnectionFactory uses. Mismatch between EGL contexts was
- * causing the native WebRTC crash (CloseStatus 1006).
+ * Global reference to the currently active MediaPlayer to manage audio playback.
+ */
+private var activeMediaPlayer: MediaPlayer? = null
+
+/**
+ * Main entry point for the Partner's streaming interface.
  */
 @Composable
 fun StreamingScreen(
@@ -65,7 +67,6 @@ fun StreamingScreen(
         }
     }
 
-    // Always present: base black background — prevents null-render / blank screen
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -83,7 +84,6 @@ fun StreamingScreen(
             )
 
             else -> {
-                // Permissions granted but dialog not yet confirmed
                 Text(
                     text = "Configure your stream...",
                     color = Color.White.copy(alpha = 0.4f),
@@ -92,30 +92,20 @@ fun StreamingScreen(
             }
         }
 
-        // Configuration dialog shown on top of the black background
         if (hasPermissions && showIdDialog) {
             AlertDialog(
-                onDismissRequest = { /* require explicit action */ },
+                onDismissRequest = { },
                 title = { Text("Partner Configuration") },
                 text = {
                     Column {
-                        Text("Enter your Partner ID.\nThe Client app must target this same ID to receive your stream.")
+                        Text("Enter your Partner ID.")
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedTextField(
                             value = partnerIdInput,
                             onValueChange = { partnerIdInput = it.trim() },
                             label = { Text("Partner ID") },
-                            placeholder = { Text("Ex: PARTNER_01") },
                             singleLine = true
                         )
-                        if (partnerIdInput.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Client must connect to: $partnerIdInput",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
                     }
                 },
                 confirmButton = {
@@ -134,6 +124,9 @@ fun StreamingScreen(
     }
 }
 
+/**
+ * Placeholder screen shown when required permissions are not granted.
+ */
 @Composable
 fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
     Box(
@@ -148,14 +141,16 @@ fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("Camera & Microphone Required", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text("Grant permissions to start streaming.", color = Color(0xFFB9C0CB), fontSize = 14.sp)
-            Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))) {
+            Button(onClick = onRetry) {
                 Text("Grant Permissions")
             }
         }
     }
 }
 
+/**
+ * Core content of the streaming session, including the video feed and command feedback.
+ */
 @Composable
 fun StreamingContent(
     onBack: () -> Unit,
@@ -165,27 +160,39 @@ fun StreamingContent(
     val context = LocalContext.current
     val connectionState by viewModel.connectionState.collectAsState()
     val commands by viewModel.commands.collectAsState()
-    val lastCommand by viewModel.lastCommand.collectAsState()
+    val lastCommandEvent by viewModel.lastCommandEvent.collectAsState()
 
-    LaunchedEffect(lastCommand) {
-        lastCommand?.let { playInstructionAudio(context, it) }
+    /**
+     * Cleanup effect to ensure MediaPlayer resources are released when leaving the screen.
+     */
+    DisposableEffect(Unit) {
+        onDispose {
+            activeMediaPlayer?.let {
+                try { if (it.isPlaying) it.stop() } catch (e: Exception) {}
+                it.release()
+            }
+            activeMediaPlayer = null
+        }
+    }
+
+    /**
+     * Triggers audio feedback whenever a new command event is received.
+     */
+    LaunchedEffect(lastCommandEvent) {
+        lastCommandEvent?.let { playInstructionAudio(context, it.text) }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
-        // SurfaceViewRenderer initialized with the ViewModel's EglBase
-        // CRITICAL: must use the same EglBase as the PeerConnectionFactory
         AndroidView(
             factory = { _ ->
                 SurfaceViewRenderer(context).also { renderer ->
-                    // initStreaming uses viewModel.eglBase to init renderer + factory
                     viewModel.initStreaming(renderer, partnerId)
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
 
-        // Partner ID label (bottom-right)
         Text(
             text = "Broadcasting as: $partnerId",
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
@@ -193,7 +200,6 @@ fun StreamingContent(
             fontSize = 12.sp
         )
 
-        // Connection state indicator (top-right)
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -213,8 +219,8 @@ fun StreamingContent(
             Text(text = connectionState.name, color = Color.White, fontSize = 12.sp)
         }
 
-        // Command history (top-left)
         if (commands.isNotEmpty()) {
+            val displayCommands = commands.asReversed().take(3)
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -222,12 +228,19 @@ fun StreamingContent(
                     .width(200.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Commands received:", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
-                commands.asReversed().forEach { InstructionItem(it) }
+                Text("Latest Commands:", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+                displayCommands.forEachIndexed { index, command ->
+                    val alphaValue = when(index) {
+                        0 -> 1.0f
+                        1 -> 0.6f
+                        2 -> 0.3f
+                        else -> 0f
+                    }
+                    InstructionItem(command, alphaValue)
+                }
             }
         }
 
-        // Back button (bottom-left)
         IconButton(
             onClick = onBack,
             modifier = Modifier
@@ -240,10 +253,13 @@ fun StreamingContent(
     }
 }
 
+/**
+ * Individual command item with varying alpha based on its chronological order.
+ */
 @Composable
-fun InstructionItem(instruction: String) {
+fun InstructionItem(instruction: String, alphaValue: Float) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().alpha(alphaValue),
         color = Color.Black.copy(alpha = 0.4f),
         shape = RoundedCornerShape(8.dp)
     ) {
@@ -251,6 +267,9 @@ fun InstructionItem(instruction: String) {
     }
 }
 
+/**
+ * Handles audio playback for directional instructions, ensuring only one sound plays at a time.
+ */
 private fun playInstructionAudio(context: Context, instruction: String) {
     val audioResId = when (instruction.lowercase()) {
         "up", "forward"    -> R.raw.up
@@ -258,13 +277,29 @@ private fun playInstructionAudio(context: Context, instruction: String) {
         "left"             -> R.raw.left
         "right"            -> R.raw.right
         else               -> null
+    } ?: return
+
+    try {
+        /**
+         * Terminate and release previous audio if it's still playing to prevent overlapping.
+         */
+        activeMediaPlayer?.let {
+            if (it.isPlaying) it.stop()
+            it.release()
+        }
+    } catch (e: Exception) {
+        // Safe to ignore errors during playback termination
     }
-    audioResId?.let {
-        try {
-            MediaPlayer.create(context, it)?.apply {
-                setOnCompletionListener { mp -> mp.release() }
-                start()
+
+    try {
+        activeMediaPlayer = MediaPlayer.create(context, audioResId)?.apply {
+            setOnCompletionListener { mp ->
+                mp.release()
+                if (activeMediaPlayer == mp) activeMediaPlayer = null
             }
-        } catch (e: Exception) { /* no audio resource in debug — safe to ignore */ }
+            start()
+        }
+    } catch (e: Exception) {
+        activeMediaPlayer = null
     }
 }

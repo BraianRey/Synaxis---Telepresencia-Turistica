@@ -8,13 +8,7 @@ import android.util.Log
 import java.nio.ByteBuffer
 import org.webrtc.*
 
-/**
- * Manager for WebRTC PeerConnection on the Client (viewer) side.
- * - Device-Aware: Detects hardware tier (Low/Mid/High) to cap incoming quality.
- * - SDP Munging: Limits max-bitrate in the Answer if the device is low-end.
- * - VR-Optimized: Prioritizes FrameRate over Resolution (MAINTAIN_FRAMERATE).
- * - Robustness: Strict lifecycle guards and international connectivity.
- */
+/** Manager for WebRTC PeerConnection on the Client (viewer) side. */
 class WebRTCManager(
         private val context: Context,
         private val eglBase: EglBase,
@@ -47,15 +41,20 @@ class WebRTCManager(
     private val mainHandler = Handler(Looper.getMainLooper())
     private val pendingCandidates = mutableListOf<IceCandidate>()
     private var remoteDescriptionSet = false
-    private var onIceCandidateCallback: ((IceCandidate) -> Unit)? = null
 
-    // Detected device tier: 1 = Low, 2 = Mid, 3 = High
+    // Outgoing ICE candidates buffering
+    @Volatile private var canSendOutgoingCandidates = false
+    private val pendingOutgoingCandidates = mutableListOf<IceCandidate>()
+
+    private var onIceCandidateCallback: ((IceCandidate) -> Unit)? = null
+    private var onConnectionStateChangeListener: ((PeerConnection.PeerConnectionState) -> Unit)? =
+            null
+
     private val deviceTier: Int by lazy { detectDeviceTier() }
 
     init {
         ensureInitialized(context)
 
-        // Optimization: Hardware decoding is mandatory for 2026 standards
         val encoderFactory = DefaultVideoEncoderFactory(eglBase.eglBaseContext, false, true)
         val decoderFactory = DefaultVideoDecoderFactory(eglBase.eglBaseContext)
 
@@ -63,47 +62,52 @@ class WebRTCManager(
                 PeerConnectionFactory.builder()
                         .setVideoEncoderFactory(encoderFactory)
                         .setVideoDecoderFactory(decoderFactory)
-                        .setOptions(PeerConnectionFactory.Options().apply {
-                            disableEncryption = false
-                            disableNetworkMonitor = false
-                        })
+                        .setOptions(
+                                PeerConnectionFactory.Options().apply {
+                                    disableEncryption = false
+                                    disableNetworkMonitor = false
+                                }
+                        )
                         .createPeerConnectionFactory()
 
-        Log.d(TAG, "PeerConnectionFactory built [Device Tier: $deviceTier]")
+        Log.d(TAG, "PeerConnectionFactory built [Tier: $deviceTier]")
     }
 
     private fun detectDeviceTier(): Int {
         val rt = Runtime.getRuntime()
-        val cpuCores = rt.availableProcessors()
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memInfo)
         val totalRamGb = memInfo.totalMem / (1024 * 1024 * 1024.0)
-
         return when {
-            cpuCores <= 4 || totalRamGb <= 3.0 -> 1 // Low-end
-            cpuCores <= 6 || totalRamGb <= 6.0 -> 2 // Mid-end
-            else -> 3 // High-end
+            rt.availableProcessors() <= 4 || totalRamGb <= 3.0 -> 1
+            rt.availableProcessors() <= 6 || totalRamGb <= 6.0 -> 2
+            else -> 3
         }
     }
 
     fun createPeerConnection() {
         if (isDisposed) return
 
+        // Clean up previous connection if it exists
+        peerConnection?.dispose()
+        remoteDescriptionSet = false
+        synchronized(pendingCandidates) { pendingCandidates.clear() }
+
         val iceServers =
                 listOf(
-                        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
-                        PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer(),
-                        PeerConnection.IceServer.builder("stun:stun2.l.google.com:19302").createIceServer()
+                        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
+                                .createIceServer(),
+                        PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302")
+                                .createIceServer()
                 )
+
         val rtcConfig =
                 PeerConnection.RTCConfiguration(iceServers).apply {
                     sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
                     continualGatheringPolicy =
                             PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
                     keyType = PeerConnection.KeyType.ECDSA
-                    iceBackupCandidatePairPingInterval = 2000
-                    iceConnectionReceivingTimeout = 5000
                 }
 
         peerConnection =
@@ -111,185 +115,158 @@ class WebRTCManager(
                         rtcConfig,
                         object : PeerConnection.Observer {
                             override fun onIceCandidate(candidate: IceCandidate) {
-                                if (!isDisposed) {
-                                    mainHandler.post { addIceCandidate(candidate) }
+                                if (isDisposed) return
+
+                                if (canSendOutgoingCandidates) {
+                                    mainHandler.post { onIceCandidateCallback?.invoke(candidate) }
+                                } else {
+                                    synchronized(pendingOutgoingCandidates) {
+                                        pendingOutgoingCandidates.add(candidate)
+                                    }
                                 }
                             }
 
-                            override fun onConnectionChange(state: PeerConnection.PeerConnectionState) {
-                                Log.d(TAG, "Connection state → $state")
+                            override fun onConnectionChange(
+                                    state: PeerConnection.PeerConnectionState
+                            ) {
+                                Log.d(TAG, "PeerConnection state change: $state")
+                                mainHandler.post { onConnectionStateChangeListener?.invoke(state) }
                             }
 
-                            override fun onIceConnectionChange(state: PeerConnection.IceConnectionState) {
-                                Log.d(TAG, "ICE connection → $state")
+                            override fun onIceConnectionChange(
+                                    state: PeerConnection.IceConnectionState
+                            ) {
+                                Log.d(TAG, "ICE connection state: $state")
                             }
 
                             override fun onTrack(transceiver: RtpTransceiver) {
                                 if (isDisposed) return
-                                mainHandler.post {
-                                    val track = transceiver.receiver.track()
-                                    if (track is VideoTrack) {
-                                        Log.d(TAG, "Remote video track received")
+                                val track = transceiver.receiver.track()
+                                if (track is VideoTrack) {
+                                    mainHandler.post {
+                                        Log.i(TAG, ">>> REMOTE VIDEO TRACK RECEIVED <<<")
                                         track.setEnabled(true)
                                         onRemoteTrack(track)
-                                        applyReceiverPreferences()
                                     }
                                 }
                             }
 
                             override fun onDataChannel(dc: DataChannel) {
-                                if (isDisposed) return
-                                Log.d(TAG, "DataChannel 'control' received")
-                                if (dc.label() == "control") {
-                                    dataChannel = dc
-                                    dc.registerObserver(
-                                            object : DataChannel.Observer {
-                                                override fun onBufferedAmountChange(p0: Long) {}
-                                                override fun onStateChange() {
-                                                    Log.d(TAG, "DataChannel state → ${dc.state()}")
-                                                }
-                                                override fun onMessage(buffer: DataChannel.Buffer) {}
-                                            }
-                                    )
-                                }
+                                if (dc.label() == "control") dataChannel = dc
                             }
 
                             override fun onRenegotiationNeeded() {}
                             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
                             override fun onIceConnectionReceivingChange(p0: Boolean) {}
-                            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
+                            override fun onIceGatheringChange(
+                                    p0: PeerConnection.IceGatheringState?
+                            ) {}
                             override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
-                            override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>?) {}
+                            override fun onAddTrack(
+                                    p0: RtpReceiver?,
+                                    p1: Array<out MediaStream>?
+                            ) {}
                             override fun onRemoveTrack(p0: RtpReceiver?) {}
                             @Deprecated("Deprecated") override fun onAddStream(p0: MediaStream?) {}
-                            @Deprecated("Deprecated") override fun onRemoveStream(p0: MediaStream?) {}
+                            @Deprecated("Deprecated")
+                            override fun onRemoveStream(p0: MediaStream?) {}
                         }
                 )
-
-        Log.d(TAG, "PeerConnection created (Unified Plan)")
     }
 
-    /**
-     * VR-Ready: Prioritizes FPS to avoid motion sickness.
-     */
-    private fun applyReceiverPreferences() {
-        mainHandler.post {
-            val pc = peerConnection ?: return@post
-            val transceivers = pc.transceivers ?: return@post
-            for (transceiver in transceivers) {
-                if (transceiver.receiver.track()?.kind() == "video") {
-                    val parameters = transceiver.receiver.parameters
-                    parameters.degradationPreference = RtpParameters.DegradationPreference.MAINTAIN_FRAMERATE
-                    transceiver.receiver.parameters = parameters
-                }
-            }
-        }
+    fun handleOfferAndAnswer(sdpOffer: String, onAnswerReady: (String) -> Unit) {
+        if (isDisposed || peerConnection == null) return
+
+        // Ensure we are ready for a new session
+        remoteDescriptionSet = false
+        canSendOutgoingCandidates = false
+        synchronized(pendingCandidates) { pendingCandidates.clear() }
+        synchronized(pendingOutgoingCandidates) { pendingOutgoingCandidates.clear() }
+
+        val remoteDesc = SessionDescription(SessionDescription.Type.OFFER, sdpOffer)
+        peerConnection?.setRemoteDescription(
+                object : SdpObserver {
+                    override fun onSetSuccess() {
+                        remoteDescriptionSet = true
+                        Log.d(TAG, "Remote Offer set. Creating Answer...")
+
+                        peerConnection?.setLocalDescription(
+                                object : SdpObserver {
+                                    override fun onSetSuccess() {
+                                        val localDesc = peerConnection?.localDescription
+                                        if (localDesc != null) {
+                                            Log.d(TAG, "Local Answer set. Sending to Partner.")
+                                            canSendOutgoingCandidates = true
+                                            onAnswerReady(localDesc.description)
+                                        }
+                                        processPendingCandidates()
+                                        flushOutgoingCandidates()
+                                    }
+                                    override fun onCreateSuccess(p0: SessionDescription?) {}
+                                    override fun onCreateFailure(p0: String?) {
+                                        Log.e(TAG, "Auto-Answer fail: $p0")
+                                    }
+                                    override fun onSetFailure(p0: String?) {
+                                        Log.e(TAG, "SetLocal fail: $p0")
+                                    }
+                                }
+                        )
+                    }
+                    override fun onCreateSuccess(p0: SessionDescription?) {}
+                    override fun onSetFailure(p0: String?) {
+                        Log.e(TAG, "SetRemote fail: $p0")
+                    }
+                    override fun onCreateFailure(p0: String?) {}
+                },
+                remoteDesc
+        )
     }
 
     fun setOnIceCandidateCallback(callback: (IceCandidate) -> Unit) {
         this.onIceCandidateCallback = callback
     }
 
+    fun setOnConnectionStateChangeListener(listener: (PeerConnection.PeerConnectionState) -> Unit) {
+        this.onConnectionStateChangeListener = listener
+    }
+
     fun sendCommand(command: String) {
         val dc = dataChannel ?: return
-        if (dc.state() != DataChannel.State.OPEN || isDisposed) return
-        val buffer = DataChannel.Buffer(ByteBuffer.wrap(command.toByteArray(Charsets.UTF_8)), false)
-        dc.send(buffer)
-        Log.d(TAG, "Command sent: $command")
-    }
-
-    fun handleOffer(sdp: String, observer: SdpObserver) {
-        if (isDisposed || peerConnection == null) return
-        val desc = SessionDescription(SessionDescription.Type.OFFER, sdp)
-        peerConnection?.setRemoteDescription(
-                object : SdpObserver {
-                    override fun onSetSuccess() {
-                        remoteDescriptionSet = true
-                        observer.onSetSuccess()
-                        processPendingCandidates()
-                    }
-                    override fun onSetFailure(error: String?) {
-                        observer.onSetFailure(error)
-                    }
-                    override fun onCreateSuccess(p0: SessionDescription?) {}
-                    override fun onCreateFailure(p0: String?) {}
-                },
-                desc
-        )
-    }
-
-    private fun processPendingCandidates() {
-        synchronized(pendingCandidates) {
-            for (candidate in pendingCandidates) {
-                peerConnection?.addIceCandidate(candidate)
-                onIceCandidateCallback?.invoke(candidate)
-            }
-            pendingCandidates.clear()
+        if (dc.state() == DataChannel.State.OPEN) {
+            dc.send(DataChannel.Buffer(ByteBuffer.wrap(command.toByteArray()), false))
         }
-    }
-
-    fun createAnswer(observer: SdpObserver) {
-        if (isDisposed || peerConnection == null) return
-        peerConnection?.createAnswer(
-                object : SdpObserver {
-                    override fun onCreateSuccess(desc: SessionDescription) {
-                        // Dynamically cap bitrate based on device tier
-                        val adaptiveSdp = capBitrateInSdp(desc.description)
-                        val adaptiveDesc = SessionDescription(desc.type, adaptiveSdp)
-                        observer.onCreateSuccess(adaptiveDesc)
-                    }
-                    override fun onCreateFailure(p0: String?) { observer.onCreateFailure(p0) }
-                    override fun onSetSuccess() {}
-                    override fun onSetFailure(p0: String?) {}
-                },
-                MediaConstraints()
-        )
-    }
-
-    /**
-     * Injects bitrate limits into the SDP Answer.
-     * Tells the Partner (sender) to reduce quality if this device is low-end.
-     */
-    private fun capBitrateInSdp(sdp: String): String {
-        val maxBitrate = when (deviceTier) {
-            1 -> 1500 // 1.5 Mbps for low-end (Safe for 720p/30)
-            2 -> 3000 // 3.0 Mbps for mid-end (Ideal for 720p/60 or 1080p/30)
-            else -> 5000 // 5.0 Mbps for high-end (Full 1080p/60)
-        }
-        
-        return if (!sdp.contains("x-google-max-bitrate")) {
-            sdp.replace("a=fmtp:111", "a=fmtp:111;x-google-max-bitrate=$maxBitrate")
-        } else {
-            sdp
-        }
-    }
-
-    fun setLocalDescription(sdp: SessionDescription, observer: SdpObserver) {
-        if (isDisposed || peerConnection == null) return
-        peerConnection?.setLocalDescription(observer, sdp)
     }
 
     fun addIceCandidate(candidate: IceCandidate) {
         if (isDisposed || peerConnection == null) return
         if (!remoteDescriptionSet) {
             synchronized(pendingCandidates) { pendingCandidates.add(candidate) }
-            return
+        } else {
+            peerConnection?.addIceCandidate(candidate)
         }
-        peerConnection?.addIceCandidate(candidate)
-        onIceCandidateCallback?.invoke(candidate)
+    }
+
+    private fun processPendingCandidates() {
+        synchronized(pendingCandidates) {
+            pendingCandidates.forEach { peerConnection?.addIceCandidate(it) }
+            pendingCandidates.clear()
+        }
+    }
+
+    private fun flushOutgoingCandidates() {
+        synchronized(pendingOutgoingCandidates) {
+            pendingOutgoingCandidates.forEach {
+                mainHandler.post { onIceCandidateCallback?.invoke(it) }
+            }
+            pendingOutgoingCandidates.clear()
+        }
     }
 
     fun close() {
-        if (isDisposed) return
         isDisposed = true
-        Log.d(TAG, "Closing WebRTCManager [Final Adaptive Edition]...")
-        dataChannel?.close()
-        dataChannel?.dispose()
-        dataChannel = null
+        canSendOutgoingCandidates = false
+        synchronized(pendingOutgoingCandidates) { pendingOutgoingCandidates.clear() }
         peerConnection?.dispose()
-        peerConnection = null
         peerConnectionFactory?.dispose()
-        peerConnectionFactory = null
-        onIceCandidateCallback = null
     }
 }

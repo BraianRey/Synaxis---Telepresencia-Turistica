@@ -56,6 +56,7 @@ android {
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
+        // Force a specific vendor to avoid using broken JREs from VS Code extensions
     }
 }
 
@@ -72,6 +73,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     // CameraX
+    //implementation(libs.androidx.camera.core)
     //implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)

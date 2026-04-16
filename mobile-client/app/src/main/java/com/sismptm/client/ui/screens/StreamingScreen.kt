@@ -35,30 +35,15 @@ import org.webrtc.RendererCommon
 import org.webrtc.SurfaceViewRenderer
 
 /**
- * Streaming screen — Client (viewer) side.
+ * Main streaming UI component for the client side.
+ * 
+ * This screen provides the video surface for remote stream playback, connection status
+ * indicators, and interactive controls to send commands back to the partner.
+ * It manages the lifecycle of the WebRTC video renderer and coordinates with 
+ * the StreamingViewModel to establish and maintain the media session.
  *
- * ## Architecture
- *
- * **SurfaceViewRenderer Initialization**: Is initialized with [viewModel.eglBase] (same EglBase
- * used by PeerConnectionFactory). This ensures consistent EGL context between WebRTC and rendering.
- * Critically, initialization is synchronous in `remember {}` to guarantee the renderer is ready
- * BEFORE the video track's onTrack callback fires.
- *
- * **Video Reception**: Remote video is received via `onTrack()` callback (Unified Plan semantics) →
- * VideoTrack.addSink() instead of the deprecated onAddStream → MediaStream pattern.
- *
- * **Connection Flow**:
- * 1. User enters Partner ID and clicks Connect
- * 2. startConnection() initiates Offer request
- * 3. Partner sends Offer via signaling server
- * 4. Client creates Answer and sends back
- * 5. ICE candidates exchanged (buffered until descriptions set)
- * 6. Connection established
- * 7. Partner sends remote video track → onTrack fires
- * 8. Renderer.addSink(track) starts displaying video
- *
- * @param onBack Callback when user clicks back/end session
- * @param viewModel The [StreamingViewModel] managing connection state and lifecycle
+ * @param onBack Navigation callback to return to the previous screen.
+ * @param viewModel The state holder managing the WebRTC connection logic.
  */
 @Composable
 fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewModel()) {
@@ -66,10 +51,12 @@ fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewMode
     var showConnectionDialog by remember { mutableStateOf(true) }
     var targetPartnerId by remember { mutableStateOf("PARTNER_01") }
 
-    // Renderer created once and reused — Factory lambda should NOT recreate it
+    /**
+     * SurfaceViewRenderer used to display the remote video track.
+     * Initialized synchronously to be ready for incoming media frames.
+     */
     val remoteRenderer = remember {
         SurfaceViewRenderer(context).apply {
-            // Initialize synchronously in remember {} so it's ready before any video arrives
             init(viewModel.eglBase.eglBaseContext, null)
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
             setEnableHardwareScaler(true)
@@ -79,15 +66,18 @@ fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewMode
     DisposableEffect(Unit) {
         onDispose {
             remoteRenderer.release()
-            // NOTE: eglBase is released by the ViewModel's onCleared()
         }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        // Remote video surface
+        /**
+         * Integration of the native WebRTC SurfaceView into the Compose hierarchy.
+         */
         AndroidView(factory = { remoteRenderer }, modifier = Modifier.fillMaxSize())
 
-        // Top bar: back + settings
+        /**
+         * Top overlay bar containing navigation and session settings.
+         */
         Row(
                 modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -126,7 +116,9 @@ fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewMode
             }
         }
 
-        // Directional controls + end session button
+        /**
+         * Interactive control overlay for session management and remote commands.
+         */
         Column(
                 modifier =
                         Modifier.align(Alignment.BottomCenter)
@@ -153,7 +145,9 @@ fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewMode
             }
         }
 
-        // Connection setup dialog
+        /**
+         * Modal dialog for establishing a connection with a specific partner.
+         */
         if (showConnectionDialog) {
             AlertDialog(
                     onDismissRequest = { showConnectionDialog = false },
@@ -177,7 +171,6 @@ fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewMode
                         Button(
                                 onClick = {
                                     showConnectionDialog = false
-                                    // KEY: pass the renderer as the sink for the remote video track
                                     viewModel.startConnection(targetPartnerId) { videoTrack ->
                                         videoTrack.addSink(remoteRenderer)
                                     }
@@ -194,9 +187,9 @@ fun StreamingScreen(onBack: () -> Unit, viewModel: StreamingViewModel = viewMode
 }
 
 /**
- * Displays connection status indicator (WiFi or WiFi Off icon with text).
+ * Visual indicator of the current WebRTC connection health.
  *
- * @param isConnected True if WebRTC connection is established and stable
+ * @param isConnected Whether the media connection is active.
  */
 @Composable
 fun ConnectionStatusChip(isConnected: Boolean) {
@@ -225,12 +218,9 @@ fun ConnectionStatusChip(isConnected: Boolean) {
 }
 
 /**
- * Directional control buttons layout (arrow pad).
+ * Layout containing directional input buttons for remote interaction.
  *
- * Arranges UP button above, LEFT/RIGHT buttons in middle row, DOWN button below. Sends "UP",
- * "DOWN", "LEFT", "RIGHT" commands when clicked.
- *
- * @param onDirectionClick Callback with command string when a direction is clicked
+ * @param onDirectionClick Callback triggered with the direction name when a button is pressed.
  */
 @Composable
 fun DirectionalControls(onDirectionClick: (String) -> Unit) {
@@ -256,13 +246,11 @@ fun DirectionalControls(onDirectionClick: (String) -> Unit) {
 }
 
 /**
- * Individual directional control button with pressed animation.
+ * Animated button for individual control inputs with visual feedback.
  *
- * Animates scale and background color when pressed for tactile feedback.
- *
- * @param icon The arrow icon to display (UP/DOWN/LEFT/RIGHT)
- * @param contentDescription Accessibility label for the button
- * @param onClick Callback when button is clicked
+ * @param icon The vector icon to display.
+ * @param contentDescription Accessibility label for the icon.
+ * @param onClick Callback triggered on button activation.
  */
 @Composable
 fun ControlButton(icon: ImageVector, contentDescription: String, onClick: () -> Unit) {

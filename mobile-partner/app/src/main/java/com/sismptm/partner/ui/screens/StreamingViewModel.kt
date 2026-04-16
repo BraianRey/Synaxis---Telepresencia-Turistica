@@ -1,18 +1,16 @@
 package com.sismptm.partner.ui.screens
 
 import android.app.Application
-import android.media.MediaPlayer
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.BuildConfig
-import com.sismptm.partner.R
 import com.sismptm.partner.data.remote.IceCandidateModel
 import com.sismptm.partner.data.remote.SignalingClient
 import com.sismptm.partner.data.remote.SignalingMessage
 import com.sismptm.partner.webrtc.WebRTCManager
+import java.util.UUID
+import kotlin.random.Random
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +19,12 @@ import kotlinx.coroutines.launch
 import org.webrtc.*
 
 /**
- * ViewModel for the Partner streaming screen.
+ * Represents a command with a unique ID to ensure UI reactivity even if the command text repeats.
+ */
+data class CommandEvent(val text: String, val id: String = UUID.randomUUID().toString())
+
+/**
+ * ViewModel for the Partner streaming screen managing WebRTC sessions and signaling.
  */
 class StreamingViewModel(application: Application) :
         AndroidViewModel(application),
@@ -33,13 +36,19 @@ class StreamingViewModel(application: Application) :
     private var targetClientId: String? = null
     private var partnerId = "PARTNER_01"
     private var signalingClient: SignalingClient? = null
-    private var mediaPlayer: MediaPlayer? = null
-    
-    // Reconexion Logic
+    private var connectionTimeout: Job? = null
+
     private var reconnectionAttempts = 0
-    private val maxReconnectionAttempts = 5
+    private val maxReconnectionAttempts = 3
+    private val reconnectionDelays =
+            listOf(
+                    4000L, // Attempt 1: 4 seconds
+                    8000L, // Attempt 2: 8 seconds
+                    16000L // Attempt 3: 16 seconds
+            )
     private var reconnectionJob: Job? = null
-    private val mainHandler = Handler(Looper.getMainLooper())
+    private var lastState: PeerConnection.PeerConnectionState =
+            PeerConnection.PeerConnectionState.NEW
 
     val eglBase: EglBase = EglBase.create()
 
@@ -49,12 +58,15 @@ class StreamingViewModel(application: Application) :
     private val _connectionState = MutableStateFlow(PeerConnection.PeerConnectionState.NEW)
     val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState
 
+    private val _lastCommandEvent = MutableStateFlow<CommandEvent?>(null)
+    val lastCommandEvent: StateFlow<CommandEvent?> = _lastCommandEvent
+
     private val _commands = MutableStateFlow<List<String>>(emptyList())
     val commands: StateFlow<List<String>> = _commands
 
-    private val _lastCommand = MutableStateFlow<String?>(null)
-    val lastCommand: StateFlow<String?> = _lastCommand
-
+    /**
+     * Initializes the local camera capture and connects to the signaling server.
+     */
     fun initStreaming(surfaceViewRenderer: SurfaceViewRenderer, customId: String) {
         this.partnerId = customId
         webRTCManager.startLocalCapture(surfaceViewRenderer)
@@ -69,51 +81,55 @@ class StreamingViewModel(application: Application) :
         return if (base.contains("?")) "$base&peerId=$peerId" else "$base?peerId=$peerId"
     }
 
-    // ─── SignalingClient.SignalingListener ───────────────────────────────────
-
     override fun onConnected() {
-        Log.d(TAG, "Signaling connected")
+        Log.i(TAG, "Signaling connected (Partner: $partnerId)")
     }
 
     override fun onJoinReceived(senderId: String) {
-        Log.d(TAG, "Client '$senderId' joined")
+        if (senderId.isBlank()) return
+        Log.i(TAG, "Join request from client: $senderId.")
         this.targetClientId = senderId
-        reconnectionAttempts = 0 // Reset on successful join
+
+        connectionTimeout?.cancel()
+        connectionTimeout = viewModelScope.launch {
+            delay(25000)
+            if (lastState != PeerConnection.PeerConnectionState.CONNECTED) {
+                Log.e(TAG, "Connection setup timeout")
+            }
+        }
+
+        webRTCManager.setupNewPeerConnection()
         webRTCManager.createOffer()
     }
 
     override fun onOfferReceived(sdp: String) {}
 
     override fun onAnswerReceived(sdp: String) {
+        if (targetClientId == null) return
+        connectionTimeout?.cancel()
         webRTCManager.setRemoteDescription(sdp, isOffer = false)
     }
 
     override fun onIceCandidateReceived(candidate: IceCandidateModel) {
+        if (targetClientId == null) return
         val iceCandidate = IceCandidate(candidate.sdpMid, candidate.sdpMLineIndex, candidate.candidate)
         webRTCManager.addIceCandidate(iceCandidate)
     }
 
     override fun onDisconnected() {
-        Log.w(TAG, "Signaling disconnected - monitoring WebRTC state")
+        Log.w(TAG, "Signaling WebSocket disconnected")
     }
 
     override fun onError(error: String) {
-        Log.e(TAG, "Signaling error: $error")
+        Log.e(TAG, "Signaling Error: $error")
     }
-
-    // ─── WebRTCManager.WebRTCListener Implementation ───────────────────────────────────
 
     override fun onIceCandidate(candidate: IceCandidate) {
         val target = targetClientId ?: return
         signalingClient?.sendMessage(
                 SignalingMessage(
                         type = "candidate",
-                        candidate = IceCandidateModel(
-                                        sdpMid = candidate.sdpMid,
-                                        sdpMLineIndex = candidate.sdpMLineIndex,
-                                        candidate = candidate.sdp,
-                                        targetId = target
-                                ),
+                        candidate = IceCandidateModel(candidate.sdpMid, candidate.sdpMLineIndex, candidate.sdp, target),
                         senderId = partnerId,
                         targetId = target
                 )
@@ -122,10 +138,9 @@ class StreamingViewModel(application: Application) :
 
     override fun onLocalSdpCreated(sdp: SessionDescription) {
         val target = targetClientId ?: return
-        val type = if (sdp.type == SessionDescription.Type.OFFER) "offer" else "answer"
         signalingClient?.sendMessage(
                 SignalingMessage(
-                        type = type,
+                        type = "offer",
                         sdp = sdp.description,
                         senderId = partnerId,
                         targetId = target
@@ -134,96 +149,51 @@ class StreamingViewModel(application: Application) :
     }
 
     override fun onCommandReceived(command: String) {
-        _lastCommand.value = command
-        _commands.value = (_commands.value + command).takeLast(3)
-        playInstructionAudio(command.lowercase())
+        // Updates state for UI reactivity; audio feedback is handled in the UI layer
+        _lastCommandEvent.value = CommandEvent(command)
+        _commands.value = (_commands.value + command).takeLast(10)
     }
 
-    private fun playInstructionAudio(command: String) {
-        try {
-            mediaPlayer?.let {
-                if (it.isPlaying) it.stop()
-                it.release()
-            }
-            mediaPlayer = null
-
-            val resId = when (command) {
-                "up" -> R.raw.up
-                "down" -> R.raw.down
-                "left" -> R.raw.left
-                "right" -> R.raw.right
-                else -> null
-            }
-
-            resId?.let {
-                mediaPlayer = MediaPlayer.create(getApplication(), it).apply {
-                    setOnCompletionListener { mp -> 
-                        mp.release()
-                        if (mediaPlayer == mp) mediaPlayer = null
-                    }
-                    start()
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error playing audio: ${e.message}")
+    override fun onConnectionStateChange(state: PeerConnection.PeerConnectionState) {
+        lastState = state
+        _connectionState.value = state
+        if (state == PeerConnection.PeerConnectionState.CONNECTED) {
+            connectionTimeout?.cancel()
+            reconnectionJob?.cancel()
+            reconnectionAttempts = 0
+        } else if (state == PeerConnection.PeerConnectionState.DISCONNECTED || state == PeerConnection.PeerConnectionState.FAILED) {
+            startReconnectionTimer()
         }
     }
 
     /**
-     * WebRTC Connection State Monitor.
-     * Logic: If disconnected, wait 3s. If still disconnected, trigger ICE Restart.
+     * Schedules an automatic reconnection attempt if the connection is lost.
      */
-    override fun onConnectionStateChange(state: PeerConnection.PeerConnectionState) {
-        Log.d(TAG, "PeerConnection → $state")
-        _connectionState.value = state
-
-        when (state) {
-            PeerConnection.PeerConnectionState.CONNECTED -> {
-                reconnectionJob?.cancel()
-                reconnectionAttempts = 0
-            }
-            PeerConnection.PeerConnectionState.DISCONNECTED, 
-            PeerConnection.PeerConnectionState.FAILED -> {
-                startReconnectionTimer()
-            }
-            else -> {}
-        }
-    }
-
     private fun startReconnectionTimer() {
-        if (reconnectionJob?.isActive == true) return
-        
+        if (reconnectionJob?.isActive == true || reconnectionAttempts >= maxReconnectionAttempts) return
+        val baseDelay = reconnectionDelays.getOrElse(reconnectionAttempts) { 16000L }
         reconnectionJob = viewModelScope.launch {
-            Log.d(TAG, "Connection lost. Waiting 3s for auto-recovery...")
-            delay(3000)
-            
-            if (_connectionState.value != PeerConnection.PeerConnectionState.CONNECTED) {
-                attemptRenegotiation()
+            delay(baseDelay + Random.nextLong(0, 1000))
+            if (lastState != PeerConnection.PeerConnectionState.CONNECTED) {
+                attemptRecovery()
             }
         }
     }
 
-    private fun attemptRenegotiation() {
-        if (reconnectionAttempts >= maxReconnectionAttempts) {
-            Log.e(TAG, "Max reconnection attempts reached ($maxReconnectionAttempts)")
-            return
-        }
-
+    /**
+     * Attempts to recover the WebRTC session by re-initiating the negotiation process.
+     */
+    private fun attemptRecovery() {
+        if (reconnectionAttempts >= maxReconnectionAttempts || targetClientId == null) return
         reconnectionAttempts++
-        Log.i(TAG, "Attempting Renegotiation (ICE Restart) #$reconnectionAttempts...")
-        
-        // Trigger a new offer from the Partner
-        webRTCManager.createOffer() 
+        webRTCManager.setupNewPeerConnection()
+        webRTCManager.createOffer()
     }
 
     override fun onCleared() {
         super.onCleared()
+        connectionTimeout?.cancel()
         reconnectionJob?.cancel()
-        mediaPlayer?.let {
-            if (it.isPlaying) it.stop()
-            it.release()
-        }
-        mediaPlayer = null
         webRTCManager.dispose()
         signalingClient?.disconnect()
     }
