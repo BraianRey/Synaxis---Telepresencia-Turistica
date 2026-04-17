@@ -96,7 +96,7 @@ public class ServiceServiceImpl implements ServiceService {
                     "You already have an active service request. Finish or cancel it before creating another.");
         }
 
-        ServiceEntity service = serviceMapper.toEntity(request, client);
+        ServiceEntity service = serviceMapper.toEntity(request);
         service.setRequestedAt(LocalDateTime.now());
         service.setStatus(ServiceStatus.REQUESTED);
 
@@ -165,17 +165,18 @@ public class ServiceServiceImpl implements ServiceService {
         if (service.getPartner() != null && service.getPartner().getId().equals(partnerId)) {
             return serviceMapper.toResponse(service);
         }
-        if (service.getStatus() == ServiceStatus.REQUESTED
-                && service.getArea().getId().equals(partner.getArea().getId())) {
+
+        if (service.getStatus() == ServiceStatus.REQUESTED) {
             return serviceMapper.toResponse(service);
         }
+
         throw new ForbiddenAccessException("You are not allowed to access this service");
     }
 
     @Override
     @Transactional
     public ServiceResponse acceptService(Long serviceId, Long partnerId) {
-        ServiceEntity service = serviceRepository.findByIdForUpdate(serviceId)
+        ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
 
         if (service.getStatus() != ServiceStatus.REQUESTED) {

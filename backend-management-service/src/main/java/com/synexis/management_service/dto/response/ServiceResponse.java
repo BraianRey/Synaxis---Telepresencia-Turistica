@@ -34,10 +34,9 @@ public record ServiceResponse(
         LocalDateTime endedAt
 
 ) {
-    public ServiceResponse(Long serviceId, Long clientId, Long partnerId, Double longitude, Double latitude,
-            String startLocationDescription,
-            Integer agreedHours, BigDecimal hourlyRate, String status, LocalDateTime requestedAt,
-            LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
+    public ServiceResponse(Long serviceId, Long clientId, String clientName, Long partnerId, Double longitude,
+            Double latitude, String startLocationDescription, Integer agreedHours, BigDecimal hourlyRate, String status,
+            LocalDateTime requestedAt, LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.serviceId = serviceId;
         this.clientId = clientId;
         this.clientName = clientName;
