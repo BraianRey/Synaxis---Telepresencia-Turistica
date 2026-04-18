@@ -1,15 +1,10 @@
 package com.synexis.management_service.repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-
-import jakarta.persistence.LockModeType;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.synexis.management_service.entity.ServiceEntity;
 import com.synexis.management_service.entity.ServiceStatus;
@@ -22,14 +17,8 @@ public interface ServiceRepository extends JpaRepository<ServiceEntity, Long> {
 
     Optional<ServiceEntity> findById(Long serviceId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT s FROM ServiceEntity s WHERE s.idService = :id")
-    Optional<ServiceEntity> findByIdForUpdate(@Param("id") Long id);
+    boolean existsByClient_IdAndStatusIn(Long authenticatedClientId, Set<ServiceStatus> activeServiceStatuses);
 
-    List<ServiceEntity> findByArea_IdAndStatus(Long areaId, ServiceStatus status);
-
-    boolean existsByPartner_IdAndStatusIn(Long partnerId, Collection<ServiceStatus> statuses);
-
-    boolean existsByClient_IdAndStatusIn(Long clientId, Collection<ServiceStatus> statuses);
+    boolean existsByPartner_IdAndStatusIn(Long partnerId, Set<ServiceStatus> activeServiceStatuses);
 
 }
