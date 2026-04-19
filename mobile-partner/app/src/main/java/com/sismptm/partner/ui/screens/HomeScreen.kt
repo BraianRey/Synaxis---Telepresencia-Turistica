@@ -32,10 +32,8 @@ import com.sismptm.partner.data.remote.ServiceResponse
 import com.sismptm.partner.location.LocationService
 import com.sismptm.partner.ui.components.RequestCard
 import com.sismptm.partner.utils.SessionManager
+import kotlinx.coroutines.delay
 import java.math.BigDecimal
-
-/** Area ID → name mapping */
-private val AREA_NAMES = mapOf(1L to "Popayán", 2L to "Cali", 3L to "Medellín", 4L to "Bogotá")
 
 @Composable
 fun HomeScreen(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()) {
@@ -90,26 +88,21 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
 @Composable
 fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()) {
     var isOnline by remember { mutableStateOf(false) }
-    var showAreaDialog by remember { mutableStateOf(SessionManager.areaId == 0L) }
 
     val requestsState by homeViewModel.requestsState.collectAsState()
     val acceptedTour by homeViewModel.acceptedTour.collectAsState()
     val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
     val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
 
-    // Load requests when areaId becomes set
-    LaunchedEffect(SessionManager.areaId) {
-        if (SessionManager.areaId != 0L) homeViewModel.loadAvailableRequests()
-    }
-
-    if (showAreaDialog) {
-        AreaSelectorDialog(
-            onAreaSelected = { areaId ->
-                SessionManager.areaId = areaId
-                showAreaDialog = false
-                homeViewModel.loadAvailableRequests()
+    // Load requests when partner is online; poll every 10s.
+    LaunchedEffect(isOnline) {
+        if (isOnline) {
+            homeViewModel.loadAvailableRequests()          // first load with spinner
+            while (true) {
+                delay(10_000)
+                homeViewModel.loadAvailableRequests(silent = true)  // silent refresh
             }
-        )
+        }
     }
 
     if (acceptedTour != null) {
@@ -151,6 +144,37 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
             item { StatsGrid() }
 
             // ── Incoming requests section ──────────────────────────────────
+            if (!isOnline) {
+                // Partner is OFFLINE → show message, hide requests
+                item { IncomingRequestsHeader(newCount = 0) }
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "You are currently offline",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFFEF4444),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Toggle your availability status to start receiving tour requests.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFB9C0CB),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            } else {
+            // Partner is ONLINE → show live requests
             when (val state = requestsState) {
                 is HomeViewModel.RequestsUiState.Loading -> {
                     item {
@@ -196,16 +220,14 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
                     item { IncomingRequestsHeader(newCount = 0) }
                     item {
                         Text(
-                            text = "Select your area to see incoming requests.",
+                            text = "Waiting for requests...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFFB9C0CB)
                         )
-                        TextButton(onClick = { showAreaDialog = true }) {
-                            Text("Change area", color = Color(0xFF2563EB))
-                        }
                     }
                 }
             }
+            } // close else (isOnline)
         }
 
         Button(
@@ -216,34 +238,6 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
     }
 }
 
-/** Dialog for the partner to select their working area. */
-@Composable
-private fun AreaSelectorDialog(onAreaSelected: (Long) -> Unit) {
-    val areas = listOf(1L to "Popayán", 2L to "Cali", 3L to "Medellín", 4L to "Bogotá")
-
-    AlertDialog(
-        onDismissRequest = { /* Required */ },
-        title = { Text("Select your area", fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    "Choose the city where you offer tours.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF677489)
-                )
-                areas.forEach { (id, name) ->
-                    OutlinedButton(
-                        onClick = { onAreaSelected(id) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) { Text(name) }
-                }
-            }
-        },
-        confirmButton = {}
-    )
-}
-
 @Composable
 private fun ServiceRequestCard(
     service: ServiceResponse,
@@ -251,8 +245,7 @@ private fun ServiceRequestCard(
     acceptEnabled: Boolean,
     onAccept: () -> Unit
 ) {
-    val areaName = AREA_NAMES[service.areaId] ?: "Area ${service.areaId}"
-    val location = service.startLocationDescription?.ifBlank { areaName } ?: areaName
+    val location = service.startLocationDescription?.ifBlank { "Location not specified" } ?: "Location not specified"
     val duration = "${service.agreedHours}h"
     val price = "${"%.0f".format(service.hourlyRate)} COP/h"
     val clientDisplayName = service.clientName.ifBlank { "Client #${service.clientId}" }
@@ -272,7 +265,6 @@ private fun ServiceRequestCard(
 
 @Composable
 private fun AcceptedTourDialog(service: ServiceResponse, onDismiss: () -> Unit) {
-    val areaName = AREA_NAMES[service.areaId] ?: "Area ${service.areaId}"
     val meetingPoint = service.startLocationDescription?.ifBlank { "-" } ?: "-"
     val requestedAt = service.requestedAt?.replace("T", " ") ?: "-"
 
@@ -290,7 +282,6 @@ private fun AcceptedTourDialog(service: ServiceResponse, onDismiss: () -> Unit) 
                 Spacer(modifier = Modifier.height(6.dp))
                 Text("${stringResource(R.string.tour_detail_service_id)}: ${service.serviceId}")
                 Text("${stringResource(R.string.tour_detail_client)}: #${service.clientId}")
-                Text("${stringResource(R.string.tour_detail_area)}: $areaName")
                 Text("${stringResource(R.string.tour_detail_meeting_point)}: $meetingPoint")
                 Text("${stringResource(R.string.tour_detail_duration)}: ${service.agreedHours}h")
                 Text("${stringResource(R.string.tour_detail_hourly_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h")

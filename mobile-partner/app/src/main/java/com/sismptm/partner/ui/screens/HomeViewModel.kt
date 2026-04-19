@@ -32,17 +32,15 @@ class HomeViewModel : ViewModel() {
     private val _acceptErrorMessage = MutableStateFlow<String?>(null)
     val acceptErrorMessage: StateFlow<String?> = _acceptErrorMessage.asStateFlow()
 
-    /** Load available (unassigned) service requests for the partner's area. */
-    fun loadAvailableRequests() {
-        val areaId = SessionManager.areaId
-        if (areaId == 0L) {
-            _requestsState.value = RequestsUiState.Idle
-            return
-        }
+    /** Load available (unassigned) service requests.
+     *  @param silent when true, skip setting Loading state (used for background polling). */
+    fun loadAvailableRequests(silent: Boolean = false) {
         viewModelScope.launch {
-            _requestsState.value = RequestsUiState.Loading
+            if (!silent) {
+                _requestsState.value = RequestsUiState.Loading
+            }
             try {
-                val response = RetrofitClient.apiService.getServicesAvailableByAreaId(areaId)
+                val response = RetrofitClient.apiService.getAvailableServices()
                 if (response.isSuccessful) {
                     _requestsState.value = RequestsUiState.Success(response.body() ?: emptyList())
                 } else {

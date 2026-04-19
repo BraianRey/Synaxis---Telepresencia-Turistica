@@ -80,7 +80,8 @@ data class RegisterClientResponse(
 
 // -- Service DTOs --------------------------------------------------------------
 data class CreateServiceRequest(
-    val areaId: Long,
+    val longitude: Double,
+    val latitude: Double,
     val startLocationDescription: String?,
     val agreedHours: Int,
     val hourlyRate: Double
@@ -91,7 +92,8 @@ data class ServiceResponse(
     val clientId: Long,
     val clientName: String? = null,
     val partnerId: Long?,
-    val areaId: Long,
+    val longitude: Double,
+    val latitude: Double,
     val startLocationDescription: String?,
     val agreedHours: Int,
     val hourlyRate: Double,

@@ -5,8 +5,8 @@ object SessionManager {
     var accessToken: String = ""
     var clientId: Long = 0L
     var clientName: String = ""
-    var clientEmail: String = ""
     var userRole: String = ""
+    var clientEmail: String = ""
 
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
 
@@ -14,15 +14,20 @@ object SessionManager {
         accessToken = token
         clientId = id
         clientName = name
-        clientEmail = email
         userRole = role
+        clientEmail = email
+    }
+
+    // Backward-compatible overload for callers that still do not provide role.
+    fun saveSession(token: String, id: Long, name: String, email: String) {
+        saveSession(token = token, id = id, name = name, email = email, role = "")
     }
 
     fun clearSession() {
         accessToken = ""
         clientId = 0L
         clientName = ""
-        clientEmail = ""
         userRole = ""
+        clientEmail = ""
     }
 }

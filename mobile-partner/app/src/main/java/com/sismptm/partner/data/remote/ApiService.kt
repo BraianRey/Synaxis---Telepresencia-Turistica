@@ -23,9 +23,9 @@ interface ApiService {
     @POST("api/partners/location/update")
     suspend fun updateLocation(@Body request: LocationUpdateRequest): Response<Unit>
 
-    /** GET /api/services/available/{areaId}  — requires PARTNER token */
-    @GET("api/services/available/{areaId}")
-    suspend fun getServicesAvailableByAreaId(@Path("areaId") areaId: Long): Response<List<ServiceResponse>>
+    /** GET /api/services/available  — requires PARTNER token */
+    @GET("api/services/available")
+    suspend fun getAvailableServices(): Response<List<ServiceResponse>>
 
     /** POST /api/services/{serviceId}/accept  — requires PARTNER token */
     @POST("api/services/{serviceId}/accept")
@@ -52,7 +52,8 @@ data class RegisterPartnerRequest(
     val email: String,
     val password: String,
     val name: String,
-    val areaId: Int,
+    val longitude: Double,
+    val latitude: Double,
     val termsAccepted: Boolean,
     val language: String,
     val picDirectory: String? = null
@@ -68,7 +69,6 @@ data class RegisterPartnerResponse(
     val termsAccepted: Boolean,
     val picDirectory: String?,
     val role: String,
-    val areaId: Int,
     val availabilityStatus: String
 )
 
@@ -81,7 +81,8 @@ data class ServiceResponse(
     val clientId: Long,
     val clientName: String,
     val partnerId: Long?,
-    val areaId: Long,
+    val longitude: Double,
+    val latitude: Double,
     val startLocationDescription: String?,
     val agreedHours: Int,
     val hourlyRate: Double,

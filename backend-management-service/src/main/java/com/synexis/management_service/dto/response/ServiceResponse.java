@@ -8,7 +8,6 @@ public record ServiceResponse(
         Long serviceId,
 
         Long clientId,
-
         String clientName,
 
         Long partnerId,

@@ -15,6 +15,9 @@ public interface ServiceRepository extends JpaRepository<ServiceEntity, Long> {
 
     List<ServiceEntity> findByPartner_Id(Long partnerId);
 
+    // Only services in "requested" or "accepted" status are considered active
+    List<ServiceEntity> findByStatus(ServiceStatus status);
+
     Optional<ServiceEntity> findById(Long serviceId);
 
     boolean existsByClient_IdAndStatusIn(Long authenticatedClientId, Set<ServiceStatus> activeServiceStatuses);
