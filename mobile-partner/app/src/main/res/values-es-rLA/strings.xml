@@ -6,7 +6,7 @@
     <string name="email">Correo Electrónico</string>
     <string name="password">Contraseña</string>
     <string name="confirm_password">Confirmar Contraseña</string>
-    <string name="area_id">Área</string>
+    <string name="city">Ciudad</string>
     <string name="select_area">Selecciona una ciudad</string>
     <string name="invalid_email">Ingresa un correo válido</string>
     <string name="passwords_do_not_match">Las contraseñas no coinciden</string>

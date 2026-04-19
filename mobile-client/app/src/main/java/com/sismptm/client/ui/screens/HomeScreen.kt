@@ -547,7 +547,7 @@ private fun ClientServiceCard(
         ) {
             Text("Service #${service.serviceId}", color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
-            Text("Area ID: ${service.areaId}", color = Color(0xFFB9C0CB))
+            Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = Color(0xFFB9C0CB))
             Text("Hours: ${service.agreedHours}", color = Color(0xFFB9C0CB))
             Text("Hourly rate: ${service.hourlyRate} COP", color = Color(0xFFB9C0CB))
             if (isActive) {

@@ -11,30 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.text.Normalizer
-
-/** Maps city names to their backend area IDs. */
-val CITY_AREA_MAP: Map<String, Long> = mapOf(
-    "Popayan"  to 1L,
-    "Cali"     to 2L,
-    "Medellin" to 3L,
-    "Bogota"   to 4L
-)
-
-/** Returns the area ID for the given city name (case-insensitive, accent-insensitive). */
-fun cityNameToAreaId(cityName: String): Long? {
-    val normalized = cityName.normalizeCityToken()
-    return CITY_AREA_MAP.entries.firstOrNull {
-        val cityKey = it.key.normalizeCityToken()
-        cityKey == normalized || cityKey.contains(normalized) || normalized.contains(cityKey)
-    }?.value
-}
-
-private fun String.normalizeCityToken(): String {
-    return Normalizer.normalize(trim(), Normalizer.Form.NFD)
-        .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
-        .lowercase()
-}
 
 class RequestTourViewModel : ViewModel() {
 
@@ -52,7 +28,8 @@ class RequestTourViewModel : ViewModel() {
     val uiState: StateFlow<RequestUiState> = _uiState.asStateFlow()
 
     fun requestTour(
-        areaId: Long,
+        longitude: Double,
+        latitude: Double,
         agreedHours: Int,
         hourlyRate: Double,
         locationDescription: String?
@@ -75,7 +52,8 @@ class RequestTourViewModel : ViewModel() {
             _uiState.value = RequestUiState.Loading
             try {
                 val request = CreateServiceRequest(
-                    areaId = areaId,
+                    longitude = longitude,
+                    latitude = latitude,
                     startLocationDescription = locationDescription?.ifBlank { null },
                     agreedHours = agreedHours,
                     hourlyRate = hourlyRate

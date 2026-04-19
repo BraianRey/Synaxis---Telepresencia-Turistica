@@ -61,15 +61,16 @@ import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
 
 private data class RequestAreaOption(
-    val id: Long,
-    val label: String
+    val label: String,
+    val longitude: Double,
+    val latitude: Double
 )
 
 private val requestAreaOptions = listOf(
-    RequestAreaOption(1L, "Popayan"),
-    RequestAreaOption(2L, "Cali"),
-    RequestAreaOption(3L, "Medellin"),
-    RequestAreaOption(4L, "Bogota")
+    RequestAreaOption("Popayan", -76.6134, 2.4382),
+    RequestAreaOption("Cali", -76.5320, 3.4516),
+    RequestAreaOption("Medellin", -75.5636, 6.2518),
+    RequestAreaOption("Bogota", -74.0721, 4.7110)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,8 +133,7 @@ fun RequestScreen(
     if (successState != null) {
         RequestCreatedDialog(
             service = successState.service,
-            areaName = requestAreaOptions.firstOrNull { it.id == successState.service.areaId }?.label
-                ?: "Area ${successState.service.areaId}",
+            areaName = successState.service.startLocationDescription ?: "Location not specified",
             onDismiss = { viewModel.resetState() },
             onConfirm = {
                 viewModel.resetState()
@@ -310,7 +310,8 @@ fun RequestScreen(
             Button(
                 onClick = {
                     viewModel.requestTour(
-                        areaId = selectedArea!!.id,
+                        longitude = selectedArea!!.longitude,
+                        latitude = selectedArea!!.latitude,
                         agreedHours = agreedHours!!,
                         hourlyRate = hourlyRate!!,
                         locationDescription = meetingPointText

@@ -28,13 +28,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 
-private data class AreaOption(val id: Int, val label: String)
+private data class CityOption(val label: String, val longitude: Double, val latitude: Double)
 
-private val areaOptions = listOf(
-    AreaOption(1, "Popayán"),
-    AreaOption(2, "Cali"),
-    AreaOption(3, "Medellín"),
-    AreaOption(4, "Bogotá")
+private val cityOptions = listOf(
+    CityOption("Popayán", -76.6134, 2.4382),
+    CityOption("Cali", -76.5320, 3.4516),
+    CityOption("Medellín", -75.5636, 6.2518),
+    CityOption("Bogotá", -74.0721, 4.7110)
 )
 
 /**
@@ -51,7 +51,7 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var selectedArea by remember { mutableStateOf<AreaOption?>(null) }
+    var selectedCity by remember { mutableStateOf<CityOption?>(null) }
     var areaExpanded by remember { mutableStateOf(false) }
     var acceptedTerms by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -70,7 +70,7 @@ fun RegisterScreen(
         password = password,
         confirmPassword = confirmPassword,
         acceptedTerms = acceptedTerms
-    ) && selectedArea != null
+    ) && selectedCity != null
 
     LaunchedEffect(uiState) {
         if (uiState is RegisterViewModel.RegisterUiState.Success) {
@@ -217,10 +217,10 @@ fun RegisterScreen(
             onExpandedChange = { areaExpanded = !areaExpanded }
         ) {
             OutlinedTextField(
-                value = selectedArea?.label.orEmpty(),
+                value = selectedCity?.label.orEmpty(),
                 onValueChange = {},
                 readOnly = true,
-                label = { Text(stringResource(id = R.string.area_id)) },
+                label = { Text(stringResource(id = R.string.select_area)) },
                 placeholder = { Text(stringResource(id = R.string.select_area)) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
@@ -238,11 +238,11 @@ fun RegisterScreen(
                 expanded = areaExpanded,
                 onDismissRequest = { areaExpanded = false }
             ) {
-                areaOptions.forEach { option ->
+                cityOptions.forEach { option ->
                     DropdownMenuItem(
                         text = { Text(option.label) },
                         onClick = {
-                            selectedArea = option
+                            selectedCity = option
                             areaExpanded = false
                         }
                     )
@@ -294,7 +294,8 @@ fun RegisterScreen(
                     name = name,
                     email = email,
                     password = password,
-                    areaId = selectedArea?.id ?: 0,
+                    longitude = selectedCity?.longitude ?: 0.0,
+                    latitude = selectedCity?.latitude ?: 0.0,
                     termsAccepted = acceptedTerms
                 )
             },

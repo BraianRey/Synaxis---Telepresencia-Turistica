@@ -52,8 +52,7 @@ data class LoginResponse(
     val id: Long,
     val email: String,
     val name: String,
-    val role: String,
-    val areaId: Long? = null
+    val role: String
 )
 
 // Request DTO (mirrors RegisterClientRequest from backend)
@@ -81,7 +80,8 @@ data class RegisterClientResponse(
 
 // -- Service DTOs --------------------------------------------------------------
 data class CreateServiceRequest(
-    val areaId: Long,
+    val longitude: Double,
+    val latitude: Double,
     val startLocationDescription: String?,
     val agreedHours: Int,
     val hourlyRate: Double
@@ -92,7 +92,8 @@ data class ServiceResponse(
     val clientId: Long,
     val clientName: String? = null,
     val partnerId: Long?,
-    val areaId: Long,
+    val longitude: Double,
+    val latitude: Double,
     val startLocationDescription: String?,
     val agreedHours: Int,
     val hourlyRate: Double,
