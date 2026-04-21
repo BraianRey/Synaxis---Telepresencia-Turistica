@@ -16,7 +16,6 @@ class AuthInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val requestBuilder = chain.request().newBuilder()
             .addHeader("Accept", "application/json")
-            .addHeader("Content-Type", "application/json")
 
         // Preferimos la sesión de Sprint 2 y usamos TokenManager como fallback.
         val token = SessionManager.accessToken.ifBlank { TokenManager.getAccessToken() }

@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,15 +61,16 @@ import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
 
 private data class RequestAreaOption(
-    val id: Long,
-    val label: String
+    val label: String,
+    val longitude: Double,
+    val latitude: Double
 )
 
 private val requestAreaOptions = listOf(
-    RequestAreaOption(1L, "Popayan"),
-    RequestAreaOption(2L, "Cali"),
-    RequestAreaOption(3L, "Medellin"),
-    RequestAreaOption(4L, "Bogota")
+    RequestAreaOption("Popayan", -76.6134, 2.4382),
+    RequestAreaOption("Cali", -76.5320, 3.4516),
+    RequestAreaOption("Medellin", -75.5636, 6.2518),
+    RequestAreaOption("Bogota", -74.0721, 4.7110)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +85,25 @@ fun RequestScreen(
     val activeServiceState = uiState as? RequestTourViewModel.RequestUiState.ActiveService
     val errorState = uiState as? RequestTourViewModel.RequestUiState.Error
     val isLoading = uiState is RequestTourViewModel.RequestUiState.Loading
+
+    // Track whether we already navigated away so we don't re-trigger on recompose.
+    var hasNavigatedToWaiting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        // Only check once per screen entry; skip if we already handled it.
+        if (!hasNavigatedToWaiting) {
+            viewModel.checkActiveServiceBeforeCreate()
+        }
+    }
+
+    LaunchedEffect(activeServiceState?.service?.serviceId) {
+        val activeServiceId = activeServiceState?.service?.serviceId ?: return@LaunchedEffect
+        if (!hasNavigatedToWaiting) {
+            hasNavigatedToWaiting = true
+            onViewDetails(activeServiceId)
+            viewModel.resetState()
+        }
+    }
 
     var areaExpanded by remember { mutableStateOf(false) }
     var selectedArea by remember { mutableStateOf<RequestAreaOption?>(null) }
@@ -112,8 +133,7 @@ fun RequestScreen(
     if (successState != null) {
         RequestCreatedDialog(
             service = successState.service,
-            areaName = requestAreaOptions.firstOrNull { it.id == successState.service.areaId }?.label
-                ?: "Area ${successState.service.areaId}",
+            areaName = successState.service.startLocationDescription ?: "Location not specified",
             onDismiss = { viewModel.resetState() },
             onConfirm = {
                 viewModel.resetState()
@@ -290,7 +310,8 @@ fun RequestScreen(
             Button(
                 onClick = {
                     viewModel.requestTour(
-                        areaId = selectedArea!!.id,
+                        longitude = selectedArea!!.longitude,
+                        latitude = selectedArea!!.latitude,
                         agreedHours = agreedHours!!,
                         hourlyRate = hourlyRate!!,
                         locationDescription = meetingPointText

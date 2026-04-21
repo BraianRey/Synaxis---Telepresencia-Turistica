@@ -12,7 +12,7 @@ import lombok.Setter;
 
 /**
  * Service provider account. Logical model: {@code Partner} adds
- * {@code Area_idArea} and
+ * {@code Area} (embedded location data) and
  * {@code availability_status} to {@code User} (SQLBD.sql).
  */
 @Entity
