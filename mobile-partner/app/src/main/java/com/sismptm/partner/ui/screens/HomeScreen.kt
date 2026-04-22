@@ -52,24 +52,10 @@ import androidx.core.content.ContextCompat
 import com.sismptm.partner.R
 import com.sismptm.partner.location.LocationService
 import com.sismptm.partner.ui.components.RequestCard
+import com.sismptm.partner.utils.SessionManager
+import kotlinx.coroutines.delay
+import java.math.BigDecimal
 
-private data class PartnerRequest(
-    val id: String,
-    val clientName: String,
-    val location: String,
-    val elapsedTime: String,
-    val duration: String,
-    val price: String
-)
-
-/**
- * Main home screen for the mobile-partner application.
- * Displays incoming tour requests, handles location permissions, and manages partner availability.
- * Partners can toggle their online status, view incoming requests, and accept tour offers.
- *
- * @param onLogout Callback triggered when partner logs out.
- * @param onRequestTour Callback triggered when partner accepts an incoming tour request.
- */
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
@@ -168,32 +154,39 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
 fun HomeContent(onLogout: () -> Unit, onRequestTour: () -> Unit = {}) {
     var isOnline by remember { mutableStateOf(false) }
 
-    val requests = remember {
-        listOf(
-            PartnerRequest(
-                id = "r1",
-                clientName = "Ana Gonzalez",
-                location = "Centro Historico",
-                elapsedTime = "Hace 2 min",
-                duration = "60 min",
-                price = "$30.000 COP"
-            ),
-            PartnerRequest(
-                id = "r2",
-                clientName = "Luis Herrera",
-                location = "San Blas",
-                elapsedTime = "Hace 5 min",
-                duration = "90 min",
-                price = "$45.000 COP"
-            ),
-            PartnerRequest(
-                id = "r3",
-                clientName = "Maria Torres",
-                location = "Sacsayhuaman",
-                elapsedTime = "Hace 11 min",
-                duration = "120 min",
-                price = "$70.000 COP"
-            )
+    val requestsState by homeViewModel.requestsState.collectAsState()
+    val acceptedTour by homeViewModel.acceptedTour.collectAsState()
+    val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
+    val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
+
+    // Load requests when partner is online; poll every 10s.
+    LaunchedEffect(isOnline) {
+        if (isOnline) {
+            homeViewModel.loadAvailableRequests()          // first load with spinner
+            while (true) {
+                delay(10_000)
+                homeViewModel.loadAvailableRequests(silent = true)  // silent refresh
+            }
+        }
+    }
+
+    if (acceptedTour != null) {
+        AcceptedTourDialog(
+            service = acceptedTour!!,
+            onDismiss = { homeViewModel.clearAcceptedTour() }
+        )
+    }
+
+    if (acceptErrorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { homeViewModel.clearAcceptError() },
+            title = { Text("Could not accept request") },
+            text = { Text(acceptErrorMessage!!) },
+            confirmButton = {
+                TextButton(onClick = { homeViewModel.clearAcceptError() }) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
         )
     }
 
@@ -220,50 +213,161 @@ fun HomeContent(onLogout: () -> Unit, onRequestTour: () -> Unit = {}) {
                 }
             }
             item { StatsGrid() }
-            item { IncomingRequestsHeader(newCount = requests.size) }
 
-            if (requests.isEmpty()) {
+            // ── Incoming requests section ──────────────────────────────────
+            if (!isOnline) {
+                // Partner is OFFLINE → show message, hide requests
+                item { IncomingRequestsHeader(newCount = 0) }
                 item {
-                    Text(
-                        text = stringResource(id = R.string.no_requests_yet),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFB9C0CB)
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "You are currently offline",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color(0xFFEF4444),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Toggle your availability status to start receiving tour requests.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFB9C0CB),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             } else {
-                items(requests, key = { it.id }) { request ->
-                    RequestCard(
-                        clientName = request.clientName,
-                        location = request.location,
-                        elapsedTime = request.elapsedTime,
-                        duration = request.duration,
-                        price = request.price,
-                        onDecline = { },
-                        onAccept = onRequestTour
-                    )
+            // Partner is ONLINE → show live requests
+            when (val state = requestsState) {
+                is HomeViewModel.RequestsUiState.Loading -> {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = Color(0xFF2563EB))
+                        }
+                    }
+                }
+                is HomeViewModel.RequestsUiState.Success -> {
+                    item { IncomingRequestsHeader(newCount = state.requests.size) }
+                    if (state.requests.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.no_requests_yet),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFB9C0CB)
+                            )
+                        }
+                    } else {
+                        items(state.requests, key = { it.serviceId }) { service ->
+                            ServiceRequestCard(
+                                service = service,
+                                isAccepting = acceptingServiceId == service.serviceId,
+                                acceptEnabled = acceptingServiceId == null || acceptingServiceId == service.serviceId,
+                                onAccept = { homeViewModel.acceptTour(service) }
+                            )
+                        }
+                    }
+                }
+                is HomeViewModel.RequestsUiState.Error -> {
+                    item {
+                        Text(
+                            text = state.message,
+                            color = Color(0xFFEF4444),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        TextButton(onClick = { homeViewModel.loadAvailableRequests() }) {
+                            Text("Retry", color = Color(0xFF2563EB))
+                        }
+                    }
+                }
+                HomeViewModel.RequestsUiState.Idle -> {
+                    item { IncomingRequestsHeader(newCount = 0) }
+                    item {
+                        Text(
+                            text = "Waiting for requests...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFB9C0CB)
+                        )
+                    }
                 }
             }
+            } // close else (isOnline)
         }
 
         Button(
-            onClick = onLogout,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1E2430),
-                contentColor = Color.White
-            )
-        ) {
-            Text(text = stringResource(id = R.string.logout))
-        }
+            onClick = { SessionManager.clearSession(); onLogout() },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2430), contentColor = Color.White)
+        ) { Text(text = stringResource(R.string.logout)) }
     }
 }
 
-/**
- * Header section with partner name and profile icon.
- * @param partnerName Name of the logged-in partner.
- */
+@Composable
+private fun ServiceRequestCard(
+    service: ServiceResponse,
+    isAccepting: Boolean,
+    acceptEnabled: Boolean,
+    onAccept: () -> Unit
+) {
+    val location = service.startLocationDescription?.ifBlank { "Location not specified" } ?: "Location not specified"
+    val duration = "${service.agreedHours}h"
+    val price = "${"%.0f".format(service.hourlyRate)} COP/h"
+    val clientDisplayName = service.clientName.ifBlank { "Client #${service.clientId}" }
+
+    RequestCard(
+        clientName = clientDisplayName,
+        location = location,
+        elapsedTime = service.requestedAt?.take(10) ?: "-",
+        duration = duration,
+        price = price,
+        onDecline = { /* TODO: decline endpoint */ },
+        onAccept = onAccept,
+        isAccepting = isAccepting,
+        acceptEnabled = acceptEnabled
+    )
+}
+
+@Composable
+private fun AcceptedTourDialog(service: ServiceResponse, onDismiss: () -> Unit) {
+    val meetingPoint = service.startLocationDescription?.ifBlank { "-" } ?: "-"
+    val requestedAt = service.requestedAt?.replace("T", " ") ?: "-"
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.tour_accepted_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.tour_accepted_message))
+                Spacer(modifier = Modifier.height(6.dp))
+                Text("${stringResource(R.string.tour_detail_service_id)}: ${service.serviceId}")
+                Text("${stringResource(R.string.tour_detail_client)}: #${service.clientId}")
+                Text("${stringResource(R.string.tour_detail_meeting_point)}: $meetingPoint")
+                Text("${stringResource(R.string.tour_detail_duration)}: ${service.agreedHours}h")
+                Text("${stringResource(R.string.tour_detail_hourly_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h")
+                Text("${stringResource(R.string.tour_detail_requested_at)}: $requestedAt")
+                Text("${stringResource(R.string.tour_detail_status)}: ACCEPTED")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.ok))
+            }
+        }
+    )
+}
+
 @Composable
 private fun HeaderSection(partnerName: String) {
     Row(

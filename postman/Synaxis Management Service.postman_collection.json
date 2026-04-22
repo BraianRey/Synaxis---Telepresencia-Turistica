@@ -80,9 +80,8 @@
                 "exec": [
                   "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
                   "var j = pm.response.json();",
-                  "pm.test(\"Has name and areaId\", function () {",
+                  "pm.test("Has name", function () {",
                   "    pm.expect(j.name).to.eql(\"Demo Client Co\");",
-                  "    pm.expect(j.areaId).to.eql(1);",
                   "    pm.expect(j.role).to.eql(\"client\");",
                   "    pm.expect(j.picDirectory).to.eql(null);",
                   "});"
@@ -142,9 +141,8 @@
                 "exec": [
                   "pm.test(\"Status is 201\", function () { pm.response.to.have.status(201); });",
                   "var j = pm.response.json();",
-                  "pm.test(\"Has name and areaId\", function () {",
+                  "pm.test("Has name", function () {",
                   "    pm.expect(j.name).to.eql(\"Demo Partner Co\");",
-                  "    pm.expect(j.areaId).to.eql(1);",
                   "    pm.expect(j.role).to.eql(\"partner\");",
                   "    pm.expect(j.picDirectory).to.eql(null);",
                   "});"
@@ -165,7 +163,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Partner Co\",\n  \"areaId\": 1,\n  \"termsAccepted\": true,\n  \"language\": \"es\"\n}"
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"password12\",\n  \"name\": \"Demo Partner Co\",\n  \"longitude\": -76.6134,\n  \"latitude\": 2.4382,\n  \"termsAccepted\": true,\n  \"language\": \"es\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/register/partner",
@@ -177,7 +175,7 @@
                 "partner"
               ]
             },
-            "description": "Creates a row in table `partners`. `areaId` must exist when Area entity is enforced (use a valid id from your DB)."
+            "description": "Creates a row in table `partners`. Coordinates are used to resolve the area via Nominatim reverse geocoding."
           },
           "response": []
         },
@@ -273,7 +271,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"longitude\": -76.5320,\r\n  \"latitude\": 3.4516,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -304,7 +302,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"longitude\": -76.5320,\r\n  \"latitude\": 3.4516,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -336,7 +334,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"longitude\": -76.5320,\r\n  \"latitude\": 3.4516,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -368,7 +366,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"longitude\": -76.5320,\r\n  \"latitude\": 3.4516,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -400,7 +398,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"clientId\": 1,\r\n  \"areaId\": 2,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
+              "raw": "{\r\n  \"clientId\": 1,\r\n  \"longitude\": -76.5320,\r\n  \"latitude\": 3.4516,\r\n  \"startLocationDescription\": \"Parque principal, cerca a la iglesia\",\r\n  \"agreedHours\": 3,\r\n  \"hourlyRate\": 15.50\r\n}",
               "options": {
                 "raw": {
                   "language": "json"

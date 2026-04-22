@@ -7,36 +7,144 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sismptm.client.ui.theme.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sismptm.client.data.remote.ServiceResponse
+import com.sismptm.client.ui.theme.Background
+import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.DividerBorder
+import com.sismptm.client.ui.theme.PrimaryAccent
+import com.sismptm.client.ui.theme.TextPrimary
+import com.sismptm.client.ui.theme.TextSecondary
 
-/**
- * Screen displaying tour request confirmation and details.
- * Allows users to review their tour request, configure request options,
- * and proceed to view service details.
- *
- * @param onViewDetails Callback triggered when user confirms and views service details.
- * @param onBack Callback triggered when user navigates back.
- */
+private data class RequestAreaOption(
+    val label: String,
+    val longitude: Double,
+    val latitude: Double
+)
+
+private val requestAreaOptions = listOf(
+    RequestAreaOption("Popayan", -76.6134, 2.4382),
+    RequestAreaOption("Cali", -76.5320, 3.4516),
+    RequestAreaOption("Medellin", -75.5636, 6.2518),
+    RequestAreaOption("Bogota", -74.0721, 4.7110)
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestScreen(
-    onViewDetails: () -> Unit,
-    onBack: () -> Unit
+    onViewDetails: (Long) -> Unit,
+    onBack: () -> Unit,
+    viewModel: RequestTourViewModel = viewModel()
 ) {
-    var isDurationEnabled by remember { mutableStateOf(true) }
-    var selectedWhen by remember { mutableStateOf("Now") }
-    var specialInstructions by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+    val successState = uiState as? RequestTourViewModel.RequestUiState.Success
+    val activeServiceState = uiState as? RequestTourViewModel.RequestUiState.ActiveService
+    val errorState = uiState as? RequestTourViewModel.RequestUiState.Error
+    val isLoading = uiState is RequestTourViewModel.RequestUiState.Loading
+
+    // Track whether we already navigated away so we don't re-trigger on recompose.
+    var hasNavigatedToWaiting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        // Only check once per screen entry; skip if we already handled it.
+        if (!hasNavigatedToWaiting) {
+            viewModel.checkActiveServiceBeforeCreate()
+        }
+    }
+
+    LaunchedEffect(activeServiceState?.service?.serviceId) {
+        val activeServiceId = activeServiceState?.service?.serviceId ?: return@LaunchedEffect
+        if (!hasNavigatedToWaiting) {
+            hasNavigatedToWaiting = true
+            onViewDetails(activeServiceId)
+            viewModel.resetState()
+        }
+    }
+
+    var areaExpanded by remember { mutableStateOf(false) }
+    var selectedArea by remember { mutableStateOf<RequestAreaOption?>(null) }
+    var agreedHoursText by remember { mutableStateOf("1") }
+    var hourlyRateText by remember { mutableStateOf("") }
+    var meetingPointText by remember { mutableStateOf("") }
+
+    val agreedHours = agreedHoursText.toIntOrNull()
+    val hourlyRate = hourlyRateText.toDoubleOrNull()
+    val canSubmit = selectedArea != null &&
+        agreedHours != null && agreedHours > 0 &&
+        hourlyRate != null && hourlyRate > 0.0 &&
+        !isLoading
+
+    val requestFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = TextPrimary,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextSecondary,
+        unfocusedPlaceholderColor = TextSecondary,
+        cursorColor = PrimaryAccent,
+        focusedBorderColor = PrimaryAccent,
+        unfocusedBorderColor = DividerBorder
+    )
+
+    if (successState != null) {
+        RequestCreatedDialog(
+            service = successState.service,
+            areaName = successState.service.startLocationDescription ?: "Location not specified",
+            onDismiss = { viewModel.resetState() },
+            onConfirm = {
+                viewModel.resetState()
+                onViewDetails(successState.service.serviceId)
+            }
+        )
+    }
+
+    if (activeServiceState != null) {
+        ActiveServiceDialog(
+            service = activeServiceState.service,
+            message = activeServiceState.message,
+            onDismiss = { viewModel.resetState() },
+            onConfirm = {
+                viewModel.resetState()
+                onViewDetails(activeServiceState.service.serviceId)
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -396,10 +504,17 @@ fun RequestScreen(
 
             // Bottom Button
             Button(
-                onClick = onViewDetails,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                onClick = {
+                    viewModel.requestTour(
+                        longitude = selectedArea!!.longitude,
+                        latitude = selectedArea!!.latitude,
+                        agreedHours = agreedHours!!,
+                        hourlyRate = hourlyRate!!,
+                        locationDescription = meetingPointText
+                    )
+                },
+                enabled = canSubmit,
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
                 shape = RoundedCornerShape(28.dp),
                 contentPadding = PaddingValues(vertical = 14.dp)

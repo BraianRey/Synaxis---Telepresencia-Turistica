@@ -98,16 +98,19 @@ public class ServiceController {
     }
 
     /**
-     * Lists all services in {@code REQUESTED} status for a specific area.
+     * Lists all services in {@code REQUESTED} status.
      *
-     * <p>Partner frontends typically call this endpoint to discover services
+     * <p>Partner frontends call this endpoint to discover services
      * that are still available to be accepted.</p>
      */
-    @GetMapping("/available/{areaId}")
+    @GetMapping("/available")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('PARTNER')")
-    public List<ServiceResponse> getServicesAvailableByAreaId(@PathVariable Long areaId) {
-        return serviceService.getServicesAvailableByAreaId(areaId);
+    public List<ServiceResponse> getAvailableServices(Authentication authentication) {
+        String keycloakId = extractKeycloakId(authentication);
+        partnerRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException("Partner not found for current user"));
+        return serviceService.getAvailableServices();
     }
 
     /**

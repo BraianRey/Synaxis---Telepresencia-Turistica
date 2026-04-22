@@ -22,18 +22,38 @@ interface ApiService {
     /** POST /api/partners/location/update */
     @POST("api/partners/location/update")
     suspend fun updateLocation(@Body request: LocationUpdateRequest): Response<Unit>
+
+    /** GET /api/services/available  — requires PARTNER token */
+    @GET("api/services/available")
+    suspend fun getAvailableServices(): Response<List<ServiceResponse>>
+
+    /** POST /api/services/{serviceId}/accept  — requires PARTNER token */
+    @POST("api/services/{serviceId}/accept")
+    suspend fun acceptService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 }
 
-data class PingResponse(
-    val status: String
+// ── Auth DTOs ─────────────────────────────────────────────────────────────────
+data class PingResponse(val status: String)
+data class LoginRequest(val email: String, val password: String)
+
+data class LoginResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String,
+    val expiresIn: Long,
+    val id: Long,
+    val email: String,
+    val name: String,
+    val role: String
 )
 
-// ── Request DTO (espeja RegisterPartnerRequest del backend) ──────────────────
+// ── Register DTOs ─────────────────────────────────────────────────────────────
 data class RegisterPartnerRequest(
     val email: String,
     val password: String,
     val name: String,
-    val areaId: Int,
+    val longitude: Double,
+    val latitude: Double,
     val termsAccepted: Boolean,
     val language: String,        // "en" | "es"
     val picDirectory: String? = null
@@ -50,24 +70,26 @@ data class RegisterPartnerResponse(
     val termsAccepted: Boolean,
     val picDirectory: String?,
     val role: String,
-    val areaId: Int,
     val availabilityStatus: String
 )
 
-data class LoginRequest(val email: String, val password: String)
+// ── Location ──────────────────────────────────────────────────────────────────
+data class LocationUpdateRequest(val latitude: Double, val longitude: Double)
 
-data class LoginResponse(
-    val accessToken: String,
-    val refreshToken: String,
-    val tokenType: String,
-    val expiresIn: Long,
-    val id: Long,
-    val email: String,
-    val name: String,
-    val role: String
-)
-
-data class LocationUpdateRequest(
+// ── Service DTOs ──────────────────────────────────────────────────────────────
+data class ServiceResponse(
+    val serviceId: Long,
+    val clientId: Long,
+    val clientName: String,
+    val partnerId: Long?,
+    val longitude: Double,
     val latitude: Double,
-    val longitude: Double
+    val startLocationDescription: String?,
+    val agreedHours: Int,
+    val hourlyRate: Double,
+    val status: String,
+    val requestedAt: String?,
+    val acceptedAt: String?,
+    val startedAt: String?,
+    val endedAt: String?
 )

@@ -88,4 +88,15 @@ public class RestExceptionHandler {
                 .body(Map.of("error", "Resource was modified by another request; please retry"));
     }
 
+    /**
+     * Catch-all for any unexpected exception so we return a JSON body instead of
+     * the default Spring HTML error page. This makes debugging much easier from
+     * mobile clients that expect JSON.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        String message = ex.getMessage() != null ? ex.getMessage() : "Unexpected server error";
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", message));
+    }
 }

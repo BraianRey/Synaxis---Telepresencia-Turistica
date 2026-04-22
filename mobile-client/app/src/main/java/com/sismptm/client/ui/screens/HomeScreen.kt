@@ -31,15 +31,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sismptm.client.data.remote.ServiceResponse
 import com.sismptm.client.data.remote.TokenManager
 import com.sismptm.client.R
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
+    onOpenServiceWaiting: (Long) -> Unit,
     onLogout: () -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+    val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -103,7 +106,11 @@ fun HomeScreen(
         ) {
             when (selectedTab) {
                 0 -> ExploreTabContent(uiState, onNavigateToPartnerSearch)
-                1 -> ComingSoonTab()
+                1 -> ToursTabContent(
+                    servicesState = servicesState,
+                    onRefresh = { homeViewModel.loadClientServices() },
+                    onOpenWaiting = onOpenServiceWaiting
+                )
                 2 -> ProfileTab(onLogout)
             }
         }
@@ -463,17 +470,121 @@ private fun DestinationCard(destination: Destination) {
 }
 
 @Composable
-private fun ComingSoonTab() {
+private fun ToursTabContent(
+    servicesState: HomeViewModel.ClientServicesUiState,
+    onRefresh: () -> Unit,
+    onOpenWaiting: (Long) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF121212)),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "My services",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+            OutlinedButton(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
+                Text("Refresh", color = Color.White)
+            }
+
+            when (servicesState) {
+                HomeViewModel.ClientServicesUiState.Idle,
+                HomeViewModel.ClientServicesUiState.Loading -> {
+                    CircularProgressIndicator(color = Color(0xFF2196F3))
+                    Text("Loading services...", color = Color(0xFFCCCCCC))
+                }
+
+                is HomeViewModel.ClientServicesUiState.Error -> {
+                    Text(
+                        text = servicesState.message,
+                        color = Color(0xFFFF8A80)
+                    )
+                }
+
+                is HomeViewModel.ClientServicesUiState.Success -> {
+                    if (servicesState.services.isEmpty()) {
+                        Text(
+                            text = "No service requests yet.",
+                            color = Color(0xFFCCCCCC)
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            servicesState.services.forEach { service ->
+                                ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClientServiceCard(
+    service: ServiceResponse,
+    onOpenWaiting: (Long) -> Unit
+) {
+    val isActive = service.status.uppercase() in setOf("REQUESTED", "ACCEPTED", "STARTED")
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430)),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text("Service #${service.serviceId}", color = Color.White, fontWeight = FontWeight.SemiBold)
+            ServiceStatusBadge(status = service.status)
+            Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = Color(0xFFB9C0CB))
+            Text("Hours: ${service.agreedHours}", color = Color(0xFFB9C0CB))
+            Text("Hourly rate: ${service.hourlyRate} COP", color = Color(0xFFB9C0CB))
+            if (isActive) {
+                Button(
+                    onClick = { onOpenWaiting(service.serviceId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                ) {
+                    Text("Open waiting screen")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ServiceStatusBadge(status: String) {
+    val normalized = status.uppercase()
+    val label = if (normalized == "REQUESTED") "CREATED" else normalized
+    val (bg, fg) = when (normalized) {
+        "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
+        "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
+        "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
+        else -> Color(0xFF37474F) to Color(0xFFECEFF1)
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = bg),
+        shape = RoundedCornerShape(999.dp)
     ) {
         Text(
-            text = stringResource(R.string.home_coming_soon),
-            fontSize = 20.sp,
-            color = MaterialTheme.colorScheme.onSurface
+            text = label,
+            color = fg,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }

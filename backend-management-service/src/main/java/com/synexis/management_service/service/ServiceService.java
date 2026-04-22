@@ -17,7 +17,7 @@ public interface ServiceService {
 
     List<ServiceResponse> getServicesByPartnerIdForUser(Long partnerId, Long authenticatedPartnerId);
 
-    List<ServiceResponse> getServicesAvailableByAreaId(Long areaId);
+    List<ServiceResponse> getAvailableServices();
 
     ServiceResponse getServiceForClient(Long serviceId, Long clientId);
 

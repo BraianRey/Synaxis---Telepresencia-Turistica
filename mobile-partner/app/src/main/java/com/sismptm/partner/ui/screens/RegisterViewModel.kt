@@ -30,7 +30,8 @@ class RegisterViewModel : ViewModel() {
         name: String,
         email: String,
         password: String,
-        areaId: Int,
+        longitude: Double,
+        latitude: Double,
         termsAccepted: Boolean
     ) {
         viewModelScope.launch {
@@ -41,7 +42,8 @@ class RegisterViewModel : ViewModel() {
                     email = email.trim(),
                     password = password,
                     name = name.trim(),
-                    areaId = areaId,
+                    longitude = longitude,
+                    latitude = latitude,
                     termsAccepted = termsAccepted,
                     language = language
                 )

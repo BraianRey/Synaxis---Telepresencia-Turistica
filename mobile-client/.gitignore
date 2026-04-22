@@ -1,4 +1,5 @@
 *.iml
+.gradle/
 .gradle
 gradle.properties
 /local.properties
@@ -15,3 +16,4 @@ gradle.properties
 .cxx
 local.properties
 .env
+build.log

@@ -1,5 +1,10 @@
 package com.sismptm.client.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,7 +44,11 @@ fun NavGraph() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Welcome.route
+        startDestination = Screen.Welcome.route,
+        enterTransition = { slideInHorizontally(tween(300)) { it } + fadeIn(tween(300)) },
+        exitTransition = { slideOutHorizontally(tween(300)) { -it / 4 } + fadeOut(tween(200)) },
+        popEnterTransition = { slideInHorizontally(tween(300)) { -it / 4 } + fadeIn(tween(300)) },
+        popExitTransition = { slideOutHorizontally(tween(300)) { it } + fadeOut(tween(200)) }
     ) {
         composable(Screen.Welcome.route) {
             WelcomeScreen(
@@ -89,6 +98,9 @@ fun NavGraph() {
                 onNavigateToPartnerSearch = {
                     navController.navigate(Screen.PartnerSearch.route)
                 },
+                onOpenServiceWaiting = { serviceId ->
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
+                },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
@@ -110,7 +122,13 @@ fun NavGraph() {
 
         composable(Screen.Solicitud.route) {
             RequestScreen(
-                onViewDetails = { navController.navigate(Screen.ServiceDetail.route) },
+                onViewDetails = { serviceId ->
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                        // Remove the Solicitud screen from backstack so pressing Back
+                        // goes to PartnerSearch/Home instead of looping back here.
+                        popUpTo(Screen.Solicitud.route) { inclusive = true }
+                    }
+                },
                 onBack = { navController.popBackStack() }
             )
         }

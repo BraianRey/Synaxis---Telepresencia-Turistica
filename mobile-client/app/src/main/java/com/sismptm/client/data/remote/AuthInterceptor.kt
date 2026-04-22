@@ -13,14 +13,15 @@ class AuthInterceptor : Interceptor {
      * @return The response from the next interceptor in the chain.
      */
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = TokenManager.getAccessToken()
-        val request = if (token.isNotBlank()) {
-            chain.request().newBuilder()
-                .addHeader("Authorization", "Bearer $token")
-                .build()
-        } else {
-            chain.request()
+        val requestBuilder = chain.request().newBuilder()
+            .addHeader("Accept", "application/json")
+
+        // Preferimos la sesión de Sprint 2 y usamos TokenManager como fallback.
+        val token = SessionManager.accessToken.ifBlank { TokenManager.getAccessToken() }
+        if (token.isNotBlank()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
         }
-        return chain.proceed(request)
+
+        return chain.proceed(requestBuilder.build())
     }
 }
