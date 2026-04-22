@@ -27,5 +27,11 @@ public class LoggingNotificationService implements NotificationService {
                 service.getIdService(),
                 service.getPartner() != null ? service.getPartner().getId() : null);
     }
-}
 
+    @Override
+    public void notifyClientServiceReady(ServiceEntity service) {
+        log.info("Notify client {} that service {} is ready for telepresence",
+                service.getClient() != null ? service.getClient().getId() : null,
+                service.getIdService());
+    }
+}

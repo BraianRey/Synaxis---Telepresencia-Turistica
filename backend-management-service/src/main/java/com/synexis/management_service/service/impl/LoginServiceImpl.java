@@ -55,7 +55,8 @@ public class LoginServiceImpl implements LoginService {
                 client.getId(),
                 client.getEmail(),
                 client.getName(),
-                client.getRole().name());
+                client.getRole().name(),
+                client.getLanguage().name());
     }
 
     @Override
@@ -73,7 +74,8 @@ public class LoginServiceImpl implements LoginService {
                 partner.getId(),
                 partner.getEmail(),
                 partner.getName(),
-                partner.getRole().name());
+                partner.getRole().name(),
+                partner.getLanguage().name());
     }
 
     private TokenResult requestToken(String email, String password) {
@@ -130,6 +132,3 @@ public class LoginServiceImpl implements LoginService {
         }
     }
 }
-
-
-

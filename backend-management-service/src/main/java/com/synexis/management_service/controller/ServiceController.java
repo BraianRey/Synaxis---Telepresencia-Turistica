@@ -45,11 +45,16 @@ public class ServiceController {
     /**
      * Creates a new service request on behalf of the authenticated client.
      *
-     * <p>Business flow: the service is created in {@code REQUESTED} status and
-     * becomes visible to available partners so they can accept it.</p>
+     * <p>
+     * Business flow: the service is created in {@code REQUESTED} status and
+     * becomes visible to available partners so they can accept it.
+     * </p>
      *
-     * <p>The client identity comes from the JWT (not from the request body). Optional
-     * header {@code X-Idempotency-Key} makes repeated creates return the same service.</p>
+     * <p>
+     * The client identity comes from the JWT (not from the request body). Optional
+     * header {@code X-Idempotency-Key} makes repeated creates return the same
+     * service.
+     * </p>
      */
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -67,8 +72,10 @@ public class ServiceController {
     /**
      * Returns all services that belong to the authenticated client.
      *
-     * <p>Used mainly by the client application to render the client's service
-     * history and current active requests, regardless of status.</p>
+     * <p>
+     * Used mainly by the client application to render the client's service
+     * history and current active requests, regardless of status.
+     * </p>
      */
     @GetMapping("/client/{clientId}")
     @ResponseStatus(HttpStatus.OK)
@@ -83,9 +90,11 @@ public class ServiceController {
     /**
      * Returns all services assigned to a given partner.
      *
-     * <p>Partner UIs can use this to list current and past services in any
+     * <p>
+     * Partner UIs can use this to list current and past services in any
      * status (for example, {@code ACCEPTED}, {@code STARTED}, {@code COMPLETED},
-     * {@code CANCELLED}).</p>
+     * {@code CANCELLED}).
+     * </p>
      */
     @GetMapping("/partner/{partnerId}")
     @ResponseStatus(HttpStatus.OK)
@@ -100,8 +109,10 @@ public class ServiceController {
     /**
      * Lists all services in {@code REQUESTED} status.
      *
-     * <p>Partner frontends call this endpoint to discover services
-     * that are still available to be accepted.</p>
+     * <p>
+     * Partner frontends call this endpoint to discover services
+     * that are still available to be accepted.
+     * </p>
      */
     @GetMapping("/available")
     @ResponseStatus(HttpStatus.OK)
@@ -114,10 +125,47 @@ public class ServiceController {
     }
 
     /**
+     * Accepts a service request by a partner.
+     *
+     * <p>
+     * Implements a race condition where only the first partner to call this
+     * endpoint wins.
+     * </p>
+     */
+    @PostMapping("/{serviceId}/accept")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('PARTNER')")
+    public ServiceResponse acceptService(@PathVariable Long serviceId, Authentication authentication) {
+        String keycloakId = extractKeycloakId(authentication);
+        Partner partner = partnerRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException("Partner not found for current user"));
+        return serviceService.acceptService(serviceId, partner.getId());
+    }
+
+    /**
+     * Sets a service to READY status by the assigned partner.
+     *
+     * <p>
+     * Indicates that the partner has the camera open and is waiting for the client.
+     * </p>
+     */
+    @PostMapping("/{serviceId}/ready")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('PARTNER')")
+    public ServiceResponse readyService(@PathVariable Long serviceId, Authentication authentication) {
+        String keycloakId = extractKeycloakId(authentication);
+        Partner partner = partnerRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException("Partner not found for current user"));
+        return serviceService.readyService(serviceId, partner.getId());
+    }
+
+    /**
      * Fetches a single service by id for either client or partner.
      *
-     * <p>This is the canonical way for frontend to refresh the latest status and
-     * timestamps of a given service.</p>
+     * <p>
+     * This is the canonical way for frontend to refresh the latest status and
+     * timestamps of a given service.
+     * </p>
      */
     @GetMapping("/{serviceId}")
     @ResponseStatus(HttpStatus.OK)
@@ -134,11 +182,13 @@ public class ServiceController {
     /**
      * Acceptance endpoint for partners.
      *
-     * <p>Flow: a partner that is {@code available} calls
+     * <p>
+     * Flow: a partner that is {@code available} calls
      * {@code POST /api/services/{id}/accept}. If the service is in
      * {@code REQUESTED} status and the partner has no other active service, the
      * backend transitions it to {@code ACCEPTED}, assigns the partner and records
-     * the {@code acceptedAt} timestamp and history.</p>
+     * the {@code acceptedAt} timestamp and history.
+     * </p>
      */
     @PostMapping("/{serviceId}/accept")
     @ResponseStatus(HttpStatus.OK)
@@ -153,10 +203,12 @@ public class ServiceController {
     /**
      * Start endpoint for partners.
      *
-     * <p>Flow: the same partner that accepted the service calls
+     * <p>
+     * Flow: the same partner that accepted the service calls
      * {@code POST /api/services/{id}/start}. Only services in
      * {@code ACCEPTED} status can be started; on success the service moves to
-     * {@code STARTED} and {@code startedAt} is populated.</p>
+     * {@code STARTED} and {@code startedAt} is populated.
+     * </p>
      */
     @PostMapping("/{serviceId}/start")
     @ResponseStatus(HttpStatus.OK)
@@ -171,11 +223,13 @@ public class ServiceController {
     /**
      * Complete endpoint for partners.
      *
-     * <p>Flow: the partner that started the service calls
+     * <p>
+     * Flow: the partner that started the service calls
      * {@code POST /api/services/{id}/complete}. Only services in
      * {@code STARTED} status can be completed; on success the service moves to
      * {@code COMPLETED}, {@code endedAt} is set and the partner is freed if it
-     * was marked as {@code busy}.</p>
+     * was marked as {@code busy}.
+     * </p>
      */
     @PostMapping("/{serviceId}/complete")
     @ResponseStatus(HttpStatus.OK)
@@ -190,14 +244,18 @@ public class ServiceController {
     /**
      * Cancel endpoint for clients.
      *
-     * <p>Flow: the owning client can cancel a service via
+     * <p>
+     * Flow: the owning client can cancel a service via
      * {@code POST /api/services/{id}/cancel} while it is still in
      * {@code REQUESTED} or {@code ACCEPTED} status. The backend validates
      * ownership, cancels the payment pre-authorization, releases the partner if
-     * needed and moves the service to {@code CANCELLED}.</p>
+     * needed and moves the service to {@code CANCELLED}.
+     * </p>
      *
-     * <p>In-progress services ({@code STARTED}) are not cancelled here but only
-     * by the system in case of connection failures.</p>
+     * <p>
+     * In-progress services ({@code STARTED}) are not cancelled here but only
+     * by the system in case of connection failures.
+     * </p>
      */
     @PostMapping("/{serviceId}/cancel")
     @ResponseStatus(HttpStatus.OK)
@@ -212,15 +270,19 @@ public class ServiceController {
     /**
      * Cancel endpoint for partners.
      *
-     * <p>Flow: the assigned partner may cancel a service via
+     * <p>
+     * Flow: the assigned partner may cancel a service via
      * {@code POST /api/services/{id}/cancel/by-partner} while it is still in
      * {@code ACCEPTED} status. The backend validates that the authenticated
      * partner matches the one assigned to the service and then moves the service
      * to {@code CANCELLED}, notifies the client and records the event in the
-     * history log.</p>
+     * history log.
+     * </p>
      *
-     * <p>Services in {@code STARTED} status cannot be cancelled from this
-     * endpoint.</p>
+     * <p>
+     * Services in {@code STARTED} status cannot be cancelled from this
+     * endpoint.
+     * </p>
      */
     @PostMapping("/{serviceId}/cancel/by-partner")
     @ResponseStatus(HttpStatus.OK)
@@ -235,10 +297,12 @@ public class ServiceController {
     /**
      * Extracts the authenticated user's Keycloak subject identifier.
      *
-     * <p>For JWT-based security, the {@code sub} claim of the access token is
+     * <p>
+     * For JWT-based security, the {@code sub} claim of the access token is
      * used as the {@code keycloakId}. Controllers then map this identifier to a
      * {@link Client} or {@link Partner} entity via the corresponding
-     * repositories.</p>
+     * repositories.
+     * </p>
      */
     private String extractKeycloakId(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwt) {

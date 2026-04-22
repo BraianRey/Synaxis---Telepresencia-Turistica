@@ -38,6 +38,7 @@ public record ServiceResponse(
             LocalDateTime requestedAt, LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.serviceId = serviceId;
         this.clientId = clientId;
+        this.clientName = clientName;
         this.partnerId = partnerId;
         this.longitude = longitude;
         this.latitude = latitude;

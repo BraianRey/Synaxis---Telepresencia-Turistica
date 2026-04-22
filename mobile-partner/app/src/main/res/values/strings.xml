@@ -27,7 +27,8 @@
     <!-- Home Screen -->
     <string name="welcome_back">Welcome back,</string>
     <string name="gps_permission_required">GPS Permission Required</string>
-    <string name="gps_permission_explanation">This app requires GPS access to update your location and receive tour requests. Please enable permissions to continue.</string>
+    <string name="gps_permission_explanation">This app requires GPS access to update your location
+        and receive tour requests. Please enable permissions to continue.</string>
     <string name="grant_permissions">Grant Permissions</string>
     <string name="availability_status">Availability Status</string>
     <string name="availability_explanation">Turn on to receive tour requests</string>
@@ -37,29 +38,80 @@
     <string name="your_rating">Your rating</string>
     <string name="incoming_requests">Incoming Requests</string>
     <string name="new_requests_count">%1$d new</string>
-    <string name="no_requests_yet">You don\'t have any requests yet. Make sure you\'re online to receive new ones!</string>
-
+    <string name="no_requests_yet">You don\'t have any requests yet. Make sure you\'re online to
+        receive new ones!</string>
 
     <!-- Requests -->
     <string name="time_ago_min">%1$d min ago</string>
     <string name="duration_min">%1$d min</string>
     <string name="price_format">$%1$s COP</string>
     <string name="wants_tour">Wants a tour in %1$s</string>
-    <string name="accept">Accept</string>
     <string name="decline">Decline</string>
 
     <!-- Actions -->
     <string name="send_location">Send Current Location</string>
 
-    <!-- Streaming Screen -->
-    <string name="streaming_title">Live Streaming</string>
+    <!-- New Home Screen Strings -->
+    <string name="greeting">Hello, %s!</string>
+    <string name="connection_status">CONNECTION STATUS</string>
+    <string name="transmit_now">Transmit Now</string>
+    <string name="active">Active</string>
+    <string name="inactive">Inactive</string>
+    <string name="daily_summary">TODAY\'S SUMMARY</string>
+    <string name="average_rating">Your Average Rating</string>
+    <string name="rating_placeholder">-- / 5.0</string>
+    <string name="reviews_placeholder">-- reviews received today</string>
+    <string name="average_rating_value">%1$.1f / 5.0</string>
+    <string name="reviews_received_today">%1$d reviews received today</string>
+    <string name="daily_earnings">Daily Earnings</string>
+    <string name="daily_earnings_amount">$%1$.2f</string>
+    <string name="earnings_placeholder">--</string>
+    <string name="pending_requests">PENDING REQUESTS IN YOUR CITY</string>
+    <string name="no_pending_requests">No pending requests</string>
+    <string name="reject">REJECT</string>
+    <string name="button_accept">ACCEPT</string>
+    <string name="home">Home</string>
+    <string name="history">History</string>
+    <string name="profile">Profile</string>
+    <string name="permission_required">Location permission required</string>
+    <string name="default_partner_name">Socio</string>
+    <string name="permission_description">The application needs location permission to transmit your
+        status and receive requests.</string>
+    <string name="request_permission">Request permission</string>
+    <string name="estimated_duration">Estimated duration: %d min</string>
+    <string name="estimated_payment">Estimated payment: $%.2f</string>
+    <string name="error_load_requests">Failed to load pending requests</string>
+    <string name="error_update_availability">Failed to update availability</string>
+    <string name="login_error_connection">Connection error. Please try again.</string>
+    <string name="login_error_invalid_credentials">Invalid credentials.</string>
+    <string name="login_error_server">Server error. Please try again.</string>
+
+    <!-- Generic actions (referenced directly by name in post-merge screens) -->
+    <string name="accept">Accept</string>
+    <string name="ok">OK</string>
     <string name="debug_streaming">Debug Streaming</string>
-    <string name="connection_quality">Connection Quality</string>
-    <string name="instruction_up">FORWARD</string>
-    <string name="instruction_down">BACKWARD</string>
-    <string name="instruction_left">LEFT</string>
-    <string name="instruction_right">RIGHT</string>
-    <string name="waiting_instructions">Waiting for instructions...</string>
-    <string name="camera_mic_permission_required">Camera &amp; Microphone Required</string>
-    <string name="camera_mic_permission_explanation">This app requires camera and microphone access to start streaming. Please enable them to continue.</string>
+
+    <!-- Tour detail dialog -->
+    <string name="tour_accepted_title">Tour Accepted</string>
+    <string name="tour_accepted_message">You have accepted the tour request.</string>
+    <string name="tour_detail_service_id">Service ID: %1$s</string>
+    <string name="tour_detail_client">Client: %1$s</string>
+    <string name="tour_detail_area">Area: %1$s</string>
+    <string name="tour_detail_meeting_point">Meeting point: %1$s</string>
+    <string name="tour_detail_duration">Duration: %1$s min</string>
+    <string name="tour_detail_hourly_rate">Rate: $%1$s COP/hr</string>
+    <string name="tour_detail_requested_at">Requested at: %1$s</string>
+    <string name="tour_detail_status">Status: %1$s</string>
+
+    <!-- Streaming Screen -->
+    <string name="camera_mic_permission_required">Camera and Microphone Required</string>
+    <string name="camera_mic_permission_explanation">This app needs camera and microphone access to
+        start the streaming session.</string>
+    <string name="connection_quality">Connection quality: %1$s</string>
+    <string name="waiting_instructions">Waiting for instructions…</string>
+    <string name="instruction_up">↑ Move forward</string>
+    <string name="instruction_down">↓ Move backward</string>
+    <string name="instruction_left">← Turn left</string>
+    <string name="instruction_right">→ Turn right</string>
+
 </resources>

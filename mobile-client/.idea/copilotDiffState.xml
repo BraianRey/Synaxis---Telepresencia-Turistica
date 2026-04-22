@@ -3,7 +3,7 @@
   <component name="CopilotDiffPersistence">
     <option name="pendingDiffs">
       <map>
-        <entry key="$PROJECT_DIR$/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt">
+        <entry key="/local (snapshot).properties">
           <value>
             <PendingDiffInfo>
               <option name="filePath" value="/local (snapshot).properties" />

@@ -20,5 +20,11 @@ public interface NotificationService {
      * @param service current state of the cancelled service
      */
     void notifyClientServiceCancelledByPartner(ServiceEntity service);
-}
 
+    /**
+     * Notifies the client that the service is ready for telepresence.
+     *
+     * @param service current state of the ready service
+     */
+    void notifyClientServiceReady(ServiceEntity service);
+}

@@ -27,9 +27,9 @@ data class CommandEvent(val text: String, val id: String = UUID.randomUUID().toS
  * ViewModel for the Partner streaming screen managing WebRTC sessions and signaling.
  */
 class StreamingViewModel(application: Application) :
-        AndroidViewModel(application),
-        SignalingClient.SignalingListener,
-        WebRTCManager.WebRTCListener {
+    AndroidViewModel(application),
+    SignalingClient.SignalingListener,
+    WebRTCManager.WebRTCListener {
 
     private val TAG = "StreamingViewModel"
 
@@ -41,19 +41,19 @@ class StreamingViewModel(application: Application) :
     private var reconnectionAttempts = 0
     private val maxReconnectionAttempts = 3
     private val reconnectionDelays =
-            listOf(
-                    4000L, // Attempt 1: 4 seconds
-                    8000L, // Attempt 2: 8 seconds
-                    16000L // Attempt 3: 16 seconds
-            )
+        listOf(
+            4000L, // Attempt 1: 4 seconds
+            8000L, // Attempt 2: 8 seconds
+            16000L // Attempt 3: 16 seconds
+        )
     private var reconnectionJob: Job? = null
     private var lastState: PeerConnection.PeerConnectionState =
-            PeerConnection.PeerConnectionState.NEW
+        PeerConnection.PeerConnectionState.NEW
 
     val eglBase: EglBase = EglBase.create()
 
     private val webRTCManager =
-            WebRTCManager(context = application, listener = this, eglBase = eglBase)
+        WebRTCManager(context = application, listener = this, eglBase = eglBase)
 
     private val _connectionState = MutableStateFlow(PeerConnection.PeerConnectionState.NEW)
     val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState
@@ -127,24 +127,24 @@ class StreamingViewModel(application: Application) :
     override fun onIceCandidate(candidate: IceCandidate) {
         val target = targetClientId ?: return
         signalingClient?.sendMessage(
-                SignalingMessage(
-                        type = "candidate",
-                        candidate = IceCandidateModel(candidate.sdpMid, candidate.sdpMLineIndex, candidate.sdp, target),
-                        senderId = partnerId,
-                        targetId = target
-                )
+            SignalingMessage(
+                type = "candidate",
+                candidate = IceCandidateModel(candidate.sdpMid, candidate.sdpMLineIndex, candidate.sdp, target),
+                senderId = partnerId,
+                targetId = target
+            )
         )
     }
 
     override fun onLocalSdpCreated(sdp: SessionDescription) {
         val target = targetClientId ?: return
         signalingClient?.sendMessage(
-                SignalingMessage(
-                        type = "offer",
-                        sdp = sdp.description,
-                        senderId = partnerId,
-                        targetId = target
-                )
+            SignalingMessage(
+                type = "offer",
+                sdp = sdp.description,
+                senderId = partnerId,
+                targetId = target
+            )
         )
     }
 

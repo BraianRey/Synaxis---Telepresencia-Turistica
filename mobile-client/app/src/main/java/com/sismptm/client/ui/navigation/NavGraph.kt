@@ -6,15 +6,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.sismptm.client.ui.screens.HomeScreen
 import com.sismptm.client.ui.screens.LoginScreen
 import com.sismptm.client.ui.screens.PartnerSearchScreen
 import com.sismptm.client.ui.screens.RegisterScreen
 import com.sismptm.client.ui.screens.RequestScreen
 import com.sismptm.client.ui.screens.ServiceDetailScreen
+import com.sismptm.client.ui.screens.ServiceWaitingScreen
 import com.sismptm.client.ui.screens.StreamingScreen
 import com.sismptm.client.ui.screens.WelcomeScreen
 
@@ -30,7 +33,12 @@ sealed class Screen(val route: String) {
     object PartnerSearch : Screen("partner_search")
     object Solicitud : Screen("solicitud")
     object ServiceDetail : Screen("service_detail")
-    object Streaming : Screen("streaming")
+    object ServiceWaiting : Screen("service_waiting/{serviceId}") {
+        fun createRoute(serviceId: Long): String = "service_waiting/$serviceId"
+    }
+    object Streaming : Screen("streaming/{serviceId}") {
+        fun createRoute(serviceId: Long): String = "streaming/$serviceId"
+    }
 }
 
 /**
@@ -63,7 +71,8 @@ fun NavGraph() {
                     }
                 },
                 onNavigateToStreaming = {
-                    navController.navigate(Screen.Streaming.route)
+                    // Default for testing if needed
+                    navController.navigate(Screen.Streaming.createRoute(0L))
                 }
             )
         }
@@ -124,12 +133,31 @@ fun NavGraph() {
             RequestScreen(
                 onViewDetails = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
-                        // Remove the Solicitud screen from backstack so pressing Back
-                        // goes to PartnerSearch/Home instead of looping back here.
                         popUpTo(Screen.Solicitud.route) { inclusive = true }
                     }
                 },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.ServiceWaiting.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+            ServiceWaitingScreen(
+                serviceId = serviceId,
+                onBackHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToStreaming = { sid ->
+                    navController.navigate(Screen.Streaming.createRoute(sid)) {
+                        popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -140,8 +168,13 @@ fun NavGraph() {
             )
         }
 
-        composable(Screen.Streaming.route) {
+        composable(
+            route = Screen.Streaming.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
             StreamingScreen(
+                serviceId = serviceId,
                 onBack = { navController.popBackStack() }
             )
         }

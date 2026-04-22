@@ -40,5 +40,3 @@ backend-management-service/picProfile/*
 !backend-management-service/picProfile/.gitkeep
 
 .idea/
-mobile-client/gradle.properties
-mobile-partner/gradle.properties

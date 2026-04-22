@@ -2,26 +2,16 @@ package com.sismptm.client.utils
 
 import com.sismptm.client.BuildConfig
 
-/**
- * Network configuration constants for the application.
- *
- * All URLs are loaded from BuildConfig (gradle build properties from local.properties). This
- * provides a single source of truth for network endpoints and timeout configuration.
- */
 object NetworkConfig {
-    /** Backend REST API base URL */
-    const val BASE_URL = BuildConfig.BASE_URL_API
+    private const val LOCAL_EMULATOR_URL = "http://10.0.2.2:8080/"
+    private const val LOCAL_SIGNALING_URL = "ws://10.0.2.2:8080/ws/signaling"
 
-    /** Keycloak authentication server URL */
-    const val KEYCLOAK_URL = BuildConfig.BASE_URL_KEYCLOAK
+    // Usa BASE_URL_API si viene configurada; en local cae a localhost del emulador.
+    val BASE_URL: String = BuildConfig.BASE_URL_API.takeIf { it.isNotBlank() } ?: LOCAL_EMULATOR_URL
+    val KEYCLOAK_URL: String = BuildConfig.BASE_URL_KEYCLOAK
+    val WS_SIGNALING_URL: String = BuildConfig.BASE_WEBRTC.takeIf { it.isNotBlank() } ?: LOCAL_SIGNALING_URL
 
-    /** WebSocket URL for WebRTC signaling server */
-    const val WS_SIGNALING_URL = BuildConfig.BASE_WEBRTC
-
-    /** Connection timeout in seconds */
     const val CONNECT_TIMEOUT = 30L
-    /** Read timeout in seconds */
     const val READ_TIMEOUT = 30L
-    /** Write timeout in seconds */
     const val WRITE_TIMEOUT = 30L
 }

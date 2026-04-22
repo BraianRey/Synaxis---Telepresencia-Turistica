@@ -13,16 +13,16 @@ import java.util.concurrent.TimeUnit
  */
 class SignalingClient(private val serverUrl: String, private val listener: SignalingListener) {
     private val TAG = "SignalingClient"
-    
+
     // Requirement 1: Ping/Pong - 15 seconds interval to keep connection alive
     private val client = OkHttpClient.Builder()
         .pingInterval(15, TimeUnit.SECONDS)
         .build()
-        
+
     private var webSocket: WebSocket? = null
     private val gson = Gson()
     private val mainHandler = Handler(Looper.getMainLooper())
-    
+
     private var isManualDisconnect = false
     private var reconnectInterval = 2000L // 2 seconds base
 
@@ -40,7 +40,7 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
         isManualDisconnect = false
         Log.d(TAG, "Connecting to: $serverUrl")
         val request = Request.Builder().url(serverUrl).build()
-        
+
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.i(TAG, "WebSocket connected successfully")
@@ -68,13 +68,13 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
 
     private fun attemptReconnect() {
         if (isManualDisconnect) return
-        
+
         // Requirement 1: Auto-reconnect every few seconds
         mainHandler.postDelayed({
             Log.i(TAG, "Attempting automatic reconnection...")
             connect()
         }, reconnectInterval)
-        
+
         // Exponential backoff up to 10 seconds
         reconnectInterval = (reconnectInterval * 1.5).toLong().coerceAtMost(10000L)
     }

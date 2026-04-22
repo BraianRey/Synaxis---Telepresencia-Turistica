@@ -40,17 +40,17 @@ private var activeMediaPlayer: MediaPlayer? = null
  */
 @Composable
 fun StreamingScreen(
+    serviceId: Long,
     onBack: () -> Unit,
     viewModel: StreamingViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var showIdDialog by remember { mutableStateOf(true) }
-    var partnerIdInput by remember { mutableStateOf("PARTNER_01") }
+    val partnerId = serviceId.toString() // Use Service ID as the channel ID
 
     var hasPermissions by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         )
     }
 
@@ -58,7 +58,7 @@ fun StreamingScreen(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         hasPermissions = permissions[Manifest.permission.CAMERA] == true &&
-                         permissions[Manifest.permission.RECORD_AUDIO] == true
+                permissions[Manifest.permission.RECORD_AUDIO] == true
     }
 
     LaunchedEffect(Unit) {
@@ -72,53 +72,15 @@ fun StreamingScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        when {
-            !hasPermissions -> StreamingPermissionDeniedScreen {
+        if (!hasPermissions) {
+            StreamingPermissionDeniedScreen {
                 launcher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
             }
-
-            !showIdDialog -> StreamingContent(
+        } else {
+            StreamingContent(
                 onBack = onBack,
                 viewModel = viewModel,
-                partnerId = partnerIdInput
-            )
-
-            else -> {
-                Text(
-                    text = "Configure your stream...",
-                    color = Color.White.copy(alpha = 0.4f),
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
-
-        if (hasPermissions && showIdDialog) {
-            AlertDialog(
-                onDismissRequest = { },
-                title = { Text("Partner Configuration") },
-                text = {
-                    Column {
-                        Text("Enter your Partner ID.")
-                        Spacer(modifier = Modifier.height(12.dp))
-                        OutlinedTextField(
-                            value = partnerIdInput,
-                            onValueChange = { partnerIdInput = it.trim() },
-                            label = { Text("Partner ID") },
-                            singleLine = true
-                        )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { if (partnerIdInput.isNotBlank()) showIdDialog = false },
-                        enabled = partnerIdInput.isNotBlank()
-                    ) {
-                        Text("Start Streaming")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = onBack) { Text("Cancel") }
-                }
+                partnerId = partnerId
             )
         }
     }
@@ -194,7 +156,7 @@ fun StreamingContent(
         )
 
         Text(
-            text = "Broadcasting as: $partnerId",
+            text = "Streaming Channel: #$partnerId",
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
             color = Color.White.copy(alpha = 0.7f),
             fontSize = 12.sp
@@ -271,25 +233,18 @@ fun InstructionItem(instruction: String, alphaValue: Float) {
  * Handles audio playback for directional instructions, ensuring only one sound plays at a time.
  */
 private fun playInstructionAudio(context: Context, instruction: String) {
-    val audioResId = when (instruction.lowercase()) {
-        "up", "forward"    -> R.raw.up
-        "down", "backward" -> R.raw.down
-        "left"             -> R.raw.left
-        "right"            -> R.raw.right
-        else               -> null
-    } ?: return
+    val lang = com.sismptm.partner.utils.SessionManager.language
+    val audioName = "${instruction.lowercase()}_$lang"
+    val audioResId = context.resources.getIdentifier(audioName, "raw", context.packageName)
+
+    if (audioResId == 0) return
 
     try {
-        /**
-         * Terminate and release previous audio if it's still playing to prevent overlapping.
-         */
         activeMediaPlayer?.let {
             if (it.isPlaying) it.stop()
             it.release()
         }
-    } catch (e: Exception) {
-        // Safe to ignore errors during playback termination
-    }
+    } catch (e: Exception) {}
 
     try {
         activeMediaPlayer = MediaPlayer.create(context, audioResId)?.apply {

@@ -4,22 +4,22 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ApiService {
+    /** GET /api/availability/ping */
+    @GET("api/availability/ping")
+    suspend fun availabilityPing(): Response<PingResponse>
 
-    /** GET /ping */
-    @GET("/api/availability/ping")
-    suspend fun ping(): Response<PingResponse>
-
-    /** POST /api/partners/register/partner */
-    @POST("api/partners/register/partner")
+    /** POST /api/partners/register */
+    @POST("api/partners/register")
     suspend fun registerPartner(@Body request: RegisterPartnerRequest): Response<RegisterPartnerResponse>
 
     /** POST /api/auth/partner/login */
     @POST("api/auth/partner/login")
     suspend fun loginPartner(@Body request: LoginRequest): Response<LoginResponse>
 
-    /** POST /api/partners/location/update */
+    /** POST /api/partners/location/update  — requires PARTNER token */
     @POST("api/partners/location/update")
     suspend fun updateLocation(@Body request: LocationUpdateRequest): Response<Unit>
 
@@ -30,6 +30,10 @@ interface ApiService {
     /** POST /api/services/{serviceId}/accept  — requires PARTNER token */
     @POST("api/services/{serviceId}/accept")
     suspend fun acceptService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    /** POST /api/services/{serviceId}/ready  — indicates partner is ready for streaming */
+    @POST("api/services/{serviceId}/ready")
+    suspend fun markServiceAsReady(@Path("serviceId") serviceId: Long): Response<Unit>
 }
 
 // ── Auth DTOs ─────────────────────────────────────────────────────────────────
@@ -44,7 +48,8 @@ data class LoginResponse(
     val id: Long,
     val email: String,
     val name: String,
-    val role: String
+    val role: String,
+    val language: String? = "en"
 )
 
 // ── Register DTOs ─────────────────────────────────────────────────────────────
@@ -55,11 +60,10 @@ data class RegisterPartnerRequest(
     val longitude: Double,
     val latitude: Double,
     val termsAccepted: Boolean,
-    val language: String,        // "en" | "es"
+    val language: String,
     val picDirectory: String? = null
 )
 
-// ── Response DTO (espeja RegisterPartnerResponse del backend) ─────────────────
 data class RegisterPartnerResponse(
     val id: Long,
     val email: String,

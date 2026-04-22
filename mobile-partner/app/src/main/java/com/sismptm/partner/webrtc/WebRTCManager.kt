@@ -70,7 +70,7 @@ class WebRTCManager(
 
     fun startLocalCapture(surfaceViewRenderer: SurfaceViewRenderer) {
         if (isCapturing || isDisposed) return
-        
+
         surfaceViewRenderer.init(eglBase.eglBaseContext, null)
         surfaceViewRenderer.setEnableHardwareScaler(true)
 
@@ -83,13 +83,13 @@ class WebRTCManager(
         surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
         capturer.initialize(surfaceTextureHelper, context, videoSource.capturerObserver)
         capturer.startCapture(1280, 720, 30)
-        
+
         localVideoTrack = peerConnectionFactory!!.createVideoTrack("video0", videoSource)
         localVideoTrack?.addSink(surfaceViewRenderer)
 
         val audioSource = peerConnectionFactory!!.createAudioSource(MediaConstraints())
         localAudioTrack = peerConnectionFactory!!.createAudioTrack("audio0", audioSource)
-        
+
         isCapturing = true
         setupNewPeerConnection()
     }
@@ -99,14 +99,14 @@ class WebRTCManager(
      */
     fun setupNewPeerConnection() {
         Log.i(TAG, "Reactive Reset: Building a fresh PeerConnection session.")
-        
+
         peerConnection?.close()
         peerConnection?.dispose()
         peerConnection = null
-        
+
         isLocalDescriptionSet = false
         isRemoteDescriptionSet = false
-        
+
         synchronized(pendingLocalIceCandidates) { pendingLocalIceCandidates.clear() }
         synchronized(pendingRemoteIceCandidates) { pendingRemoteIceCandidates.clear() }
 
@@ -216,7 +216,7 @@ class WebRTCManager(
         override fun onDataChannel(dc: DataChannel) {
             if (dc.label() == "control") dc.registerObserver(dataChannelObserver)
         }
-        
+
         override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
         override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
         override fun onRenegotiationNeeded() {}
