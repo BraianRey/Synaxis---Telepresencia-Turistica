@@ -36,7 +36,9 @@ sealed class Screen(val route: String) {
     object ServiceWaiting : Screen("service_waiting/{serviceId}") {
         fun createRoute(serviceId: Long): String = "service_waiting/$serviceId"
     }
-    object Streaming : Screen("streaming")
+    object Streaming : Screen("streaming/{serviceId}") {
+        fun createRoute(serviceId: Long): String = "streaming/$serviceId"
+    }
 }
 
 /**
@@ -69,7 +71,8 @@ fun NavGraph() {
                     }
                 },
                 onNavigateToStreaming = {
-                    navController.navigate(Screen.Streaming.route)
+                    // Default for testing if needed
+                    navController.navigate(Screen.Streaming.createRoute(0L))
                 }
             )
         }
@@ -130,8 +133,6 @@ fun NavGraph() {
             RequestScreen(
                 onViewDetails = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
-                        // Remove the Solicitud screen from backstack so pressing Back
-                        // goes to PartnerSearch/Home instead of looping back here.
                         popUpTo(Screen.Solicitud.route) { inclusive = true }
                     }
                 },
@@ -151,6 +152,11 @@ fun NavGraph() {
                         popUpTo(Screen.Home.route) { inclusive = false }
                         launchSingleTop = true
                     }
+                },
+                onNavigateToStreaming = { sid ->
+                    navController.navigate(Screen.Streaming.createRoute(sid)) {
+                        popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -162,8 +168,13 @@ fun NavGraph() {
             )
         }
 
-        composable(Screen.Streaming.route) {
+        composable(
+            route = Screen.Streaming.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
             StreamingScreen(
+                serviceId = serviceId,
                 onBack = { navController.popBackStack() }
             )
         }

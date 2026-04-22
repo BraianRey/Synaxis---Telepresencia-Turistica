@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -45,6 +46,7 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
 
     val uiState by viewModel.uiState.collectAsState()
+    val pingState by viewModel.pingState.collectAsState()
     val isLoading = uiState is LoginViewModel.LoginUiState.Loading
 
     LaunchedEffect(uiState) {
@@ -63,7 +65,31 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
+        // Ping Section at the top
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = pingState ?: "Check server availability",
+                fontSize = 12.sp,
+                color = if (pingState?.contains("Online") == true) Color(0xFF2E7D32) else Color(0xFF757575),
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = { viewModel.checkAvailability() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Ping Server",
+                    tint = Color(0xFF1565C0),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = stringResource(id = R.string.login_title),

@@ -6,11 +6,6 @@ import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -25,29 +20,37 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
-import kotlinx.coroutines.delay
+import org.webrtc.PeerConnection
+import org.webrtc.SurfaceViewRenderer
 
 /**
- * Screen for Live Streaming via WebRTC.
- * Includes a video preview using CameraX, connection quality indicator,
- * and a history of received movement instructions with audio feedback.
+ * Global reference to the currently active MediaPlayer to manage audio playback.
+ */
+private var activeMediaPlayer: MediaPlayer? = null
+
+/**
+ * Main entry point for the Partner's streaming interface.
  */
 @Composable
-fun StreamingScreen(onBack: () -> Unit) {
+fun StreamingScreen(
+    serviceId: Long,
+    onBack: () -> Unit,
+    viewModel: StreamingViewModel = viewModel()
+) {
     val context = LocalContext.current
-    
+    val partnerId = serviceId.toString() // Use Service ID as the channel ID
+
     var hasPermissions by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         )
     }
 
@@ -55,7 +58,7 @@ fun StreamingScreen(onBack: () -> Unit) {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         hasPermissions = permissions[Manifest.permission.CAMERA] == true &&
-                         permissions[Manifest.permission.RECORD_AUDIO] == true
+                permissions[Manifest.permission.RECORD_AUDIO] == true
     }
 
     LaunchedEffect(Unit) {
@@ -64,15 +67,28 @@ fun StreamingScreen(onBack: () -> Unit) {
         }
     }
 
-    if (!hasPermissions) {
-        StreamingPermissionDeniedScreen {
-            launcher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        if (!hasPermissions) {
+            StreamingPermissionDeniedScreen {
+                launcher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
+            }
+        } else {
+            StreamingContent(
+                onBack = onBack,
+                viewModel = viewModel,
+                partnerId = partnerId
+            )
         }
-    } else {
-        StreamingContent(onBack = onBack)
     }
 }
 
+/**
+ * Placeholder screen shown when required permissions are not granted.
+ */
 @Composable
 fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
     Box(
@@ -86,82 +102,66 @@ fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = stringResource(id = R.string.camera_mic_permission_required),
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Text(
-                text = stringResource(id = R.string.camera_mic_permission_explanation),
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFFB9C0CB),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
-            ) {
-                Text(stringResource(id = R.string.grant_permissions))
+            Text("Camera & Microphone Required", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Button(onClick = onRetry) {
+                Text("Grant Permissions")
             }
         }
     }
 }
 
+/**
+ * Core content of the streaming session, including the video feed and command feedback.
+ */
 @Composable
-fun StreamingContent(onBack: () -> Unit) {
+fun StreamingContent(
+    onBack: () -> Unit,
+    viewModel: StreamingViewModel,
+    partnerId: String
+) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-    
-    // History of instructions (max 3)
-    var instructions by remember { mutableStateOf(listOf<String>()) }
-    
-    // SIMULATION: Receiving instructions from server (every 10 seconds for testing)
-    LaunchedEffect(Unit) {
-        val possibleInstructions = listOf("up", "down", "left", "right")
-        while (true) {
-            delay(10000) 
-            val newInstruction = possibleInstructions.random()
-            instructions = (instructions + newInstruction).takeLast(3)
-            
-            // Audio playback based on instruction
-            playInstructionAudio(context, newInstruction)
+    val connectionState by viewModel.connectionState.collectAsState()
+    val commands by viewModel.commands.collectAsState()
+    val lastCommandEvent by viewModel.lastCommandEvent.collectAsState()
+
+    /**
+     * Cleanup effect to ensure MediaPlayer resources are released when leaving the screen.
+     */
+    DisposableEffect(Unit) {
+        onDispose {
+            activeMediaPlayer?.let {
+                try { if (it.isPlaying) it.stop() } catch (e: Exception) {}
+                it.release()
+            }
+            activeMediaPlayer = null
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        // 1. Camera Preview
+    /**
+     * Triggers audio feedback whenever a new command event is received.
+     */
+    LaunchedEffect(lastCommandEvent) {
+        lastCommandEvent?.let { playInstructionAudio(context, it.text) }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+
         AndroidView(
-            factory = { ctx ->
-                val previewView = PreviewView(ctx)
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }, ContextCompat.getMainExecutor(ctx))
-                previewView
+            factory = { _ ->
+                SurfaceViewRenderer(context).also { renderer ->
+                    viewModel.initStreaming(renderer, partnerId)
+                }
             },
             modifier = Modifier.fillMaxSize()
         )
 
-        // UI Overlay
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.1f)))
+        Text(
+            text = "Streaming Channel: #$partnerId",
+            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+            color = Color.White.copy(alpha = 0.7f),
+            fontSize = 12.sp
+        )
 
-        // 2. Connection Quality
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -169,81 +169,92 @@ fun StreamingContent(onBack: () -> Unit) {
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.Black.copy(alpha = 0.5f))
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.SignalCellularAlt, null, modifier = Modifier.size(20.dp), tint = Color.Green)
-            Text(stringResource(R.string.connection_quality), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            val tint = when (connectionState) {
+                PeerConnection.PeerConnectionState.CONNECTED  -> Color.Green
+                PeerConnection.PeerConnectionState.CONNECTING -> Color.Yellow
+                else -> Color.Red
+            }
+            Icon(Icons.Default.SignalCellularAlt, contentDescription = null, modifier = Modifier.size(20.dp), tint = tint)
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = connectionState.name, color = Color.White, fontSize = 12.sp)
         }
 
-        // 3. Instruction History (Localized)
-        Column(
-            modifier = Modifier.align(Alignment.TopStart).padding(24.dp).width(160.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            instructions.asReversed().forEachIndexed { index, instruction ->
-                val alpha by animateFloatAsState(targetValue = when (index) { 0 -> 1.0f; 1 -> 0.6f; else -> 0.3f })
-                InstructionItem(instruction = instruction, modifier = Modifier.alpha(alpha))
-            }
-            if (instructions.isEmpty()) {
-                Text(stringResource(R.string.waiting_instructions), color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+        if (commands.isNotEmpty()) {
+            val displayCommands = commands.asReversed().take(3)
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(24.dp)
+                    .width(200.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Latest Commands:", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+                displayCommands.forEachIndexed { index, command ->
+                    val alphaValue = when(index) {
+                        0 -> 1.0f
+                        1 -> 0.6f
+                        2 -> 0.3f
+                        else -> 0f
+                    }
+                    InstructionItem(command, alphaValue)
+                }
             }
         }
 
         IconButton(
             onClick = onBack,
-            modifier = Modifier.align(Alignment.BottomStart).padding(24.dp).background(Color.Black.copy(alpha = 0.4f), CircleShape)
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(24.dp)
+                .background(Color.Black.copy(alpha = 0.4f), CircleShape)
         ) {
-            Text("←", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("←", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         }
-    }
-}
-
-@Composable
-fun InstructionItem(instruction: String, modifier: Modifier = Modifier) {
-    val textId = when (instruction) {
-        "up" -> R.string.instruction_up
-        "down" -> R.string.instruction_down
-        "left" -> R.string.instruction_left
-        "right" -> R.string.instruction_right
-        else -> R.string.waiting_instructions
-    }
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Color.Black.copy(alpha = 0.4f),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Text(
-            text = stringResource(id = textId),
-            color = Color.White,
-            modifier = Modifier.padding(8.dp),
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp
-        )
     }
 }
 
 /**
- * Plays the corresponding audio file from res/raw or res/raw-es.
- * Android automatically picks the correct folder based on app language.
+ * Individual command item with varying alpha based on its chronological order.
+ */
+@Composable
+fun InstructionItem(instruction: String, alphaValue: Float) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().alpha(alphaValue),
+        color = Color.Black.copy(alpha = 0.4f),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(instruction, color = Color.White, modifier = Modifier.padding(8.dp), fontSize = 13.sp)
+    }
+}
+
+/**
+ * Handles audio playback for directional instructions, ensuring only one sound plays at a time.
  */
 private fun playInstructionAudio(context: Context, instruction: String) {
-    val audioResId = when (instruction) {
-        "up" -> R.raw.up
-        "down" -> R.raw.down
-        "left" -> R.raw.left
-        "right" -> R.raw.right
-        else -> null
-    }
+    val lang = com.sismptm.partner.utils.SessionManager.language
+    val audioName = "${instruction.lowercase()}_$lang"
+    val audioResId = context.resources.getIdentifier(audioName, "raw", context.packageName)
 
-    audioResId?.let {
-        try {
-            val mediaPlayer = MediaPlayer.create(context, it)
-            mediaPlayer.setOnCompletionListener { mp -> mp.release() }
-            mediaPlayer.start()
-        } catch (e: Exception) {
-            println("Error playing audio: ${e.message}")
+    if (audioResId == 0) return
+
+    try {
+        activeMediaPlayer?.let {
+            if (it.isPlaying) it.stop()
+            it.release()
         }
+    } catch (e: Exception) {}
+
+    try {
+        activeMediaPlayer = MediaPlayer.create(context, audioResId)?.apply {
+            setOnCompletionListener { mp ->
+                mp.release()
+                if (activeMediaPlayer == mp) activeMediaPlayer = null
+            }
+            start()
+        }
+    } catch (e: Exception) {
+        activeMediaPlayer = null
     }
 }

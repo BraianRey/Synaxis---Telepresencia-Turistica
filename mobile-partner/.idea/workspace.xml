@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.vscode/settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/../.vscode/settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/client/NominatimClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/client/NominatimClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/config/DataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/config/DataInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/config/WebClientConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/config/WebClientConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/controller/ServiceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/controller/ServiceController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/LoginRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/LoginRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterClientRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterClientRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterPartnerRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterPartnerRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/LoginResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/LoginResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/NominatimResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/NominatimResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/RegisterPartnerResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/RegisterPartnerResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/ServiceResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/ServiceResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/Area.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/Area.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/Partner.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/Partner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/ServiceEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/ServiceEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/exception/RestExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/exception/RestExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/repository/ServiceRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/repository/ServiceRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/ServiceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/ServiceService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/PartnerServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/PartnerServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/test/java/com/synexis/management_service/repository/PartnerRepositoryTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/test/java/com/synexis/management_service/repository/PartnerRepositoryTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../keycloak/realm-export.json" beforeDir="false" afterPath="$PROJECT_DIR$/../keycloak/realm-export.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/copilotDiffState.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/ApiService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/AuthInterceptor.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/AuthInterceptor.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/RetrofitClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/RetrofitClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/SignalingClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/SignalingClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/WebRTCManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/WebRTCManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/HomeViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/HomeViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/LoginScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/LoginScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/LoginViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/LoginViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/PartnerSearchScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/PartnerSearchScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RegisterScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RegisterScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RegisterViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RegisterViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RequestScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RequestScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RequestTourViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/RequestTourViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/ServiceWaitingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/ServiceWaitingScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/StreamingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/StreamingScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/StreamingViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/StreamingViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/utils/NetworkConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/utils/NetworkConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/utils/SessionManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/utils/SessionManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/gradle/libs.versions.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/gradlew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/AndroidProjectSystem.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AndroidProjectSystem.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deviceManager.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deviceManager.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/ApiService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/AuthInterceptor.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/AuthInterceptor.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/RetrofitClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/RetrofitClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/SignalingClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/SignalingClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/components/RequestCard.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/components/RequestCard.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/navigation/NavGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/navigation/NavGraph.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/LoginScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/LoginScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/LoginViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/LoginViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/RegisterScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/RegisterScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/RegisterViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/RegisterViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/utils/NetworkConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/utils/NetworkConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/utils/SessionManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/utils/SessionManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/webrtc/WebRTCManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/webrtc/WebRTCManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-en/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-en/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es-rLA/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es-rLA/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/libs.versions.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../postman/Synaxis Management Service.postman_collection.json" beforeDir="false" afterPath="$PROJECT_DIR$/../postman/Synaxis Management Service.postman_collection.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../streaming-service/src/main/java/com/synexis/streaming_service/config/RawWebSocketHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/../streaming-service/src/main/java/com/synexis/streaming_service/config/RawWebSocketHandler.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[PhysicalDevice::serial=M7T4NRSGHY65PZSK]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+        <option value="Kotlin File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;BraianRey&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/BraianRey/Synaxis---Telepresencia-Turistica.git&quot;,
+    &quot;accountId&quot;: &quot;cd5502d4-d496-442f-89c2-ae7c104d5f2f&quot;
+  }
+}</component>
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\Janus\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="3C8UADKCGKXxXzWFWBdybxy2d9a" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="1" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Android App.app.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Notification.DisplayName-DoNotAsk-Android Gradle Upgrade Notification": "Android Gradle Upgrade Notification",
+    "Notification.DoNotAsk-Android Gradle Upgrade Notification": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "git-widget-placeholder": "TEST-INTEGRATION-MAP&&STREAM",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/TEST/Synaxis---Telepresencia-Turistica/mobile-partner/app/src/main/java/com/sismptm/partner/data/remote",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\TEST\Synaxis---Telepresencia-Turistica\mobile-partner\app\src\main\java\com\sismptm\partner\data\remote" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="SISPTMPartner.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="" />
+      <created>1775766545528</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1775766545528</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="com.sismptm.partner">
+          <value>
+            <CheckInfo lastCheckTimestamp="1776302656407" />
+          </value>
+        </entry>
+        <entry key="com.sismptm.partner.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1776302656407" />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

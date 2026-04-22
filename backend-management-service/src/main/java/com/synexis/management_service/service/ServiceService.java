@@ -25,6 +25,8 @@ public interface ServiceService {
 
     ServiceResponse acceptService(Long serviceId, Long partnerId);
 
+    ServiceResponse readyService(Long serviceId, Long partnerId);
+
     ServiceResponse startService(Long serviceId, Long partnerId);
 
     ServiceResponse completeService(Long serviceId, Long partnerId);

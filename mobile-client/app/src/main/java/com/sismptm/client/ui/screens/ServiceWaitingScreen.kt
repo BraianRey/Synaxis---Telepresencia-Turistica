@@ -171,7 +171,7 @@ class ServiceWaitingViewModel : ViewModel() {
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
             while (isActive) {
-                delay(8000)
+                delay(5000)
                 fetchService(serviceId, isManualRefresh = false)
             }
         }
@@ -191,7 +191,8 @@ class ServiceWaitingViewModel : ViewModel() {
 @Composable
 fun ServiceWaitingScreen(
     serviceId: Long,
-    onBackHome: () -> Unit
+    onBackHome: () -> Unit,
+    onNavigateToStreaming: (Long) -> Unit
 ) {
     val viewModel: ServiceWaitingViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -202,6 +203,13 @@ fun ServiceWaitingScreen(
 
     LaunchedEffect(serviceId) {
         viewModel.load(serviceId)
+    }
+
+    // Auto-navigate to streaming when status is READY
+    LaunchedEffect(status) {
+        if (status == "READY") {
+            onNavigateToStreaming(serviceId)
+        }
     }
 
     Scaffold(
@@ -266,6 +274,7 @@ fun ServiceWaitingScreen(
                             text = when (status) {
                                 "REQUESTED" -> "Waiting for a partner to accept your request."
                                 "ACCEPTED" -> "A partner accepted your request. Waiting for tour start."
+                                "READY" -> "Partner is ready! Starting streaming..."
                                 "STARTED" -> "Tour is in progress."
                                 "COMPLETED" -> "Tour finished successfully."
                                 "CANCELLED" -> "Tour was cancelled."
@@ -319,6 +328,7 @@ private fun StatusBadge(status: String) {
     val (bg, fg) = when (normalized) {
         "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
         "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
         "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
         "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
@@ -334,4 +344,3 @@ private fun StatusBadge(status: String) {
         )
     }
 }
-

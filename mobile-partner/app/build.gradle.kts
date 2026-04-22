@@ -25,8 +25,14 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
+        val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: "http://10.0.2.2:8080/"
         buildConfigField("String", "BASE_URL_API", "\"$baseUrlApi\"")
+
+        val baseWebRtc: String = localProperties.getProperty("BASE_WEBRTC") ?: "ws://10.0.2.2:8081/"
+        buildConfigField("String", "BASE_WEBRTC", "\"$baseWebRtc\"")
+
+        val baseUrlKeycloak: String = localProperties.getProperty("BASE_URL_KEYCLOAK") ?: ""
+        buildConfigField("String", "BASE_URL_KEYCLOAK", "\"$baseUrlKeycloak\"")
     }
 
     buildTypes {
@@ -65,6 +71,9 @@ dependencies {
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
+
+    // WebRTC
+    implementation(libs.webrtc)
 
     // Retrofit
     implementation(libs.retrofit)

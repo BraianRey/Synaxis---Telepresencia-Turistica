@@ -33,10 +33,13 @@ import com.sismptm.partner.location.LocationService
 import com.sismptm.partner.ui.components.RequestCard
 import com.sismptm.partner.utils.SessionManager
 import kotlinx.coroutines.delay
-import java.math.BigDecimal
 
 @Composable
-fun HomeScreen(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    onLogout: () -> Unit,
+    onNavigateToServiceReady: (Long) -> Unit,
+    homeViewModel: HomeViewModel = viewModel()
+) {
     val context = LocalContext.current
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -64,7 +67,7 @@ fun HomeScreen(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel())
     if (!hasLocationPermission) {
         PermissionDeniedScreen { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
     } else {
-        HomeContent(onLogout = onLogout, homeViewModel = homeViewModel)
+        HomeContent(onLogout = onLogout, onNavigateToServiceReady = onNavigateToServiceReady, homeViewModel = homeViewModel)
     }
 }
 
@@ -86,7 +89,11 @@ fun PermissionDeniedScreen(onRetry: () -> Unit) {
 }
 
 @Composable
-fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()) {
+fun HomeContent(
+    onLogout: () -> Unit,
+    onNavigateToServiceReady: (Long) -> Unit,
+    homeViewModel: HomeViewModel = viewModel()
+) {
     var isOnline by remember { mutableStateOf(false) }
 
     val requestsState by homeViewModel.requestsState.collectAsState()
@@ -105,11 +112,11 @@ fun HomeContent(onLogout: () -> Unit, homeViewModel: HomeViewModel = viewModel()
         }
     }
 
-    if (acceptedTour != null) {
-        AcceptedTourDialog(
-            service = acceptedTour!!,
-            onDismiss = { homeViewModel.clearAcceptedTour() }
-        )
+    LaunchedEffect(acceptedTour) {
+        acceptedTour?.let {
+            onNavigateToServiceReady(it.serviceId)
+            homeViewModel.clearAcceptedTour()
+        }
     }
 
     if (acceptErrorMessage != null) {
@@ -260,40 +267,6 @@ private fun ServiceRequestCard(
         onAccept = onAccept,
         isAccepting = isAccepting,
         acceptEnabled = acceptEnabled
-    )
-}
-
-@Composable
-private fun AcceptedTourDialog(service: ServiceResponse, onDismiss: () -> Unit) {
-    val meetingPoint = service.startLocationDescription?.ifBlank { "-" } ?: "-"
-    val requestedAt = service.requestedAt?.replace("T", " ") ?: "-"
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.tour_accepted_title),
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(stringResource(R.string.tour_accepted_message))
-                Spacer(modifier = Modifier.height(6.dp))
-                Text("${stringResource(R.string.tour_detail_service_id)}: ${service.serviceId}")
-                Text("${stringResource(R.string.tour_detail_client)}: #${service.clientId}")
-                Text("${stringResource(R.string.tour_detail_meeting_point)}: $meetingPoint")
-                Text("${stringResource(R.string.tour_detail_duration)}: ${service.agreedHours}h")
-                Text("${stringResource(R.string.tour_detail_hourly_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h")
-                Text("${stringResource(R.string.tour_detail_requested_at)}: $requestedAt")
-                Text("${stringResource(R.string.tour_detail_status)}: ACCEPTED")
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.ok))
-            }
-        }
     )
 }
 

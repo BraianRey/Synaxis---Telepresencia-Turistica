@@ -6,35 +6,27 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.sismptm.partner.ui.screens.HomeScreen
-import com.sismptm.partner.ui.screens.LoginScreen
-import com.sismptm.partner.ui.screens.RegisterScreen
-import com.sismptm.partner.ui.screens.RequestDetailScreen
-import com.sismptm.partner.ui.screens.ServiceDetailScreen
-import com.sismptm.partner.ui.screens.StreamingScreen
+import androidx.navigation.navArgument
+import com.sismptm.partner.ui.screens.*
 
-/**
- * Sealed class representing all navigation routes in the mobile-partner application.
- * Each object corresponds to a screen in the partner navigation graph.
- */
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
     object SolicitudDetail : Screen("solicitud_detail")
     object ServicioDetail : Screen("servicio_detail")
-    object Streaming : Screen("streaming")
+    object ServiceReady : Screen("service_ready/{serviceId}") {
+        fun createRoute(serviceId: Long) = "service_ready/$serviceId"
+    }
+    object Streaming : Screen("streaming/{serviceId}") {
+        fun createRoute(serviceId: Long) = "streaming/$serviceId"
+    }
 }
 
-/**
- * Main navigation graph composable for the mobile-partner application.
- * Defines the navigation structure and relationships between all screens.
- * Manages the NavController and handles navigation between Login, Register, Home,
- * SolicitudDetail, ServicioDetail, and Streaming screens.
- */
 @Composable
 fun PartnerNavGraph() {
     val navController = rememberNavController()
@@ -58,7 +50,8 @@ fun PartnerNavGraph() {
                     navController.navigate(Screen.Register.route)
                 },
                 onNavigateToStreaming = {
-                    navController.navigate(Screen.Streaming.route)
+                    // Default fallback or test route
+                    navController.navigate(Screen.Streaming.createRoute(0L))
                 }
             )
         }
@@ -80,7 +73,37 @@ fun PartnerNavGraph() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                },
+                onNavigateToServiceReady = { serviceId ->
+                    navController.navigate(Screen.ServiceReady.createRoute(serviceId))
                 }
+            )
+        }
+
+        composable(
+            route = Screen.ServiceReady.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+            ServiceReadyScreen(
+                serviceId = serviceId,
+                onReadyConfirmed = { id ->
+                    navController.navigate(Screen.Streaming.createRoute(id)) {
+                        popUpTo(Screen.Home.route)
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.Streaming.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+            StreamingScreen(
+                serviceId = serviceId,
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -95,12 +118,6 @@ fun PartnerNavGraph() {
         composable(Screen.ServicioDetail.route) {
             ServiceDetailScreen(
                 onComplete = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(Screen.Streaming.route) {
-            StreamingScreen(
                 onBack = { navController.popBackStack() }
             )
         }

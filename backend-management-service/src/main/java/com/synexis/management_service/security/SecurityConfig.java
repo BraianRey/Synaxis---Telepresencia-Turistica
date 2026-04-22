@@ -22,12 +22,15 @@ import org.springframework.security.web.SecurityFilterChain;
  * saving users.
  *
  * <p>
- * How it works: {@link #securityFilterChain(HttpSecurity, Converter)} disables CSRF
+ * How it works: {@link #securityFilterChain(HttpSecurity, Converter)} disables
+ * CSRF
  * (typical for stateless JSON APIs) and
  * allows unauthenticated access to {@code /ping}, auth/register endpoints, and
- * {@code OPTIONS} preflight; everything else requires an authenticated principal.
+ * {@code OPTIONS} preflight; everything else requires an authenticated
+ * principal.
  * {@link #passwordEncoder()} is used by
- * {@link com.synexis.management_service.service.impl.AuthServiceImpl AuthService}
+ * {@link com.synexis.management_service.service.impl.AuthServiceImpl
+ * AuthService}
  * for encoding and verification.
  */
 @Configuration
@@ -43,6 +46,7 @@ public class SecurityConfig {
                 return web -> web.ignoring()
                                 .requestMatchers(
                                                 "/ping",
+                                                "/api/availability/ping",
                                                 "/api/auth/**",
                                                 "/api/clients/register",
                                                 "/api/partners/register");
@@ -60,6 +64,7 @@ public class SecurityConfig {
                                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                                                 .requestMatchers(
                                                                                 "/ping",
+                                                                                "/api/availability/ping",
                                                                                 "/api/auth/**",
                                                                                 "/api/clients/register",
                                                                                 "/api/partners/register")

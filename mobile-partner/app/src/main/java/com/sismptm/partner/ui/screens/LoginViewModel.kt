@@ -23,6 +23,9 @@ class LoginViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    private val _pingState = MutableStateFlow<String?>(null)
+    val pingState: StateFlow<String?> = _pingState.asStateFlow()
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
@@ -37,7 +40,8 @@ class LoginViewModel : ViewModel() {
                             token = body.accessToken,
                             id = body.id,
                             name = body.name,
-                            email = body.email
+                            email = body.email,
+                            lang = body.language
                         )
                     }
                     _uiState.value = LoginUiState.Success
@@ -50,6 +54,25 @@ class LoginViewModel : ViewModel() {
                 _uiState.value = LoginUiState.Error(parseConnectionError(ex))
             }
         }
+    }
+
+    fun checkAvailability() {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.availabilityPing()
+                if (response.isSuccessful) {
+                    _pingState.value = "Server Online: ${response.body()?.status}"
+                } else {
+                    _pingState.value = "Server unreachable (Code: ${response.code()})"
+                }
+            } catch (e: Exception) {
+                _pingState.value = "Connection error: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun clearPingState() {
+        _pingState.value = null
     }
 
     fun resetState() {

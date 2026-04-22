@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,8 @@ import com.synexis.management_service.repository.PartnerRepository;
 import com.synexis.management_service.repository.ServiceIdempotencyKeyRepository;
 import com.synexis.management_service.repository.ServiceRepository;
 import com.synexis.management_service.service.NotificationService;
+
+import jakarta.persistence.LockModeType;
 import com.synexis.management_service.service.PaymentService;
 import com.synexis.management_service.service.ServiceHistoryService;
 import com.synexis.management_service.service.ServiceService;
@@ -176,6 +179,7 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     @Transactional
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     public ServiceResponse acceptService(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
@@ -215,6 +219,37 @@ public class ServiceServiceImpl implements ServiceService {
                 partnerId,
                 "Service accepted by partner",
                 Instant.now());
+
+        return serviceMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResponse readyService(Long serviceId, Long partnerId) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+
+        if (service.getStatus() != ServiceStatus.ACCEPTED) {
+            throw new BusinessRuleViolationException("Only ACCEPTED services can be set to READY");
+        }
+
+        if (!partnerId.equals(service.getPartner().getId())) {
+            throw new ForbiddenAccessException("Partner does not own this service");
+        }
+
+        service.setStatus(ServiceStatus.READY);
+        service.setStartedAt(LocalDateTime.now()); // Assuming started_at is used for ready
+
+        ServiceEntity saved = serviceRepository.save(service);
+
+        serviceHistoryService.recordEvent(
+                saved,
+                "PARTNER",
+                partnerId,
+                "Service set to READY by partner",
+                Instant.now());
+
+        notificationService.notifyClientServiceReady(saved);
 
         return serviceMapper.toResponse(saved);
     }

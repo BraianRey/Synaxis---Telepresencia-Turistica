@@ -7,9 +7,9 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-    /** GET /ping */
-    @GET("ping")
-    suspend fun ping(): Response<PingResponse>
+    /** GET /api/availability/ping */
+    @GET("api/availability/ping")
+    suspend fun availabilityPing(): Response<PingResponse>
 
     /** POST /api/partners/register */
     @POST("api/partners/register")
@@ -30,6 +30,10 @@ interface ApiService {
     /** POST /api/services/{serviceId}/accept  — requires PARTNER token */
     @POST("api/services/{serviceId}/accept")
     suspend fun acceptService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    /** POST /api/services/{serviceId}/ready  — indicates partner is ready for streaming */
+    @POST("api/services/{serviceId}/ready")
+    suspend fun markServiceAsReady(@Path("serviceId") serviceId: Long): Response<Unit>
 }
 
 // ── Auth DTOs ─────────────────────────────────────────────────────────────────
@@ -44,7 +48,8 @@ data class LoginResponse(
     val id: Long,
     val email: String,
     val name: String,
-    val role: String
+    val role: String,
+    val language: String? = "en"
 )
 
 // ── Register DTOs ─────────────────────────────────────────────────────────────
@@ -92,4 +97,3 @@ data class ServiceResponse(
     val startedAt: String?,
     val endedAt: String?
 )
-
