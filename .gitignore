@@ -30,3 +30,5 @@ backend-management-service/data/
 backend-management-service/docs/
 
 .idea/
+mobile-client/gradle.properties
+mobile-partner/gradle.properties
