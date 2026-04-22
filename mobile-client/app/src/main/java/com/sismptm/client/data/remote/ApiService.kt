@@ -113,3 +113,8 @@ data class UserProfileResponse(
     val role: String,
     val picDirectory: String?
 )
+
+data class MapLocation(
+    val lat: Double,
+    val lon: Double
+)

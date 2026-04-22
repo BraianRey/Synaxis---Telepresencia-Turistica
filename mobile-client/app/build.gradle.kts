@@ -88,6 +88,14 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
 
+    implementation("org.maplibre.gl:android-sdk:13.0.2")
+    implementation("org.maplibre.gl:android-plugin-annotation-v9:3.0.2")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material:material-icons-extended:1.6.7")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

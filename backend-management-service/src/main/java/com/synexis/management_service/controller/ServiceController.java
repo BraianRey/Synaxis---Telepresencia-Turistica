@@ -180,27 +180,6 @@ public class ServiceController {
     }
 
     /**
-     * Acceptance endpoint for partners.
-     *
-     * <p>
-     * Flow: a partner that is {@code available} calls
-     * {@code POST /api/services/{id}/accept}. If the service is in
-     * {@code REQUESTED} status and the partner has no other active service, the
-     * backend transitions it to {@code ACCEPTED}, assigns the partner and records
-     * the {@code acceptedAt} timestamp and history.
-     * </p>
-     */
-    @PostMapping("/{serviceId}/accept")
-    @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("hasRole('PARTNER')")
-    public ServiceResponse acceptService(@PathVariable Long serviceId, Authentication authentication) {
-        String keycloakId = extractKeycloakId(authentication);
-        Partner partner = partnerRepository.findByKeycloakId(keycloakId)
-                .orElseThrow(() -> new ResourceNotFoundException("Partner not found for current user"));
-        return serviceService.acceptService(serviceId, partner.getId());
-    }
-
-    /**
      * Start endpoint for partners.
      *
      * <p>

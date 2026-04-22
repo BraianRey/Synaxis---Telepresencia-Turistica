@@ -2,6 +2,7 @@ package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -34,16 +35,29 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.data.remote.ServiceResponse
 import com.sismptm.client.data.remote.TokenManager
 import com.sismptm.client.R
+
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
     onLogout: () -> Unit,
-    homeViewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    mapViewModel: MapViewModel = viewModel() // ← nuevo
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
+    var showFullMap by remember { mutableStateOf(false) } // ← nuevo
+
+    // Si showFullMap es true, muestra el mapa en pantalla completa
+    if (showFullMap) {
+        FullScreenMapScreen(
+            viewModel = mapViewModel,
+            onBack = { showFullMap = false },
+            onConfirm = { showFullMap = false }
+        )
+        return
+    }
 
     Scaffold(
         bottomBar = {
@@ -105,7 +119,11 @@ fun HomeScreen(
                 .background(Color(0xFF1A1A1A))
         ) {
             when (selectedTab) {
-                0 -> ExploreTabContent(uiState, onNavigateToPartnerSearch)
+                0 -> ExploreTabContent(
+                    uiState = uiState,
+                    onNavigateToPartnerSearch = onNavigateToPartnerSearch,
+                    onOpenFullMap = { showFullMap = true } // ← nuevo
+                )
                 1 -> ToursTabContent(
                     servicesState = servicesState,
                     onRefresh = { homeViewModel.loadClientServices() },
@@ -120,7 +138,8 @@ fun HomeScreen(
 @Composable
 private fun ExploreTabContent(
     uiState: HomeUiState,
-    onNavigateToPartnerSearch: () -> Unit
+    onNavigateToPartnerSearch: () -> Unit,
+    onOpenFullMap: () -> Unit // ← nuevo
 ) {
     Column(
         modifier = Modifier
@@ -128,25 +147,23 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
         HomeHeader(uiState.userName)
-
-        // Search Bar
         SearchBar()
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Map Placeholder
-        MapPlaceholder(uiState.mapPins, onNavigateToPartnerSearch)
+        MapPlaceholder(
+            mapPins = uiState.mapPins,
+            onNavigateToPartnerSearch = onNavigateToPartnerSearch,
+            onOpenFullMap = onOpenFullMap // ← nuevo
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Destinations Section
         DestinationsSection(uiState.destinations)
-
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
+
+// --- El resto de funciones sin cambios ---
 
 @Composable
 private fun HomeHeader(userName: String) {
@@ -172,8 +189,6 @@ private fun HomeHeader(userName: String) {
                 color = Color(0xFFCCCCCC)
             )
         }
-
-        // Avatar
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -234,7 +249,11 @@ private fun SearchBar() {
 }
 
 @Composable
-private fun MapPlaceholder(mapPins: List<MapPin>, onNavigateToPartnerSearch: () -> Unit) {
+fun MapPlaceholder(
+    mapPins: List<MapPin>,
+    onNavigateToPartnerSearch: () -> Unit,
+    onOpenFullMap: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,6 +261,7 @@ private fun MapPlaceholder(mapPins: List<MapPin>, onNavigateToPartnerSearch: () 
             .padding(horizontal = 20.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color(0xFFE8DCC8))
+            .clickable { onOpenFullMap() }
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val width = maxWidth
@@ -364,9 +384,7 @@ private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifie
                 .padding(top = 4.dp)
                 .wrapContentSize(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xCC000000)
-            )
+            colors = CardDefaults.cardColors(containerColor = Color(0xCC000000))
         ) {
             Text(
                 text = stringResource(R.string.home_city_guides, city, guides),
@@ -392,9 +410,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
             letterSpacing = 1.2.sp,
             color = Color(0xFFFFFFFF)
         )
-
         Spacer(modifier = Modifier.height(12.dp))
-
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
@@ -429,7 +445,6 @@ private fun DestinationCard(destination: Destination) {
                 .fillMaxSize()
                 .background(Brush.verticalGradient(gradientColors))
         ) {
-            // Top text: city bold
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -447,7 +462,6 @@ private fun DestinationCard(destination: Destination) {
                     color = Color(0xFFAAAAAA)
                 )
             }
-            // Bottom text: place + partners
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -503,20 +517,12 @@ private fun ToursTabContent(
                     CircularProgressIndicator(color = Color(0xFF2196F3))
                     Text("Loading services...", color = Color(0xFFCCCCCC))
                 }
-
                 is HomeViewModel.ClientServicesUiState.Error -> {
-                    Text(
-                        text = servicesState.message,
-                        color = Color(0xFFFF8A80)
-                    )
+                    Text(text = servicesState.message, color = Color(0xFFFF8A80))
                 }
-
                 is HomeViewModel.ClientServicesUiState.Success -> {
                     if (servicesState.services.isEmpty()) {
-                        Text(
-                            text = "No service requests yet.",
-                            color = Color(0xFFCCCCCC)
-                        )
+                        Text(text = "No service requests yet.", color = Color(0xFFCCCCCC))
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             servicesState.services.forEach { service ->
@@ -575,7 +581,6 @@ private fun ServiceStatusBadge(status: String) {
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)
     }
-
     Card(
         colors = CardDefaults.cardColors(containerColor = bg),
         shape = RoundedCornerShape(999.dp)
