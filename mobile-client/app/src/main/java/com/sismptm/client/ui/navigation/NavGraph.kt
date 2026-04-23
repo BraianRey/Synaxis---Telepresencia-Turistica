@@ -20,6 +20,7 @@ import com.sismptm.client.ui.screens.ServiceDetailScreen
 import com.sismptm.client.ui.screens.ServiceWaitingScreen
 import com.sismptm.client.ui.screens.StreamingScreen
 import com.sismptm.client.ui.screens.WelcomeScreen
+import com.sismptm.client.ui.screens.MapServiceScreen
 
 /**
  * Sealed class representing all navigation routes in the mobile-client application.
@@ -31,8 +32,9 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Home : Screen("home")
     object PartnerSearch : Screen("partner_search")
-    object Solicitud : Screen("solicitud")
+    object Request : Screen("service_request")
     object ServiceDetail : Screen("service_detail")
+    object MapService : Screen("map_service")
     object ServiceWaiting : Screen("service_waiting/{serviceId}") {
         fun createRoute(serviceId: Long): String = "service_waiting/$serviceId"
     }
@@ -110,10 +112,21 @@ fun NavGraph() {
                 onOpenServiceWaiting = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
                 },
+                onNavigateToMapService = {  // ← AGREGAR ESTE PARÁMETRO
+                    navController.navigate(Screen.MapService.route)
+                },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.MapService.route) {
+            MapServiceScreen(
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -124,16 +137,16 @@ fun NavGraph() {
                     navController.popBackStack()
                 },
                 onRequestTour = {
-                    navController.navigate(Screen.Solicitud.route)
+                    navController.navigate(Screen.Request.route)
                 }
             )
         }
 
-        composable(Screen.Solicitud.route) {
+        composable(Screen.Request.route) {
             RequestScreen(
                 onViewDetails = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
-                        popUpTo(Screen.Solicitud.route) { inclusive = true }
+                        popUpTo(Screen.Request.route) { inclusive = true }
                     }
                 },
                 onBack = { navController.popBackStack() }

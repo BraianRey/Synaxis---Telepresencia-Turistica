@@ -50,13 +50,13 @@ public class ServiceEntity {
     @Column(name = "requested_at", nullable = false)
     private LocalDateTime requestedAt;
 
-    @Column(name = "accepted_at", nullable = false)
+    @Column(name = "accepted_at")
     private LocalDateTime acceptedAt;
 
-    @Column(name = "started_at", nullable = false)
+    @Column(name = "started_at")
     private LocalDateTime startedAt;
 
-    @Column(name = "ended_at", nullable = false)
+    @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
 }

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,7 +8,6 @@ plugins {
 // ----------------------------------------------
 // 1. Read local.properties (if exists)
 // ----------------------------------------------
-import java.util.Properties
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
@@ -88,6 +89,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
 
+    // Map
     implementation("org.maplibre.gl:android-sdk:13.0.2")
     implementation("org.maplibre.gl:android-plugin-annotation-v9:3.0.2")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")

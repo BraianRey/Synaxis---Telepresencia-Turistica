@@ -2,7 +2,6 @@ package com.sismptm.client.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -12,9 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.outlined.ConfirmationNumber
-import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
@@ -41,76 +37,16 @@ fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
     onLogout: () -> Unit,
+    onNavigateToMapService: () -> Unit,
     homeViewModel: HomeViewModel = viewModel(),
-    mapViewModel: MapViewModel = viewModel() // ← nuevo
+    serviceViewModel: ServiceViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
-    var showFullMap by remember { mutableStateOf(false) } // ← nuevo
-
-    // Si showFullMap es true, muestra el mapa en pantalla completa
-    if (showFullMap) {
-        FullScreenMapScreen(
-            viewModel = mapViewModel,
-            onBack = { showFullMap = false },
-            onConfirm = { showFullMap = false }
-        )
-        return
-    }
 
     Scaffold(
-        bottomBar = {
-            NavigationBar(
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = Color(0xFF1A1A1A),
-                tonalElevation = 0.dp,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Explore, contentDescription = "Explore") },
-                    label = { Text(stringResource(R.string.home_explore)) },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    alwaysShowLabel = true,
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFFFFFFFF),
-                        unselectedIconColor = Color(0xFF666666),
-                        selectedTextColor = Color(0xFFFFFFFF),
-                        unselectedTextColor = Color(0xFF666666)
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.ConfirmationNumber, contentDescription = "Tours") },
-                    label = { Text("Tours") },
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    alwaysShowLabel = true,
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFFFFFFFF),
-                        unselectedIconColor = Color(0xFF666666),
-                        selectedTextColor = Color(0xFFFFFFFF),
-                        unselectedTextColor = Color(0xFF666666)
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
-                    label = { Text("Profile") },
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    alwaysShowLabel = true,
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFFFFFFFF),
-                        unselectedIconColor = Color(0xFF666666),
-                        selectedTextColor = Color(0xFFFFFFFF),
-                        unselectedTextColor = Color(0xFF666666)
-                    )
-                )
-            }
-        }
+        bottomBar = {}
     ) { padding ->
         Box(
             modifier = Modifier
@@ -122,7 +58,7 @@ fun HomeScreen(
                 0 -> ExploreTabContent(
                     uiState = uiState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
-                    onOpenFullMap = { showFullMap = true } // ← nuevo
+                    onNavigateToMapService = onNavigateToMapService
                 )
                 1 -> ToursTabContent(
                     servicesState = servicesState,
@@ -139,7 +75,7 @@ fun HomeScreen(
 private fun ExploreTabContent(
     uiState: HomeUiState,
     onNavigateToPartnerSearch: () -> Unit,
-    onOpenFullMap: () -> Unit // ← nuevo
+    onNavigateToMapService: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -151,19 +87,27 @@ private fun ExploreTabContent(
         SearchBar()
         Spacer(modifier = Modifier.height(16.dp))
 
-        MapPlaceholder(
-            mapPins = uiState.mapPins,
-            onNavigateToPartnerSearch = onNavigateToPartnerSearch,
-            onOpenFullMap = onOpenFullMap // ← nuevo
-        )
+        OutlinedButton(
+            onClick = onNavigateToMapService,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 20.dp),
+            border = BorderStroke(1.dp, Color(0xFF2196F3)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "Request service",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF2196F3)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
         DestinationsSection(uiState.destinations)
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
-
-// --- El resto de funciones sin cambios ---
 
 @Composable
 private fun HomeHeader(userName: String) {
@@ -246,111 +190,6 @@ private fun SearchBar() {
             focusedTextColor = Color(0xFFFFFFFF)
         )
     )
-}
-
-@Composable
-fun MapPlaceholder(
-    mapPins: List<MapPin>,
-    onNavigateToPartnerSearch: () -> Unit,
-    onOpenFullMap: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp)
-            .padding(horizontal = 20.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFE8DCC8))
-            .clickable { onOpenFullMap() }
-    ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val width = maxWidth
-            val height = maxHeight
-            val lineColor = Color(0xFFD4C9B0)
-
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopStart)
-                    .offset(y = height * 0.30f)
-            )
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopStart)
-                    .offset(y = height * 0.60f)
-            )
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(1.dp)
-                    .align(Alignment.TopStart)
-                    .offset(x = width * 0.45f)
-            )
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(1.dp)
-                    .align(Alignment.TopStart)
-                    .offset(x = width * 0.70f)
-            )
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(40.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = "Your location",
-                    tint = Color(0xFF2196F3),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            mapPins.forEachIndexed { index, pin ->
-                val pinModifier = when (index) {
-                    0 -> Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = width * 0.15f, y = height * 0.20f)
-                    1 -> Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = -(width * 0.15f), y = height * 0.25f)
-                    2 -> Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = -(width * 0.12f), y = -(height * 0.10f))
-                    else -> Modifier
-                        .align(Alignment.BottomStart)
-                        .offset(x = width * 0.12f, y = -(height * 0.08f))
-                }
-                PinIndicator(pin.city, pin.activeGuides, modifier = pinModifier)
-            }
-
-            SmallFloatingActionButton(
-                onClick = onNavigateToPartnerSearch,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = 48.dp),
-                containerColor = Color(0xFF2196F3),
-                contentColor = Color(0xFFFFFFFF)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Explore,
-                    contentDescription = "Request tour",
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
 }
 
 @Composable
