@@ -31,7 +31,6 @@ class PartnerRepositoryTest {
         Partner partner = new Partner();
         partner.setEmail("partner@example.com");
         partner.setName("Tour Guides Inc");
-        partner.setArea(area);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(true);
         partner.setRole(UserRole.PARTNER);
@@ -47,7 +46,6 @@ class PartnerRepositoryTest {
                         p -> {
                             assertThat(p.getEmail()).isEqualTo("partner@example.com");
                             assertThat(p.getName()).isEqualTo("Tour Guides Inc");
-                            assertThat(p.getArea().getCity()).isEqualTo(area.getCity());
                             assertThat(p.getRole()).isEqualTo(UserRole.PARTNER);
                         });
     }

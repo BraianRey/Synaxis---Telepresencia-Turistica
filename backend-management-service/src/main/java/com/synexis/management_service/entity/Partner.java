@@ -1,7 +1,6 @@
 package com.synexis.management_service.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,6 +8,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import org.locationtech.jts.geom.Point;
 
 /**
  * Service provider account. Logical model: {@code Partner} adds
@@ -22,8 +23,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Partner extends UserBase {
 
-    @Embedded
-    private Area area;
+    private String fcmToken;
+
+    @Column(columnDefinition = "geography(Point,4326)")
+    private Point location;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "availability_status", nullable = false, length = 20)

@@ -39,4 +39,7 @@ mobile-client/build.log
 backend-management-service/picProfile/*
 !backend-management-service/picProfile/.gitkeep
 
-.idea/
+# IntelliJ IDEA
+.idea/*
+*.iws
+*.ipr

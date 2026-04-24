@@ -1,9 +1,7 @@
 package com.synexis.management_service.service.impl;
 
-import com.synexis.management_service.client.NominatimClient;
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
 import com.synexis.management_service.dto.response.RegisterPartnerResponse;
-import com.synexis.management_service.entity.Area;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.entity.PartnerAvailabilityStatus;
 import com.synexis.management_service.entity.UserLanguage;
@@ -12,6 +10,7 @@ import com.synexis.management_service.exception.EmailAlreadyExistsException;
 import com.synexis.management_service.exception.KeycloakUserCreationException;
 import com.synexis.management_service.repository.PartnerRepository;
 import com.synexis.management_service.service.PartnerService;
+import com.synexis.management_service.utils.GeoUtils;
 
 import jakarta.ws.rs.core.Response;
 
@@ -36,12 +35,10 @@ public class PartnerServiceImpl implements PartnerService {
 
     private final PartnerRepository partnerRepository;
     private final Keycloak keycloak;
-    private final NominatimClient nominatimClient;
 
-    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak, NominatimClient nominatimClient) {
+    public PartnerServiceImpl(PartnerRepository partnerRepository, Keycloak keycloak) {
         this.partnerRepository = partnerRepository;
         this.keycloak = keycloak;
-        this.nominatimClient = nominatimClient;
     }
 
     @Override
@@ -111,20 +108,17 @@ public class PartnerServiceImpl implements PartnerService {
             throw new KeycloakUserCreationException("Failed to assign PARTNER role in Keycloak: " + ex.getMessage());
         }
 
-        // Get area details from Nominatim
-        Area area = nominatimClient.getAreaFromCoordinates(request.latitude(), request.longitude());
-
         Partner partner = new Partner();
         partner.setKeycloakId(userId);
         partner.setEmail(normalizedEmail);
         partner.setName(request.name().trim());
-        partner.setArea(area);
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(request.termsAccepted());
         partner.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
         partner.setPicDirectory(normalizePicDirectory(request.picDirectory()));
         partner.setRole(UserRole.PARTNER);
         partner.setCreatedAt(Instant.now());
+        partner.setLocation(GeoUtils.createPoint(request.longitude(), request.latitude()));
 
         Partner saved = partnerRepository.save(partner);
 
@@ -138,7 +132,6 @@ public class PartnerServiceImpl implements PartnerService {
                 saved.getTermsAccepted(),
                 saved.getPicDirectory(),
                 saved.getRole(),
-                saved.getArea(),
                 saved.getAvailabilityStatus());
     }
 
