@@ -15,3 +15,5 @@
 local.properties
 .env
 build.log
+/gradle/libs.versions.toml
+/settings.gradle.kts
