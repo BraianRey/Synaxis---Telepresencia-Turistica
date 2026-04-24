@@ -180,6 +180,26 @@ public class ServiceController {
     }
 
     /**
+     * Returns service history for the authenticated user.
+     *
+     * <p>
+     * The endpoint resolves the authenticated Keycloak subject and returns
+     * services for that identity, either as client or partner.
+     * </p>
+     */
+    @GetMapping("/me")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('CLIENT', 'PARTNER')")
+    public List<ServiceResponse> getMyServices(Authentication authentication) {
+        String keycloakId = extractKeycloakId(authentication);
+        return clientRepository.findByKeycloakId(keycloakId)
+                .map(client -> serviceService.getServicesByClientIdForUser(client.getId(), client.getId()))
+                .orElseGet(() -> partnerRepository.findByKeycloakId(keycloakId)
+                        .map(partner -> serviceService.getServicesByPartnerIdForUser(partner.getId(), partner.getId()))
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found for current user")));
+    }
+
+    /**
      * Start endpoint for partners.
      *
      * <p>
