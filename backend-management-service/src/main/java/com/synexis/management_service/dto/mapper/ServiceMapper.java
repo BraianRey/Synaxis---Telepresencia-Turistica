@@ -28,7 +28,6 @@ public class ServiceMapper {
         service.setLatitude(request.latitude());
         service.setStartLocationDescription(request.startLocationDescription());
         service.setAgreedHours(request.agreedHours());
-        service.setHourlyRate(request.hourlyRate());
 
         return service;
     }
@@ -44,7 +43,6 @@ public class ServiceMapper {
                 service.getLatitude(),
                 service.getStartLocationDescription(),
                 service.getAgreedHours(),
-                service.getHourlyRate(),
                 service.getStatus().name(),
                 service.getRequestedAt(),
                 service.getAcceptedAt(),

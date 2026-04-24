@@ -1,6 +1,5 @@
 package com.synexis.management_service.dto.response;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record ServiceResponse(
@@ -20,8 +19,6 @@ public record ServiceResponse(
 
         Integer agreedHours,
 
-        BigDecimal hourlyRate,
-
         String status,
 
         LocalDateTime requestedAt,
@@ -34,7 +31,7 @@ public record ServiceResponse(
 
 ) {
     public ServiceResponse(Long serviceId, Long clientId, String clientName, Long partnerId, Double longitude,
-            Double latitude, String startLocationDescription, Integer agreedHours, BigDecimal hourlyRate, String status,
+            Double latitude, String startLocationDescription, Integer agreedHours, String status,
             LocalDateTime requestedAt, LocalDateTime acceptedAt, LocalDateTime startedAt, LocalDateTime endedAt) {
         this.serviceId = serviceId;
         this.clientId = clientId;
@@ -44,7 +41,6 @@ public record ServiceResponse(
         this.latitude = latitude;
         this.startLocationDescription = startLocationDescription;
         this.agreedHours = agreedHours;
-        this.hourlyRate = hourlyRate;
         this.status = status;
         this.requestedAt = requestedAt;
         this.acceptedAt = acceptedAt;
