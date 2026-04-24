@@ -11,9 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.outlined.ConfirmationNumber
-import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
@@ -34,69 +31,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.data.remote.ServiceResponse
 import com.sismptm.client.data.remote.TokenManager
 import com.sismptm.client.R
+
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
     onLogout: () -> Unit,
-    homeViewModel: HomeViewModel = viewModel()
+    onNavigateToMapService: () -> Unit,
+    homeViewModel: HomeViewModel = viewModel(),
+    serviceViewModel: ServiceViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
-        bottomBar = {
-            NavigationBar(
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = Color(0xFF1A1A1A),
-                tonalElevation = 0.dp,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            ) {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Explore, contentDescription = "Explore") },
-                    label = { Text(stringResource(R.string.home_explore)) },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    alwaysShowLabel = true,
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFFFFFFFF),
-                        unselectedIconColor = Color(0xFF666666),
-                        selectedTextColor = Color(0xFFFFFFFF),
-                        unselectedTextColor = Color(0xFF666666)
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.ConfirmationNumber, contentDescription = "Tours") },
-                    label = { Text("Tours") },
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    alwaysShowLabel = true,
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFFFFFFFF),
-                        unselectedIconColor = Color(0xFF666666),
-                        selectedTextColor = Color(0xFFFFFFFF),
-                        unselectedTextColor = Color(0xFF666666)
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
-                    label = { Text("Profile") },
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    alwaysShowLabel = true,
-                    colors = NavigationBarItemDefaults.colors(
-                        indicatorColor = Color.Transparent,
-                        selectedIconColor = Color(0xFFFFFFFF),
-                        unselectedIconColor = Color(0xFF666666),
-                        selectedTextColor = Color(0xFFFFFFFF),
-                        unselectedTextColor = Color(0xFF666666)
-                    )
-                )
-            }
-        }
+        bottomBar = {}
     ) { padding ->
         Box(
             modifier = Modifier
@@ -105,7 +55,11 @@ fun HomeScreen(
                 .background(Color(0xFF1A1A1A))
         ) {
             when (selectedTab) {
-                0 -> ExploreTabContent(uiState, onNavigateToPartnerSearch)
+                0 -> ExploreTabContent(
+                    uiState = uiState,
+                    onNavigateToPartnerSearch = onNavigateToPartnerSearch,
+                    onNavigateToMapService = onNavigateToMapService
+                )
                 1 -> ToursTabContent(
                     servicesState = servicesState,
                     onRefresh = { homeViewModel.loadClientServices() },
@@ -120,7 +74,8 @@ fun HomeScreen(
 @Composable
 private fun ExploreTabContent(
     uiState: HomeUiState,
-    onNavigateToPartnerSearch: () -> Unit
+    onNavigateToPartnerSearch: () -> Unit,
+    onNavigateToMapService: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -128,22 +83,28 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
         HomeHeader(uiState.userName)
-
-        // Search Bar
         SearchBar()
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Map Placeholder
-        MapPlaceholder(uiState.mapPins, onNavigateToPartnerSearch)
+        OutlinedButton(
+            onClick = onNavigateToMapService,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 20.dp),
+            border = BorderStroke(1.dp, Color(0xFF2196F3)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "Request service",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF2196F3)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Destinations Section
         DestinationsSection(uiState.destinations)
-
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -172,8 +133,6 @@ private fun HomeHeader(userName: String) {
                 color = Color(0xFFCCCCCC)
             )
         }
-
-        // Avatar
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -234,106 +193,6 @@ private fun SearchBar() {
 }
 
 @Composable
-private fun MapPlaceholder(mapPins: List<MapPin>, onNavigateToPartnerSearch: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp)
-            .padding(horizontal = 20.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFE8DCC8))
-    ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val width = maxWidth
-            val height = maxHeight
-            val lineColor = Color(0xFFD4C9B0)
-
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopStart)
-                    .offset(y = height * 0.30f)
-            )
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopStart)
-                    .offset(y = height * 0.60f)
-            )
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(1.dp)
-                    .align(Alignment.TopStart)
-                    .offset(x = width * 0.45f)
-            )
-            Divider(
-                color = lineColor,
-                thickness = 1.dp,
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(1.dp)
-                    .align(Alignment.TopStart)
-                    .offset(x = width * 0.70f)
-            )
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(40.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = "Your location",
-                    tint = Color(0xFF2196F3),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            mapPins.forEachIndexed { index, pin ->
-                val pinModifier = when (index) {
-                    0 -> Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = width * 0.15f, y = height * 0.20f)
-                    1 -> Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = -(width * 0.15f), y = height * 0.25f)
-                    2 -> Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = -(width * 0.12f), y = -(height * 0.10f))
-                    else -> Modifier
-                        .align(Alignment.BottomStart)
-                        .offset(x = width * 0.12f, y = -(height * 0.08f))
-                }
-                PinIndicator(pin.city, pin.activeGuides, modifier = pinModifier)
-            }
-
-            SmallFloatingActionButton(
-                onClick = onNavigateToPartnerSearch,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = 48.dp),
-                containerColor = Color(0xFF2196F3),
-                contentColor = Color(0xFFFFFFFF)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Explore,
-                    contentDescription = "Request tour",
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
@@ -364,9 +223,7 @@ private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifie
                 .padding(top = 4.dp)
                 .wrapContentSize(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xCC000000)
-            )
+            colors = CardDefaults.cardColors(containerColor = Color(0xCC000000))
         ) {
             Text(
                 text = stringResource(R.string.home_city_guides, city, guides),
@@ -392,9 +249,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
             letterSpacing = 1.2.sp,
             color = Color(0xFFFFFFFF)
         )
-
         Spacer(modifier = Modifier.height(12.dp))
-
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
@@ -429,7 +284,6 @@ private fun DestinationCard(destination: Destination) {
                 .fillMaxSize()
                 .background(Brush.verticalGradient(gradientColors))
         ) {
-            // Top text: city bold
             Column(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -447,7 +301,6 @@ private fun DestinationCard(destination: Destination) {
                     color = Color(0xFFAAAAAA)
                 )
             }
-            // Bottom text: place + partners
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -503,20 +356,12 @@ private fun ToursTabContent(
                     CircularProgressIndicator(color = Color(0xFF2196F3))
                     Text("Loading services...", color = Color(0xFFCCCCCC))
                 }
-
                 is HomeViewModel.ClientServicesUiState.Error -> {
-                    Text(
-                        text = servicesState.message,
-                        color = Color(0xFFFF8A80)
-                    )
+                    Text(text = servicesState.message, color = Color(0xFFFF8A80))
                 }
-
                 is HomeViewModel.ClientServicesUiState.Success -> {
                     if (servicesState.services.isEmpty()) {
-                        Text(
-                            text = "No service requests yet.",
-                            color = Color(0xFFCCCCCC)
-                        )
+                        Text(text = "No service requests yet.", color = Color(0xFFCCCCCC))
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             servicesState.services.forEach { service ->
@@ -575,7 +420,6 @@ private fun ServiceStatusBadge(status: String) {
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)
     }
-
     Card(
         colors = CardDefaults.cardColors(containerColor = bg),
         shape = RoundedCornerShape(999.dp)

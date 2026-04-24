@@ -80,6 +80,7 @@ data class RegisterClientResponse(
 
 // -- Service DTOs --------------------------------------------------------------
 data class CreateServiceRequest(
+    val clientId: Long,
     val longitude: Double,
     val latitude: Double,
     val startLocationDescription: String?,

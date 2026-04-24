@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val userLanguage by remember { mutableStateOf("es") }
 
+
             LanguageContext(languageCode = userLanguage) {
                 SISPTMClientTheme {
                     Surface(
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavGraph()
                     }
+
                 }
             }
         }
