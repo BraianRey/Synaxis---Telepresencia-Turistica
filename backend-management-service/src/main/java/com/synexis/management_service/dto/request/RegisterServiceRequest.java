@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 
 public record RegisterServiceRequest(
 
-        @NotNull Long clientId,
+        @NotNull String keycloakId,
 
         @NotNull Double longitude,
 

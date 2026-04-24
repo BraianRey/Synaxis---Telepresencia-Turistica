@@ -18,8 +18,8 @@ public class ServiceMapper {
 
     public ServiceEntity toEntity(RegisterServiceRequest request) {
 
-        Client client = clientRepository.findById(request.clientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + request.clientId()));
+        Client client = clientRepository.findByKeycloakId(request.keycloakId())
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + request.keycloakId()));
 
         ServiceEntity service = new ServiceEntity();
 
