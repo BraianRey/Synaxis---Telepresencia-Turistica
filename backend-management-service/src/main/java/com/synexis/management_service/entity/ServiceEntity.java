@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,9 +31,6 @@ public class ServiceEntity {
 
     @Column(name = "agreed_hours", nullable = false)
     private Integer agreedHours;
-
-    @Column(name = "hourly_rate", precision = 10, scale = 2)
-    private BigDecimal hourlyRate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
