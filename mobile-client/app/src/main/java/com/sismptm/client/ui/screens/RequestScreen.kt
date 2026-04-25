@@ -107,16 +107,9 @@ fun RequestScreen(
 
     var areaExpanded by remember { mutableStateOf(false) }
     var selectedArea by remember { mutableStateOf<RequestAreaOption?>(null) }
-    var agreedHoursText by remember { mutableStateOf("1") }
-    var hourlyRateText by remember { mutableStateOf("") }
     var meetingPointText by remember { mutableStateOf("") }
 
-    val agreedHours = agreedHoursText.toIntOrNull()
-    val hourlyRate = hourlyRateText.toDoubleOrNull()
-    val canSubmit = selectedArea != null &&
-        agreedHours != null && agreedHours > 0 &&
-        hourlyRate != null && hourlyRate > 0.0 &&
-        !isLoading
+    val canSubmit = selectedArea != null && !isLoading
 
     val requestFieldColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = TextPrimary,
@@ -244,34 +237,6 @@ fun RequestScreen(
                         }
                     }
 
-                    OutlinedTextField(
-                        value = agreedHoursText,
-                        onValueChange = { value ->
-                            agreedHoursText = value.filter { it.isDigit() }.take(2)
-                        },
-                        label = { Text("Agreed hours") },
-                        placeholder = { Text("Example: 2") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = requestFieldColors
-                    )
-
-                    OutlinedTextField(
-                        value = hourlyRateText,
-                        onValueChange = { value ->
-                            hourlyRateText = value.filter { it.isDigit() || it == '.' }.let { filtered ->
-                                val parts = filtered.split('.')
-                                if (parts.size <= 2) filtered else parts[0] + "." + parts[1]
-                            }
-                        },
-                        label = { Text("Hourly rate (COP)") },
-                        placeholder = { Text("Example: 45000") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = requestFieldColors
-                    )
 
                     OutlinedTextField(
                         value = meetingPointText,
@@ -302,8 +267,6 @@ fun RequestScreen(
 
             RequestSummaryCard(
                 areaName = selectedArea?.label ?: "Not selected",
-                agreedHours = agreedHoursText.ifBlank { "-" },
-                hourlyRate = hourlyRateText.ifBlank { "-" },
                 meetingPoint = meetingPointText.ifBlank { "No additional notes" }
             )
 
@@ -312,8 +275,6 @@ fun RequestScreen(
                     viewModel.requestTour(
                         longitude = selectedArea!!.longitude,
                         latitude = selectedArea!!.latitude,
-                        agreedHours = agreedHours!!,
-                        hourlyRate = hourlyRate!!,
                         locationDescription = meetingPointText
                     )
                 },
@@ -345,8 +306,6 @@ fun RequestScreen(
 @Composable
 private fun RequestSummaryCard(
     areaName: String,
-    agreedHours: String,
-    hourlyRate: String,
     meetingPoint: String
 ) {
     Card(
@@ -367,8 +326,6 @@ private fun RequestSummaryCard(
                 color = TextPrimary
             )
             SummaryRow(label = "Area", value = areaName)
-            SummaryRow(label = "Hours", value = agreedHours)
-            SummaryRow(label = "Hourly rate", value = if (hourlyRate == "-") hourlyRate else "$hourlyRate COP")
             SummaryRow(label = "Notes", value = meetingPoint)
         }
     }
@@ -407,8 +364,6 @@ private fun RequestCreatedDialog(
                 Text("Service ID: ${service.serviceId}")
                 Text("Area: $areaName")
                 Text("Status: ${service.status}")
-                Text("Hours: ${service.agreedHours}")
-                Text("Hourly rate: ${service.hourlyRate} COP")
             }
         },
         confirmButton = {

@@ -1,7 +1,7 @@
 package com.sismptm.client.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,14 +24,7 @@ fun LocationDescriptionSheet(
     val selectedLocation by viewModel.selectedLocation.collectAsState()
     val description by viewModel.locationDescription.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0x80000000))
-            .clickable { onDismiss() }
-    )
-
-    // Bottom sheet
+    // Bottom sheet content only — backdrop handled by parent
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,9 +86,11 @@ fun LocationDescriptionSheet(
 
         Button(
             onClick = {
+                Log.d("LocationSheet", "▶ Confirm button clicked | location=$selectedLocation | desc='$description'")
                 selectedLocation?.let { loc ->
+                    Log.d("LocationSheet", "✅ Calling onConfirm with loc=$loc")
                     onConfirm(loc, description)
-                }
+                } ?: Log.w("LocationSheet", "⚠️ selectedLocation is NULL — button should be disabled")
             },
             modifier = Modifier
                 .fillMaxWidth()

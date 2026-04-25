@@ -283,8 +283,6 @@ fun ServiceWaitingScreen(
                             color = TextSecondary
                         )
                         Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = TextSecondary)
-                        Text("Hours: ${service.agreedHours}", color = TextSecondary)
-                        Text("Rate: ${service.hourlyRate} COP", color = TextSecondary)
                     }
                 }
             }

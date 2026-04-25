@@ -30,8 +30,6 @@ class RequestTourViewModel : ViewModel() {
     fun requestTour(
         longitude: Double,
         latitude: Double,
-        agreedHours: Int,
-        hourlyRate: Double,
         locationDescription: String?
     ) {
         val clientId = SessionManager.clientId
@@ -52,12 +50,9 @@ class RequestTourViewModel : ViewModel() {
             _uiState.value = RequestUiState.Loading
             try {
                 val request = CreateServiceRequest(
-                    1, //------------------------------------------------------------------provicional
                     longitude = longitude,
                     latitude = latitude,
-                    startLocationDescription = locationDescription?.ifBlank { null },
-                    agreedHours = agreedHours,
-                    hourlyRate = hourlyRate
+                    startLocationDescription = locationDescription?.ifBlank { null }
                 )
                 val response = RetrofitClient.apiService.createService(request)
                 if (response.isSuccessful) {
