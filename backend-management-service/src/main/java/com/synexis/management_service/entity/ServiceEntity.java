@@ -26,10 +26,10 @@ public class ServiceEntity {
     private Partner partner;
 
     // FIELDS
-    @Column(name = "start_location_description", nullable = false, length = 255)
+    @Column(name = "start_location_description", length = 255)
     private String startLocationDescription;
 
-    @Column(name = "agreed_hours", nullable = false)
+    @Column(name = "agreed_hours")
     private Integer agreedHours;
 
     @Enumerated(EnumType.STRING)
