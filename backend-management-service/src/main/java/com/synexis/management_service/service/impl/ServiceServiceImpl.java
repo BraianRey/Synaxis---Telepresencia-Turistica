@@ -99,7 +99,7 @@ public class ServiceServiceImpl implements ServiceService {
                     "You already have an active service request. Finish or cancel it before creating another.");
         }
 
-        ServiceEntity service = serviceMapper.toEntity(request);
+        ServiceEntity service = serviceMapper.toEntity(request, client);
         service.setRequestedAt(LocalDateTime.now());
         service.setStatus(ServiceStatus.REQUESTED);
 

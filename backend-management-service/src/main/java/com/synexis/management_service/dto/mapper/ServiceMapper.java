@@ -4,22 +4,13 @@ import com.synexis.management_service.dto.request.RegisterServiceRequest;
 import com.synexis.management_service.dto.response.ServiceResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.ServiceEntity;
-import com.synexis.management_service.exception.ResourceNotFoundException;
-import com.synexis.management_service.repository.ClientRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ServiceMapper {
 
-    @Autowired
-    private ClientRepository clientRepository;
-
-    public ServiceEntity toEntity(RegisterServiceRequest request) {
-
-        Client client = clientRepository.findByKeycloakId(request.keycloakId())
-                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + request.keycloakId()));
+    public ServiceEntity toEntity(RegisterServiceRequest request, Client client) {
 
         ServiceEntity service = new ServiceEntity();
 
