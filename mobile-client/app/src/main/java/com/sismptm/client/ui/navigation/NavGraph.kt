@@ -127,6 +127,11 @@ fun NavGraph() {
             MapServiceScreen(
                 onBack = {
                     navController.popBackStack()
+                },
+                onServiceCreated = { serviceId ->
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                        popUpTo(Screen.MapService.route) { inclusive = true }
+                    }
                 }
             )
         }

@@ -1,18 +1,20 @@
 package com.sismptm.client.ui.screens
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sismptm.client.data.remote.ApiService
 import com.sismptm.client.data.remote.CreateServiceRequest
 import com.sismptm.client.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+private const val TAG = "ServiceViewModel"
+
 sealed class CreateServiceUiState {
     object Idle : CreateServiceUiState()
     object Loading : CreateServiceUiState()
-    data class Success(val message: String) : CreateServiceUiState()
+    data class Success(val serviceId: Long) : CreateServiceUiState()
     data class Error(val message: String) : CreateServiceUiState()
 }
 
@@ -22,33 +24,41 @@ class ServiceViewModel : ViewModel() {
     val createServiceState: StateFlow<CreateServiceUiState> = _createServiceState
 
     fun createService(location: MapLocation, description: String) {
+        Log.d(TAG, "▶ createService() called | lat=${location.lat} lon=${location.lon} desc='$description'")
         viewModelScope.launch {
             _createServiceState.value = CreateServiceUiState.Loading
+            Log.d(TAG, "⏳ State → Loading")
 
             try {
                 val request = CreateServiceRequest(
-                    1, //------------------------------------------------------------------provicional
                     longitude = location.lon,
                     latitude = location.lat,
-                    startLocationDescription = description.takeIf { it.isNotBlank() },
-                    agreedHours = 1,      // ← PROVISIONAL: cambiar con input real
-                    hourlyRate = 1.0      // ← PROVISIONAL: cambiar con input real
+                    startLocationDescription = description.takeIf { it.isNotBlank() }
                 )
+                Log.d(TAG, "📤 Sending request: $request")
 
                 val response = RetrofitClient.apiService.createService(request)
+                Log.d(TAG, "📥 Response code: ${response.code()} | successful: ${response.isSuccessful}")
 
                 if (response.isSuccessful) {
-                    _createServiceState.value = CreateServiceUiState.Success("Service created")
+                    val serviceId = response.body()?.serviceId
+                        ?: throw IllegalStateException("Empty response body")
+                    Log.d(TAG, "✅ Service created! serviceId=$serviceId")
+                    _createServiceState.value = CreateServiceUiState.Success(serviceId)
                 } else {
-                    _createServiceState.value = CreateServiceUiState.Error("Error: ${response.code()}")
+                    val errorBody = response.errorBody()?.string() ?: "(empty)"
+                    Log.e(TAG, "❌ Error ${response.code()}: $errorBody")
+                    _createServiceState.value = CreateServiceUiState.Error("Error: ${response.code()} - $errorBody")
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "💥 Exception in createService: ${e.javaClass.simpleName} - ${e.message}", e)
                 _createServiceState.value = CreateServiceUiState.Error(e.message ?: "Unknown error")
             }
         }
     }
 
     fun resetState() {
+        Log.d(TAG, "🔄 State reset to Idle")
         _createServiceState.value = CreateServiceUiState.Idle
     }
 }

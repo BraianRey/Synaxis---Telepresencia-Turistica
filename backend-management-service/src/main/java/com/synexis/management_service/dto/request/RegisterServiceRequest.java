@@ -4,15 +4,13 @@ import jakarta.validation.constraints.*;
 
 public record RegisterServiceRequest(
 
-        @NotNull String keycloakId,
-
         @NotNull Double longitude,
 
         @NotNull Double latitude,
 
         @Size(max = 255) String startLocationDescription,
 
-        @NotNull @Min(1) Integer agreedHours
+        @Min(1) Integer agreedHours
 
 ) {
 }

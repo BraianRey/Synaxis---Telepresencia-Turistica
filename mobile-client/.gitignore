@@ -15,8 +15,5 @@
 local.properties
 .env
 build.log
-
-# IntelliJ IDEA
-.idea/*
-*.iws
-*.ipr
+/gradle/libs.versions.toml
+/settings.gradle.kts

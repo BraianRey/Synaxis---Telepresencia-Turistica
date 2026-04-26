@@ -1,6 +1,7 @@
 package com.sismptm.client.ui.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -28,7 +29,8 @@ import org.maplibre.android.maps.MapView
 fun MapServiceScreen(
     mapViewModel: MapViewModel = viewModel(),
     serviceViewModel: ServiceViewModel = viewModel(),
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onServiceCreated: (Long) -> Unit = {}
 ) {
     val context = LocalContext.current
     MapLibre.getInstance(context)
@@ -37,32 +39,26 @@ fun MapServiceScreen(
     val showDescriptionSheet by mapViewModel.showDescriptionSheet.collectAsState()
     val createState by serviceViewModel.createServiceState.collectAsState()
 
-    // On successful service creation, return to home
-    LaunchedEffect(createState) {
-        if (createState is CreateServiceUiState.Success) {
-            mapViewModel.clearLocation()
-            serviceViewModel.resetState()
-            onBack()
-        }
-    }
-
     val mapView = rememberMapViewForService(context, mapViewModel)
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(createState) {
+        Log.d("MapServiceScreen", "🔔 createState changed → $createState")
         when (createState) {
             is CreateServiceUiState.Success -> {
-                snackbarHostState.showSnackbar("Service created successfully!")
+                val serviceId = (createState as CreateServiceUiState.Success).serviceId
+                Log.d("MapServiceScreen", "✅ Success! serviceId=$serviceId → navigating to waiting screen")
                 mapViewModel.clearLocation()
                 serviceViewModel.resetState()
-                onBack()
+                onServiceCreated(serviceId)
             }
             is CreateServiceUiState.Error -> {
-                snackbarHostState.showSnackbar(
-                    (createState as CreateServiceUiState.Error).message
-                )
+                val msg = (createState as CreateServiceUiState.Error).message
+                Log.e("MapServiceScreen", "❌ Error: $msg")
+                snackbarHostState.showSnackbar(msg)
             }
-            else -> {}
+            is CreateServiceUiState.Loading -> Log.d("MapServiceScreen", "⏳ Loading...")
+            is CreateServiceUiState.Idle -> Log.d("MapServiceScreen", "💤 Idle")
         }
     }
 
@@ -81,7 +77,7 @@ fun MapServiceScreen(
             onClick = onBack,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .statusBarsPadding()  // ← respeta status bar
+                .statusBarsPadding()
                 .padding(8.dp)
         ) {
             Icon(
@@ -97,7 +93,7 @@ fun MapServiceScreen(
                 onClick = { mapViewModel.showDescriptionSheet() },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .navigationBarsPadding()  // ← respeta nav bar
+                    .navigationBarsPadding()
                     .padding(16.dp),
                 containerColor = Color(0xFF2196F3)
             ) {
@@ -109,14 +105,29 @@ fun MapServiceScreen(
             }
         }
 
+        // Sheet anclada al fondo del Box
         if (showDescriptionSheet) {
-            LocationDescriptionSheet(
-                viewModel = mapViewModel,
-                onConfirm = { location, description ->
-                    serviceViewModel.createService(location, description)
-                },
-                onDismiss = { mapViewModel.hideDescriptionSheet() }
+            // Fondo semi-transparente
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x80000000))
             )
+            // Contenido del sheet en la parte inferior
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                LocationDescriptionSheet(
+                    viewModel = mapViewModel,
+                    onConfirm = { location, description ->
+                        Log.d("MapServiceScreen", "📍 onConfirm received → calling createService")
+                        serviceViewModel.createService(location, description)
+                    },
+                    onDismiss = { mapViewModel.hideDescriptionSheet() }
+                )
+            }
         }
 
         if (createState is CreateServiceUiState.Loading) {
@@ -129,6 +140,14 @@ fun MapServiceScreen(
                 CircularProgressIndicator(color = Color(0xFF2196F3))
             }
         }
+
+        // Snackbar para mostrar errores al usuario
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+        )
     }
 }
 
