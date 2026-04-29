@@ -31,6 +31,7 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
         fun onAnswerReceived(sdp: String)
         fun onIceCandidateReceived(candidate: IceCandidateModel)
         fun onJoinReceived(senderId: String)
+        fun onCommandReceived(command: String)
         fun onConnected()
         fun onDisconnected()
         fun onError(error: String)
@@ -99,6 +100,7 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
                     "answer" -> message.sdp?.let { listener.onAnswerReceived(it) }
                     "candidate" -> message.candidate?.let { listener.onIceCandidateReceived(it) }
                     "join" -> message.senderId?.let { listener.onJoinReceived(it) }
+                    "command" -> message.text?.let { listener.onCommandReceived(it) }
                     else -> Log.w(TAG, "Unknown message type: ${message.type}")
                 }
             }

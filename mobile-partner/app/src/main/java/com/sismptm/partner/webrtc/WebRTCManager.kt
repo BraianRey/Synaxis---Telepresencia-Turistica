@@ -1,5 +1,6 @@
 package com.sismptm.partner.webrtc
 
+import android.app.ActivityManager
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -8,7 +9,7 @@ import org.webrtc.*
 
 /**
  * Manager for WebRTC operations on the Partner (broadcaster) side.
- * Implements high resilience: Clean start on "join" and dual ICE candidate queuing.
+ * Handles peer connection lifecycle, media capture, and quality optimizations.
  */
 class WebRTCManager(
     private val context: Context,
@@ -19,6 +20,9 @@ class WebRTCManager(
         private const val TAG = "WebRTCManager"
         private var isFactoryInitialized = false
 
+        /**
+         * Ensures the PeerConnectionFactory is initialized once per application lifecycle.
+         */
         fun ensureInitialized(context: Context) {
             if (!isFactoryInitialized) {
                 val options = PeerConnectionFactory.InitializationOptions.builder(context.applicationContext)
@@ -30,6 +34,9 @@ class WebRTCManager(
         }
     }
 
+    /**
+     * Interface for communicating WebRTC events back to the ViewModel.
+     */
     interface WebRTCListener {
         fun onIceCandidate(candidate: IceCandidate)
         fun onLocalSdpCreated(sdp: SessionDescription)
@@ -53,13 +60,38 @@ class WebRTCManager(
     private val pendingRemoteIceCandidates = mutableListOf<IceCandidate>()
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    private val deviceTier: Int by lazy { detectDeviceTier() }
+
     init {
         ensureInitialized(context)
         buildPeerConnectionFactory()
     }
 
+    /**
+     * Detects device performance tier based on CPU cores and total RAM.
+     * Tier 3: High-end, Tier 2: Mid-range, Tier 1: Low-end.
+     */
+    private fun detectDeviceTier(): Int {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memInfo)
+        val totalRamGb = memInfo.totalMem / (1024 * 1024 * 1024.0)
+        val processors = Runtime.getRuntime().availableProcessors()
+        
+        Log.d(TAG, "Device Detect: RAM: $totalRamGb GB, CPU: $processors cores")
+        
+        return when {
+            processors <= 4 || totalRamGb <= 3.0 -> 1 // Low-end
+            processors <= 6 || totalRamGb <= 6.0 -> 2 // Mid-range
+            else -> 3 // High-end
+        }
+    }
+
+    /**
+     * Builds the PeerConnectionFactory with hardware-accelerated encoders and decoders.
+     */
     private fun buildPeerConnectionFactory() {
-        val encoderFactory = DefaultVideoEncoderFactory(eglBase.eglBaseContext, false, true)
+        val encoderFactory = DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true)
         val decoderFactory = DefaultVideoDecoderFactory(eglBase.eglBaseContext)
 
         peerConnectionFactory = PeerConnectionFactory.builder()
@@ -68,21 +100,32 @@ class WebRTCManager(
             .createPeerConnectionFactory()
     }
 
+    /**
+     * Starts local camera capture with resolution adjusted to the device tier.
+     */
     fun startLocalCapture(surfaceViewRenderer: SurfaceViewRenderer) {
         if (isCapturing || isDisposed) return
 
         surfaceViewRenderer.init(eglBase.eglBaseContext, null)
         surfaceViewRenderer.setEnableHardwareScaler(true)
+        surfaceViewRenderer.setMirror(true)
 
         val enumerator = Camera2Enumerator(context)
-        val deviceName = enumerator.deviceNames.find { enumerator.isBackFacing(it) } ?: enumerator.deviceNames.first()
+        val deviceNames = enumerator.deviceNames
+        val deviceName = deviceNames.find { enumerator.isBackFacing(it) } ?: deviceNames.firstOrNull() ?: return
+        
         val capturer = enumerator.createCapturer(deviceName, null)
         this.videoCapturer = capturer
 
         val videoSource = peerConnectionFactory!!.createVideoSource(capturer.isScreencast)
         surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
         capturer.initialize(surfaceTextureHelper, context, videoSource.capturerObserver)
-        capturer.startCapture(1280, 720, 30)
+        
+        when (deviceTier) {
+            3 -> capturer.startCapture(1920, 1080, 30) // 1080p 
+            2 -> capturer.startCapture(1280, 720, 30)  // 720p
+            else -> capturer.startCapture(640, 480, 30) // VGA
+        }
 
         localVideoTrack = peerConnectionFactory!!.createVideoTrack("video0", videoSource)
         localVideoTrack?.addSink(surfaceViewRenderer)
@@ -95,10 +138,10 @@ class WebRTCManager(
     }
 
     /**
-     * Requirement 2: Clean start for Reactive Negotiation.
+     * Initializes or resets the PeerConnection and re-attaches media tracks.
      */
     fun setupNewPeerConnection() {
-        Log.i(TAG, "Reactive Reset: Building a fresh PeerConnection session.")
+        Log.i(TAG, "Session Reset (Tier $deviceTier): Building fresh PeerConnection.")
 
         peerConnection?.close()
         peerConnection?.dispose()
@@ -112,16 +155,55 @@ class WebRTCManager(
 
         peerConnection = buildPeerConnection()
 
-        // Create Control DataChannel
         val dcInit = DataChannel.Init().apply { ordered = true }
         dataChannel = peerConnection?.createDataChannel("control", dcInit)
         dataChannel?.registerObserver(dataChannelObserver)
 
-        // Re-attach tracks
-        localVideoTrack?.let { peerConnection?.addTrack(it, listOf("stream0")) }
+        localVideoTrack?.let { track ->
+            val sender = peerConnection?.addTrack(track, listOf("stream0"))
+            configureSender(sender)
+        }
         localAudioTrack?.let { peerConnection?.addTrack(it, listOf("stream0")) }
     }
 
+    /**
+     * Configures the RtpSender with bitrate limits and degradation preferences based on device tier.
+     */
+    private fun configureSender(sender: RtpSender?) {
+        if (sender == null) return
+        val parameters = sender.parameters
+        
+        parameters.degradationPreference = if (deviceTier >= 2) {
+            RtpParameters.DegradationPreference.MAINTAIN_RESOLUTION
+        } else {
+            RtpParameters.DegradationPreference.BALANCED
+        }
+        
+        if (parameters.encodings.isNotEmpty()) {
+            for (encoding in parameters.encodings) {
+                when (deviceTier) {
+                    3 -> { // High: 1.5 - 5 Mbps
+                        encoding.minBitrateBps = 1500 * 1000
+                        encoding.maxBitrateBps = 5000 * 1000
+                    }
+                    2 -> { // Mid: 800 kbps - 2.5 Mbps
+                        encoding.minBitrateBps = 800 * 1000
+                        encoding.maxBitrateBps = 2500 * 1000
+                    }
+                    else -> { // Low: 300 - 800 kbps
+                        encoding.minBitrateBps = 300 * 1000
+                        encoding.maxBitrateBps = 800 * 1000
+                    }
+                }
+                encoding.active = true
+            }
+        }
+        sender.parameters = parameters
+    }
+
+    /**
+     * Builds the PeerConnection with STUN servers and Unified Plan semantics.
+     */
     private fun buildPeerConnection(): PeerConnection? {
         val iceServers = listOf(
             PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
@@ -133,33 +215,58 @@ class WebRTCManager(
         return peerConnectionFactory?.createPeerConnection(rtcConfig, peerConnectionObserver)
     }
 
+    /**
+     * Creates a WebRTC offer and optimizes the SDP for the detected device tier.
+     */
     fun createOffer() {
         if (peerConnection == null || isDisposed) return
+        
+        val constraints = MediaConstraints().apply {
+            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
+        }
+
         peerConnection?.createOffer(object : SdpObserver {
             override fun onCreateSuccess(desc: SessionDescription) {
+                val bitrate = when(deviceTier) {
+                    3 -> 5000
+                    2 -> 2500
+                    else -> 1000
+                }
+                val optimizedSdp = sdpWithBitrate(desc.description, bitrate)
+                val optimizedDesc = SessionDescription(desc.type, optimizedSdp)
+
                 peerConnection?.setLocalDescription(object : SdpObserver {
                     override fun onSetSuccess() {
-                        Log.i(TAG, "Local Description (Offer) set. Draining local candidates.")
                         isLocalDescriptionSet = true
-                        listener.onLocalSdpCreated(desc)
+                        listener.onLocalSdpCreated(optimizedDesc)
                         drainLocalIceCandidates()
                     }
                     override fun onCreateSuccess(p0: SessionDescription?) {}
                     override fun onCreateFailure(p0: String?) {}
-                    override fun onSetFailure(p0: String?) { Log.e(TAG, "Local SDP Error: $p0") }
-                }, desc)
+                    override fun onSetFailure(p0: String?) {}
+                }, optimizedDesc)
             }
             override fun onSetSuccess() {}
-            override fun onCreateFailure(p0: String?) { Log.e(TAG, "Offer Creation Error: $p0") }
+            override fun onCreateFailure(p0: String?) {}
             override fun onSetFailure(p0: String?) {}
-        }, MediaConstraints())
+        }, constraints)
     }
 
+    /**
+     * Modifies the SDP string to include application-specific bandwidth constraints.
+     */
+    private fun sdpWithBitrate(sdp: String, bitrateKbps: Int): String {
+        return sdp.replace("a=mid:video\r\n", "a=mid:video\r\nb=AS:$bitrateKbps\r\n")
+    }
+
+    /**
+     * Sets the remote SessionDescription and drains any queued ICE candidates.
+     */
     fun setRemoteDescription(sdp: String, isOffer: Boolean) {
         val type = if (isOffer) SessionDescription.Type.OFFER else SessionDescription.Type.ANSWER
         peerConnection?.setRemoteDescription(object : SdpObserver {
             override fun onSetSuccess() {
-                Log.i(TAG, "Remote Description set. Draining remote candidates.")
                 isRemoteDescriptionSet = true
                 drainRemoteIceCandidates()
             }
@@ -170,7 +277,7 @@ class WebRTCManager(
     }
 
     /**
-     * Requirement 3: Handle incoming candidates reactively.
+     * Adds an ICE candidate to the PeerConnection or queues it if the remote description is not yet set.
      */
     fun addIceCandidate(candidate: IceCandidate) {
         if (isRemoteDescriptionSet) {
@@ -238,6 +345,9 @@ class WebRTCManager(
         override fun onStateChange() {}
     }
 
+    /**
+     * Releases all WebRTC resources and stops camera capture.
+     */
     fun dispose() {
         isDisposed = true
         isCapturing = false
