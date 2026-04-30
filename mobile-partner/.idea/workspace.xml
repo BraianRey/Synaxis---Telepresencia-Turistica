@@ -10,12 +10,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/ServiceEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/ServiceEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/WebRTCManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/WebRTCManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/SignalingClient.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/SignalingClient.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/SignalingModels.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/SignalingModels.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/webrtc/WebRTCManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/webrtc/WebRTCManager.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,7 +32,7 @@
       <entry key="_C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner" value="3C8UADKCGKXxXzWFWBdybxy2d9a" />
     </persistenceIdMap>
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\David\.android\avd\Medium_Phone_API_36.1_2_2.avd]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[PhysicalDevice::serial=M7T4NRSGHY65PZSK]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -59,7 +61,7 @@
     &quot;accountId&quot;: &quot;cd5502d4-d496-442f-89c2-ae7c104d5f2f&quot;
   }
 }</component>
-  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\David\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\Janus\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -85,7 +87,7 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;David&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;BRey&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner&quot;,
@@ -119,6 +121,8 @@
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
       <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
       <option name="DEBUGGER_TYPE" value="Auto" />
       <Auto>
         <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />

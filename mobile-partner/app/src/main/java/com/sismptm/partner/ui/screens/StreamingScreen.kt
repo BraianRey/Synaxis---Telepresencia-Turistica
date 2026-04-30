@@ -3,7 +3,9 @@ package com.sismptm.partner.ui.screens
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.media.MediaPlayer
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -19,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,8 +30,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
+import com.sismptm.partner.utils.SessionManager
 import org.webrtc.PeerConnection
 import org.webrtc.SurfaceViewRenderer
+import java.util.Locale
 
 /**
  * Global reference to the currently active MediaPlayer to manage audio playback.
@@ -45,7 +50,7 @@ fun StreamingScreen(
     viewModel: StreamingViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val partnerId = serviceId.toString() // Use Service ID as the channel ID
+    val partnerId = serviceId.toString()
 
     var hasPermissions by remember {
         mutableStateOf(
@@ -86,9 +91,6 @@ fun StreamingScreen(
     }
 }
 
-/**
- * Placeholder screen shown when required permissions are not granted.
- */
 @Composable
 fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
     Box(
@@ -110,9 +112,6 @@ fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
     }
 }
 
-/**
- * Core content of the streaming session, including the video feed and command feedback.
- */
 @Composable
 fun StreamingContent(
     onBack: () -> Unit,
@@ -124,9 +123,6 @@ fun StreamingContent(
     val commands by viewModel.commands.collectAsState()
     val lastCommandEvent by viewModel.lastCommandEvent.collectAsState()
 
-    /**
-     * Cleanup effect to ensure MediaPlayer resources are released when leaving the screen.
-     */
     DisposableEffect(Unit) {
         onDispose {
             activeMediaPlayer?.let {
@@ -137,9 +133,6 @@ fun StreamingContent(
         }
     }
 
-    /**
-     * Triggers audio feedback whenever a new command event is received.
-     */
     LaunchedEffect(lastCommandEvent) {
         lastCommandEvent?.let { playInstructionAudio(context, it.text) }
     }
@@ -215,39 +208,67 @@ fun StreamingContent(
     }
 }
 
-/**
- * Individual command item with varying alpha based on its chronological order.
- */
 @Composable
 fun InstructionItem(instruction: String, alphaValue: Float) {
+    val context = LocalContext.current
+    val currentConfig = LocalConfiguration.current
+    val lang = SessionManager.language
+    
+    val displayId = when (instruction.lowercase().trim()) {
+        "up" -> R.string.instruction_up
+        "down" -> R.string.instruction_down
+        "left" -> R.string.instruction_left
+        "right" -> R.string.instruction_right
+        else -> null
+    }
+
+    val displayText = remember(instruction, lang) {
+        if (displayId != null) {
+            val config = Configuration(currentConfig)
+            config.setLocale(Locale.forLanguageTag(lang))
+            context.createConfigurationContext(config).getString(displayId)
+        } else {
+            instruction
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxWidth().alpha(alphaValue),
         color = Color.Black.copy(alpha = 0.4f),
         shape = RoundedCornerShape(8.dp)
     ) {
-        Text(instruction, color = Color.White, modifier = Modifier.padding(8.dp), fontSize = 13.sp)
+        Text(displayText, color = Color.White, modifier = Modifier.padding(8.dp), fontSize = 13.sp)
     }
 }
 
-/**
- * Handles audio playback for directional instructions, ensuring only one sound plays at a time.
- */
 private fun playInstructionAudio(context: Context, instruction: String) {
-    val lang = com.sismptm.partner.utils.SessionManager.language
-    val audioName = "${instruction.lowercase()}_$lang"
-    val audioResId = context.resources.getIdentifier(audioName, "raw", context.packageName)
+    val lang = SessionManager.language
+    val audioName = instruction.lowercase().trim()
+    
+    val config = Configuration(context.resources.configuration)
+    config.setLocale(Locale.forLanguageTag(lang))
+    val localizedContext = context.createConfigurationContext(config)
+    
+    val audioResId = localizedContext.resources.getIdentifier(audioName, "raw", context.packageName)
 
-    if (audioResId == 0) return
+    if (audioResId == 0) {
+        Log.w("StreamingScreen", "Audio resource not found for: $audioName in lang: $lang")
+        return
+    }
 
     try {
         activeMediaPlayer?.let {
-            if (it.isPlaying) it.stop()
+            if (it.isPlaying) {
+                it.stop()
+            }
             it.release()
         }
-    } catch (e: Exception) {}
+    } catch (e: Exception) {
+        Log.e("StreamingScreen", "Error stopping player", e)
+    }
 
     try {
-        activeMediaPlayer = MediaPlayer.create(context, audioResId)?.apply {
+        activeMediaPlayer = MediaPlayer.create(localizedContext, audioResId)?.apply {
             setOnCompletionListener { mp ->
                 mp.release()
                 if (activeMediaPlayer == mp) activeMediaPlayer = null
@@ -255,6 +276,7 @@ private fun playInstructionAudio(context: Context, instruction: String) {
             start()
         }
     } catch (e: Exception) {
+        Log.e("StreamingScreen", "Error playing audio: $audioName", e)
         activeMediaPlayer = null
     }
 }
