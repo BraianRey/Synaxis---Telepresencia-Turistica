@@ -8,6 +8,10 @@ spring:
     username: synexis
     password: synexis123
 
+  sql:
+    init:
+      mode: always
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:

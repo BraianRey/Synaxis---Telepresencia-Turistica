@@ -363,9 +363,39 @@ private fun ToursTabContent(
                     if (servicesState.services.isEmpty()) {
                         Text(text = "No service requests yet.", color = Color(0xFFCCCCCC))
                     } else {
+                        val activeStatuses = setOf("REQUESTED", "ACCEPTED", "STARTED")
+                        val activeServices = servicesState.services.filter { it.status.uppercase() in activeStatuses }
+                        val historyServices = servicesState.services.filter { it.status.uppercase() !in activeStatuses }
+
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            servicesState.services.forEach { service ->
-                                ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+                            Text(
+                                text = stringResource(R.string.home_services_active),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            if (activeServices.isEmpty()) {
+                                Text(text = stringResource(R.string.home_services_no_active), color = Color(0xFFCCCCCC))
+                            } else {
+                                activeServices.forEach { service ->
+                                    ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = stringResource(R.string.home_services_history),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                            if (historyServices.isEmpty()) {
+                                Text(text = stringResource(R.string.home_services_no_history), color = Color(0xFFCCCCCC))
+                            } else {
+                                historyServices.forEach { service ->
+                                    ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+                                }
                             }
                         }
                     }

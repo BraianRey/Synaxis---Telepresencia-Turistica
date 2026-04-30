@@ -84,7 +84,8 @@ public class ServiceController {
         String keycloakId = extractKeycloakId(authentication);
         Client client = clientRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client not found for current user"));
-        return serviceService.getServicesByClientIdForUser(clientId, client.getId());
+        // Use the authenticated client's ID, not the path variable (security check)
+        return serviceService.getServicesByClientIdForUser(client.getId(), client.getId());
     }
 
     /**
@@ -103,7 +104,8 @@ public class ServiceController {
         String keycloakId = extractKeycloakId(authentication);
         Partner partner = partnerRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partner not found for current user"));
-        return serviceService.getServicesByPartnerIdForUser(partnerId, partner.getId());
+        // Use the authenticated partner's ID, not the path variable (security check)
+        return serviceService.getServicesByPartnerIdForUser(partner.getId(), partner.getId());
     }
 
     /**

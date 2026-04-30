@@ -161,6 +161,7 @@ fun rememberMapViewForService(
 
     val mapView = remember {
         MapView(context).apply {
+            onCreate(null)
             getMapAsync { map ->
                 map.setStyle("https://tiles.openfreemap.org/styles/liberty") { style ->
                     map.uiSettings.apply {

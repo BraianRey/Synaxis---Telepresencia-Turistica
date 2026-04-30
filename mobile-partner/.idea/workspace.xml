@@ -10,12 +10,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/ServiceEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/entity/ServiceEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/config/DataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/config/DataInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/controller/ServiceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/controller/ServiceController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/MapServiceScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/screens/MapServiceScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-en-rUS/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-en-rUS/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-en/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-en/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es-rLA/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es-rLA/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/ApiService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/HomeViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-en-rUS/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-en-rUS/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-en/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-en/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es-rLA/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es-rLA/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,11 +47,28 @@
       <entry key="_C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner" value="3C8UADKCGKXxXzWFWBdybxy2d9a" />
     </persistenceIdMap>
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\David\.android\avd\Medium_Phone_API_36.1_2_2.avd]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\jhonn\.android\avd\Pixel_8_Pro.avd]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
     </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="SISPTMPartner" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -59,7 +93,7 @@
     &quot;accountId&quot;: &quot;cd5502d4-d496-442f-89c2-ae7c104d5f2f&quot;
   }
 }</component>
-  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\David\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\jhonn\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="D:\universidad\semestres\octavo semestre\proyecto1\programas\AndroidStudio\jbr" gradleVersion="9.3.1" />
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -85,10 +119,10 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;David&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;JhonnyFuertes&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/universidad/semestres/octavo semestre/proyecto1/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
   }
 }</component>
@@ -119,6 +153,8 @@
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
       <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
       <option name="DEBUGGER_TYPE" value="Auto" />
       <Auto>
         <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />

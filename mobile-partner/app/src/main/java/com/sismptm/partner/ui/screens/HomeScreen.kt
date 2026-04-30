@@ -94,12 +94,14 @@ fun HomeContent(
     onNavigateToServiceReady: (Long) -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
+    var selectedTab by remember { mutableStateOf(0) }
     var isOnline by remember { mutableStateOf(false) }
 
     val requestsState by homeViewModel.requestsState.collectAsState()
     val acceptedTour by homeViewModel.acceptedTour.collectAsState()
     val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
     val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
+    val partnerServicesState by homeViewModel.partnerServicesState.collectAsState()
 
     // Load requests when partner is online; poll every 10s.
     LaunchedEffect(isOnline) {
@@ -119,10 +121,14 @@ fun HomeContent(
         }
     }
 
+    LaunchedEffect(Unit) {
+        homeViewModel.loadPartnerServices()
+    }
+
     if (acceptErrorMessage != null) {
         AlertDialog(
             onDismissRequest = { homeViewModel.clearAcceptError() },
-            title = { Text("Could not accept request") },
+            title = { Text(stringResource(R.string.error_accept_request)) },
             text = { Text(acceptErrorMessage!!) },
             confirmButton = {
                 TextButton(onClick = { homeViewModel.clearAcceptError() }) {
@@ -132,56 +138,116 @@ fun HomeContent(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF12151B))) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { "Partner" }) }
-            item { AvailabilityCard(isOnline = isOnline, onToggleOnline = { isOnline = it }) }
-            item {
-                OutlinedButton(
-                    onClick = { LocationService.sendCurrentLocationOnce() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
-                ) { Text(text = stringResource(R.string.send_location)) }
+    Scaffold(
+        bottomBar = {
+            Button(
+                onClick = { SessionManager.clearSession(); onLogout() },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2430), contentColor = Color.White)
+            ) {
+                Text(stringResource(R.string.logout))
             }
-            item { StatsGrid() }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(Color(0xFF12151B))
+        ) {
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color(0xFF1E2430),
+                contentColor = Color.White
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text(stringResource(R.string.tab_requests)) }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text(stringResource(R.string.tab_my_services)) }
+                )
+            }
 
-            // ── Incoming requests section ──────────────────────────────────
-            if (!isOnline) {
-                // Partner is OFFLINE → show message, hide requests
-                item { IncomingRequestsHeader(newCount = 0) }
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))
+            when (selectedTab) {
+                0 -> RequestsTabContent(
+                    isOnline = isOnline,
+                    onToggleOnline = { isOnline = it },
+                    requestsState = requestsState,
+                    acceptingServiceId = acceptingServiceId,
+                    onAccept = { homeViewModel.acceptTour(it) },
+                    onRetry = { homeViewModel.loadAvailableRequests() }
+                )
+                1 -> MyServicesTabContent(
+                    partnerServicesState = partnerServicesState,
+                    onRetry = { homeViewModel.loadPartnerServices() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RequestsTabContent(
+    isOnline: Boolean,
+    onToggleOnline: (Boolean) -> Unit,
+    requestsState: HomeViewModel.RequestsUiState,
+    acceptingServiceId: Long?,
+    onAccept: (ServiceResponse) -> Unit,
+    onRetry: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { "Partner" }) }
+        item { AvailabilityCard(isOnline = isOnline, onToggleOnline = onToggleOnline) }
+        item {
+            OutlinedButton(
+                onClick = { LocationService.sendCurrentLocationOnce() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
+            ) {
+                Text(text = stringResource(R.string.send_location))
+            }
+        }
+        item { StatsGrid() }
+
+        // ── Incoming requests section ──────────────────────────────────
+        if (!isOnline) {
+            item { IncomingRequestsHeader(newCount = 0) }
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "You are currently offline",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color(0xFFEF4444),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Toggle your availability status to start receiving tour requests.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFB9C0CB),
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.status_offline_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFFEF4444),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = stringResource(R.string.status_offline_explanation),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFB9C0CB),
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
-            } else {
-            // Partner is ONLINE → show live requests
+            }
+        } else {
             when (val state = requestsState) {
                 is HomeViewModel.RequestsUiState.Loading -> {
                     item {
@@ -206,7 +272,7 @@ fun HomeContent(
                                 service = service,
                                 isAccepting = acceptingServiceId == service.serviceId,
                                 acceptEnabled = acceptingServiceId == null || acceptingServiceId == service.serviceId,
-                                onAccept = { homeViewModel.acceptTour(service) }
+                                onAccept = { onAccept(service) }
                             )
                         }
                     }
@@ -218,8 +284,8 @@ fun HomeContent(
                             color = Color(0xFFEF4444),
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        TextButton(onClick = { homeViewModel.loadAvailableRequests() }) {
-                            Text("Retry", color = Color(0xFF2563EB))
+                        TextButton(onClick = onRetry) {
+                            Text(stringResource(R.string.retry), color = Color(0xFF2563EB))
                         }
                     }
                 }
@@ -227,21 +293,164 @@ fun HomeContent(
                     item { IncomingRequestsHeader(newCount = 0) }
                     item {
                         Text(
-                            text = "Waiting for requests...",
+                            text = stringResource(R.string.waiting_for_requests),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFFB9C0CB)
                         )
                     }
                 }
             }
-            } // close else (isOnline)
         }
+    }
+}
 
-        Button(
-            onClick = { SessionManager.clearSession(); onLogout() },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2430), contentColor = Color.White)
-        ) { Text(text = stringResource(R.string.logout)) }
+@Composable
+private fun MyServicesTabContent(
+    partnerServicesState: HomeViewModel.PartnerServicesUiState,
+    onRetry: () -> Unit
+) {
+    when (val state = partnerServicesState) {
+        HomeViewModel.PartnerServicesUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFF2563EB))
+            }
+        }
+        is HomeViewModel.PartnerServicesUiState.Error -> {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(text = state.message, color = Color(0xFFEF4444))
+                TextButton(onClick = onRetry) {
+                    Text(stringResource(R.string.retry), color = Color(0xFF2563EB))
+                }
+            }
+        }
+        is HomeViewModel.PartnerServicesUiState.Success -> {
+            val activeStatuses = setOf("ACCEPTED", "STARTED")
+            val activeServices = state.services.filter { it.status.uppercase() in activeStatuses }
+            val historyServices = state.services.filter { it.status.uppercase() !in activeStatuses }
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Text(
+                        text = stringResource(R.string.services_active),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                if (activeServices.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.services_no_active),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFB9C0CB)
+                        )
+                    }
+                } else {
+                    items(activeServices, key = { it.serviceId }) { service ->
+                        PartnerServiceCard(service)
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+                item {
+                    Text(
+                        text = stringResource(R.string.services_history),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                if (historyServices.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(R.string.services_no_history),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFB9C0CB)
+                        )
+                    }
+                } else {
+                    items(historyServices, key = { it.serviceId }) { service ->
+                        PartnerServiceCard(service)
+                    }
+                }
+            }
+        }
+        HomeViewModel.PartnerServicesUiState.Idle -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.services_idle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFFB9C0CB)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PartnerServiceCard(service: ServiceResponse) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = "Service #${service.serviceId}",
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
+            ServiceStatusBadge(service.status)
+            Text(
+                text = "${stringResource(R.string.label_client)}: ${service.clientName.ifBlank { "Client #${service.clientId}" }}",
+                color = Color(0xFFB9C0CB)
+            )
+            Text(
+                text = "${stringResource(R.string.label_location)}: ${service.startLocationDescription ?: "N/A"}",
+                color = Color(0xFFB9C0CB)
+            )
+            Text(
+                text = "${stringResource(R.string.label_hours)}: ${service.agreedHours}h",
+                color = Color(0xFFB9C0CB)
+            )
+            Text(
+                text = "${stringResource(R.string.label_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h",
+                color = Color(0xFFB9C0CB)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ServiceStatusBadge(status: String) {
+    val normalized = status.uppercase()
+    val label = if (normalized == "REQUESTED") "CREATED" else normalized
+    val (bg, fg) = when (normalized) {
+        "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
+        "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
+        "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
+        else -> Color(0xFF37474F) to Color(0xFFECEFF1)
+    }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = bg),
+        shape = RoundedCornerShape(999.dp)
+    ) {
+        Text(
+            text = label,
+            color = fg,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+        )
     }
 }
 

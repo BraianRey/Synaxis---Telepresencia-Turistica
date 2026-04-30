@@ -27,6 +27,10 @@ interface ApiService {
     @GET("api/services/available")
     suspend fun getAvailableServices(): Response<List<ServiceResponse>>
 
+    /** GET /api/services/partner/{partnerId}  — requires PARTNER token */
+    @GET("api/services/partner/{partnerId}")
+    suspend fun getServicesByPartner(@Path("partnerId") partnerId: Long): Response<List<ServiceResponse>>
+
     /** POST /api/services/{serviceId}/accept  — requires PARTNER token */
     @POST("api/services/{serviceId}/accept")
     suspend fun acceptService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
@@ -97,3 +101,4 @@ data class ServiceResponse(
     val startedAt: String?,
     val endedAt: String?
 )
+
