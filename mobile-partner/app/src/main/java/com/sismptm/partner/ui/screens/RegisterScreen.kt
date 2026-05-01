@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
+import com.sismptm.partner.domain.validation.RegisterValidator
 
 private data class CityOption(val label: String, val longitude: Double, val latitude: Double)
 
@@ -37,9 +38,6 @@ private val cityOptions = listOf(
     CityOption("Bogotá", -74.0721, 4.7110)
 )
 
-/**
- * Screen for new partner registration.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
@@ -58,13 +56,13 @@ fun RegisterScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    val emailHasError = email.isNotBlank() && !RegisterFormValidator.isValidEmail(email)
-    val passwordMismatch = confirmPassword.isNotBlank() && password != confirmPassword
+    val emailHasError = email.isNotBlank() && !RegisterValidator.isValidEmail(email)
+    val passwordMismatch = confirmPassword.isNotBlank() && !RegisterValidator.doPasswordsMatch(password, confirmPassword)
 
     val uiState by viewModel.uiState.collectAsState()
     val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading
 
-    val isFormValid = RegisterFormValidator.isFormValid(
+    val isFormValid = RegisterValidator.isFormValid(
         fullName = name,
         email = email,
         password = password,
@@ -87,18 +85,9 @@ fun RegisterScreen(
             .padding(vertical = 24.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = stringResource(id = R.string.register_title),
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+        Text(text = stringResource(id = R.string.register_title), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.Black)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(id = R.string.register_subtitle),
-            fontSize = 14.sp,
-            color = Color(0xFF9E9E9E)
-        )
+        Text(text = stringResource(id = R.string.register_subtitle), fontSize = 14.sp, color = Color(0xFF9E9E9E))
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -106,20 +95,12 @@ fun RegisterScreen(
             value = name,
             onValueChange = { name = it },
             label = { Text(stringResource(id = R.string.full_name)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1565C0),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -130,20 +111,12 @@ fun RegisterScreen(
             label = { Text(stringResource(id = R.string.email)) },
             isError = emailHasError,
             supportingText = { if (emailHasError) Text(stringResource(R.string.invalid_email)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1565C0),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -155,26 +128,15 @@ fun RegisterScreen(
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
-                    )
+                    Icon(imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
                 }
             },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1565C0),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -186,28 +148,17 @@ fun RegisterScreen(
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(
-                        imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
-                    )
+                    Icon(imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
                 }
             },
             isError = passwordMismatch,
             supportingText = { if (passwordMismatch) Text(stringResource(R.string.passwords_do_not_match)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1565C0),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
-            )
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -221,20 +172,12 @@ fun RegisterScreen(
                 onValueChange = {},
                 readOnly = true,
                 label = { Text(stringResource(id = R.string.select_area)) },
-                placeholder = { Text(stringResource(id = R.string.select_area)) },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
-                },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth(),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1565C0),
-                    unfocusedBorderColor = Color(0xFFE0E0E0)
-                )
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
             )
-            DropdownMenu(
+            ExposedDropdownMenu(
                 expanded = areaExpanded,
                 onDismissRequest = { areaExpanded = false }
             ) {
@@ -252,39 +195,16 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Checkbox(
-                checked = acceptedTerms,
-                onCheckedChange = { acceptedTerms = it },
-                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF1E88E5))
-            )
-            Text(
-                text = stringResource(id = R.string.accept_terms),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Checkbox(checked = acceptedTerms, onCheckedChange = { acceptedTerms = it }, colors = CheckboxDefaults.colors(checkedColor = Color(0xFF2563EB)))
+            Text(text = stringResource(id = R.string.accept_terms), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Error banner
         if (uiState is RegisterViewModel.RegisterUiState.Error) {
-            val errorMsg = (uiState as RegisterViewModel.RegisterUiState.Error).message
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp)
-            ) {
-                Text(
-                    text = errorMsg,
-                    color = Color(0xFFC62828),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(12.dp)
-                )
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)), modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                Text(text = (uiState as RegisterViewModel.RegisterUiState.Error).message, color = Color(0xFFC62828), fontSize = 13.sp, modifier = Modifier.padding(12.dp))
             }
         }
 
@@ -300,40 +220,21 @@ fun RegisterScreen(
                 )
             },
             enabled = isFormValid && !isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1565C0),
-                disabledContainerColor = Color(0xFF90CAF9)
-            ),
+            modifier = Modifier.fillMaxWidth().height(54.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = Color.White,
-                    strokeWidth = 2.dp
-                )
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
             } else {
-                Text(
-                    text = stringResource(id = R.string.register_button),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
+                Text(text = stringResource(id = R.string.register_button), fontWeight = FontWeight.SemiBold)
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = onNavigateToLogin) {
-            Text(
-                text = stringResource(id = R.string.already_have_account),
-                color = Color(0xFF1565C0)
-            )
+            Text(text = stringResource(id = R.string.already_have_account), color = Color(0xFF2563EB))
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
     }
 }

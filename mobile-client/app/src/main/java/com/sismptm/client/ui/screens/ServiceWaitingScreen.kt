@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sismptm.client.data.remote.RetrofitClient
-import com.sismptm.client.data.remote.ServiceResponse
+import com.sismptm.client.core.network.RetrofitClient
+import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.ui.theme.Background
 import com.sismptm.client.ui.theme.CardBackground
 import com.sismptm.client.ui.theme.PrimaryAccent

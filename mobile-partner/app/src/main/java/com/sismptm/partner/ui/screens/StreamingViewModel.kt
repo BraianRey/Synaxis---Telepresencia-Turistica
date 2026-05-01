@@ -5,10 +5,10 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.BuildConfig
-import com.sismptm.partner.data.remote.IceCandidateModel
-import com.sismptm.partner.data.remote.SignalingClient
-import com.sismptm.partner.data.remote.SignalingMessage
-import com.sismptm.partner.webrtc.WebRTCManager
+import com.sismptm.partner.data.remote.api.dto.IceCandidateModel
+import com.sismptm.partner.data.remote.signaling.SignalingClient
+import com.sismptm.partner.data.remote.signaling.SignalingMessage
+import com.sismptm.partner.manager.webrtc.WebRTCManager
 import java.util.UUID
 import kotlin.random.Random
 import kotlinx.coroutines.Job
@@ -18,13 +18,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.webrtc.*
 
-/**
- * Represents a command with a unique ID to ensure UI reactivity even if the command text repeats.
- */
 data class CommandEvent(val text: String, val id: String = UUID.randomUUID().toString())
 
 /**
- * ViewModel for the Partner streaming screen managing WebRTC sessions and signaling.
+ * ViewModel for managing the streaming session, signaling, and WebRTC lifecycle.
+ * Coordinates between the UI, Signaling server, and WebRTC hardware manager.
  */
 class StreamingViewModel(application: Application) :
     AndroidViewModel(application),
@@ -34,26 +32,18 @@ class StreamingViewModel(application: Application) :
     private val TAG = "StreamingViewModel"
 
     private var targetClientId: String? = null
-    private var partnerId = "PARTNER_01"
+    private var partnerId = ""
     private var signalingClient: SignalingClient? = null
     private var connectionTimeout: Job? = null
 
     private var reconnectionAttempts = 0
     private val maxReconnectionAttempts = 3
-    private val reconnectionDelays =
-        listOf(
-            4000L, // Attempt 1: 4 seconds
-            8000L, // Attempt 2: 8 seconds
-            16000L // Attempt 3: 16 seconds
-        )
+    private val reconnectionDelays = listOf(4000L, 8000L, 16000L)
     private var reconnectionJob: Job? = null
-    private var lastState: PeerConnection.PeerConnectionState =
-        PeerConnection.PeerConnectionState.NEW
+    private var lastState: PeerConnection.PeerConnectionState = PeerConnection.PeerConnectionState.NEW
 
     val eglBase: EglBase = EglBase.create()
-
-    private val webRTCManager =
-        WebRTCManager(context = application, listener = this, eglBase = eglBase)
+    private val webRTCManager = WebRTCManager(context = application, listener = this, eglBase = eglBase)
 
     private val _connectionState = MutableStateFlow(PeerConnection.PeerConnectionState.NEW)
     val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState
@@ -65,20 +55,18 @@ class StreamingViewModel(application: Application) :
     val commands: StateFlow<List<String>> = _commands
 
     /**
-     * Initializes the local camera capture and connects to the signaling server.
+     * Initializes hardware capture and connects to the signaling server using the defined peer ID.
      */
     fun initStreaming(surfaceViewRenderer: SurfaceViewRenderer, customId: String) {
         this.partnerId = customId
         webRTCManager.startLocalCapture(surfaceViewRenderer)
 
+        // Ensure signaling URL is built correctly from project configuration
         val baseUrl = BuildConfig.BASE_WEBRTC
-        val signalingUrl = buildUrl(baseUrl, partnerId)
+        val signalingUrl = if (baseUrl.contains("?")) "$baseUrl&peerId=$partnerId" else "$baseUrl?peerId=$partnerId"
+
         signalingClient = SignalingClient(signalingUrl, this)
         signalingClient?.connect()
-    }
-
-    private fun buildUrl(base: String, peerId: String): String {
-        return if (base.contains("?")) "$base&peerId=$peerId" else "$base?peerId=$peerId"
     }
 
     override fun onConnected() {
@@ -149,7 +137,6 @@ class StreamingViewModel(application: Application) :
     }
 
     override fun onCommandReceived(command: String) {
-        // Updates state for UI reactivity; audio feedback is handled in the UI layer
         _lastCommandEvent.value = CommandEvent(command)
         _commands.value = (_commands.value + command).takeLast(10)
     }
@@ -166,9 +153,6 @@ class StreamingViewModel(application: Application) :
         }
     }
 
-    /**
-     * Schedules an automatic reconnection attempt if the connection is lost.
-     */
     private fun startReconnectionTimer() {
         if (reconnectionJob?.isActive == true || reconnectionAttempts >= maxReconnectionAttempts) return
         val baseDelay = reconnectionDelays.getOrElse(reconnectionAttempts) { 16000L }
@@ -180,9 +164,6 @@ class StreamingViewModel(application: Application) :
         }
     }
 
-    /**
-     * Attempts to recover the WebRTC session by re-initiating the negotiation process.
-     */
     private fun attemptRecovery() {
         if (reconnectionAttempts >= maxReconnectionAttempts || targetClientId == null) return
         reconnectionAttempts++

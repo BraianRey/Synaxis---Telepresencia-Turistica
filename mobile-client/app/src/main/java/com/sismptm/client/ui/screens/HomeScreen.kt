@@ -16,21 +16,21 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.*
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sismptm.client.data.remote.ServiceResponse
-import com.sismptm.client.data.remote.TokenManager
 import com.sismptm.client.R
+import com.sismptm.client.core.session.SessionManager
+import com.sismptm.client.data.remote.api.dto.ServiceResponse
 
 @Composable
 fun HomeScreen(
@@ -43,7 +43,7 @@ fun HomeScreen(
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         bottomBar = {}
@@ -491,7 +491,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
             Spacer(Modifier.height(32.dp))
             OutlinedButton(
                 onClick = {
-                    TokenManager.clearSession()
+                    SessionManager.clearSession()
                     onLogout()
                 },
                 border = BorderStroke(1.dp, Color(0xFF666666)),

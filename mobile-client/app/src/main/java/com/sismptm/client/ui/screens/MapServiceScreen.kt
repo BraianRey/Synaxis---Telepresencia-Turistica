@@ -43,22 +43,22 @@ fun MapServiceScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(createState) {
-        Log.d("MapServiceScreen", "🔔 createState changed → $createState")
+        Log.d("MapServiceScreen", "[STATE] createState changed to $createState")
         when (createState) {
             is CreateServiceUiState.Success -> {
                 val serviceId = (createState as CreateServiceUiState.Success).serviceId
-                Log.d("MapServiceScreen", "✅ Success! serviceId=$serviceId → navigating to waiting screen")
+                Log.d("MapServiceScreen", "[SUCCESS] serviceId=$serviceId. Navigating to waiting screen.")
                 mapViewModel.clearLocation()
                 serviceViewModel.resetState()
                 onServiceCreated(serviceId)
             }
             is CreateServiceUiState.Error -> {
                 val msg = (createState as CreateServiceUiState.Error).message
-                Log.e("MapServiceScreen", "❌ Error: $msg")
+                Log.e("MapServiceScreen", "[ERROR] $msg")
                 snackbarHostState.showSnackbar(msg)
             }
-            is CreateServiceUiState.Loading -> Log.d("MapServiceScreen", "⏳ Loading...")
-            is CreateServiceUiState.Idle -> Log.d("MapServiceScreen", "💤 Idle")
+            is CreateServiceUiState.Loading -> Log.d("MapServiceScreen", "[STATE] Loading...")
+            is CreateServiceUiState.Idle -> Log.d("MapServiceScreen", "[STATE] Idle")
         }
     }
 
@@ -122,7 +122,7 @@ fun MapServiceScreen(
                 LocationDescriptionSheet(
                     viewModel = mapViewModel,
                     onConfirm = { location, description ->
-                        Log.d("MapServiceScreen", "📍 onConfirm received → calling createService")
+                        Log.d("MapServiceScreen", "[ACTION] onConfirm received, calling createService")
                         serviceViewModel.createService(location, description)
                     },
                     onDismiss = { mapViewModel.hideDescriptionSheet() }

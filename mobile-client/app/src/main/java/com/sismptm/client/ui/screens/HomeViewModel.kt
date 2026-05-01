@@ -2,10 +2,9 @@ package com.sismptm.client.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sismptm.client.data.remote.RetrofitClient
-import com.sismptm.client.data.remote.ServiceResponse
-import com.sismptm.client.data.remote.TokenManager
-import com.sismptm.client.utils.SessionManager
+import com.sismptm.client.core.network.RetrofitClient
+import com.sismptm.client.data.remote.api.dto.ServiceResponse
+import com.sismptm.client.core.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +28,7 @@ class HomeViewModel : ViewModel() {
 
     init {
         // Step 1: Display name immediately from local session
-        val localName = TokenManager.getUserName()
+        val localName = SessionManager.userName
         _uiState.value = _uiState.value.copy(
             userName = if (localName.isNotBlank()) localName else "Viajero",
             isLoading = false,
@@ -65,8 +64,8 @@ class HomeViewModel : ViewModel() {
     }
 
     fun loadClientServices() {
-        val clientId = SessionManager.clientId
-        if (clientId == 0L) {
+        val clientId = SessionManager.userId
+        if (clientId == -1L) {
             _servicesState.value = ClientServicesUiState.Error("Session expired. Please log in again.")
             return
         }

@@ -86,11 +86,11 @@ fun LocationDescriptionSheet(
 
         Button(
             onClick = {
-                Log.d("LocationSheet", "▶ Confirm button clicked | location=$selectedLocation | desc='$description'")
+                Log.d("LocationSheet", "[UI] Confirm button clicked | location=$selectedLocation | desc='$description'")
                 selectedLocation?.let { loc ->
-                    Log.d("LocationSheet", "✅ Calling onConfirm with loc=$loc")
+                    Log.d("LocationSheet", "[ACTION] Calling onConfirm with loc=$loc")
                     onConfirm(loc, description)
-                } ?: Log.w("LocationSheet", "⚠️ selectedLocation is NULL — button should be disabled")
+                } ?: Log.w("LocationSheet", "[WARNING] selectedLocation is NULL — button should be disabled")
             },
             modifier = Modifier
                 .fillMaxWidth()

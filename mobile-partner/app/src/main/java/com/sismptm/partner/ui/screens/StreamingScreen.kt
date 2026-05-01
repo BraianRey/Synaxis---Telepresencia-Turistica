@@ -30,18 +30,16 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
-import com.sismptm.partner.utils.SessionManager
+import com.sismptm.partner.core.session.SessionManager
 import org.webrtc.PeerConnection
 import org.webrtc.SurfaceViewRenderer
 import java.util.Locale
 
-/**
- * Global reference to the currently active MediaPlayer to manage audio playback.
- */
 private var activeMediaPlayer: MediaPlayer? = null
 
 /**
- * Main entry point for the Partner's streaming interface.
+ * Interface for live streaming, displaying incoming directional commands and providing 
+ * audio feedback to the partner.
  */
 @Composable
 fun StreamingScreen(
@@ -72,48 +70,29 @@ fun StreamingScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (!hasPermissions) {
             StreamingPermissionDeniedScreen {
                 launcher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
             }
         } else {
-            StreamingContent(
-                onBack = onBack,
-                viewModel = viewModel,
-                partnerId = partnerId
-            )
+            StreamingContent(onBack = onBack, viewModel = viewModel, partnerId = partnerId)
         }
     }
 }
 
 @Composable
-fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF12151B))
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+private fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF12151B)).padding(24.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text("Camera & Microphone Required", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Button(onClick = onRetry) {
-                Text("Grant Permissions")
-            }
+            Button(onClick = onRetry) { Text("Grant Access") }
         }
     }
 }
 
 @Composable
-fun StreamingContent(
+private fun StreamingContent(
     onBack: () -> Unit,
     viewModel: StreamingViewModel,
     partnerId: String
@@ -137,8 +116,7 @@ fun StreamingContent(
         lastCommandEvent?.let { playInstructionAudio(context, it.text) }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-
+    Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { _ ->
                 SurfaceViewRenderer(context).also { renderer ->
@@ -148,60 +126,21 @@ fun StreamingContent(
             modifier = Modifier.fillMaxSize()
         )
 
-        Text(
-            text = "Streaming Channel: #$partnerId",
-            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 12.sp
+        ConnectionStatusBadge(
+            state = connectionState,
+            modifier = Modifier.align(Alignment.TopEnd).padding(24.dp)
         )
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(24.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.Black.copy(alpha = 0.5f))
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val tint = when (connectionState) {
-                PeerConnection.PeerConnectionState.CONNECTED  -> Color.Green
-                PeerConnection.PeerConnectionState.CONNECTING -> Color.Yellow
-                else -> Color.Red
-            }
-            Icon(Icons.Default.SignalCellularAlt, contentDescription = null, modifier = Modifier.size(20.dp), tint = tint)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = connectionState.name, color = Color.White, fontSize = 12.sp)
-        }
-
         if (commands.isNotEmpty()) {
-            val displayCommands = commands.asReversed().take(3)
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(24.dp)
-                    .width(200.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Latest Commands:", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
-                displayCommands.forEachIndexed { index, command ->
-                    val alphaValue = when(index) {
-                        0 -> 1.0f
-                        1 -> 0.6f
-                        2 -> 0.3f
-                        else -> 0f
-                    }
-                    InstructionItem(command, alphaValue)
-                }
-            }
+            CommandOverlay(
+                displayCommands = commands.asReversed().take(3),
+                modifier = Modifier.align(Alignment.TopStart).padding(24.dp)
+            )
         }
 
         IconButton(
             onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(24.dp)
-                .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+            modifier = Modifier.align(Alignment.BottomStart).padding(24.dp).background(Color.Black.copy(alpha = 0.4f), CircleShape)
         ) {
             Text("←", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         }
@@ -209,7 +148,39 @@ fun StreamingContent(
 }
 
 @Composable
-fun InstructionItem(instruction: String, alphaValue: Float) {
+private fun ConnectionStatusBadge(state: PeerConnection.PeerConnectionState, modifier: Modifier) {
+    val tint = when (state) {
+        PeerConnection.PeerConnectionState.CONNECTED  -> Color.Green
+        PeerConnection.PeerConnectionState.CONNECTING -> Color.Yellow
+        else -> Color.Red
+    }
+    Row(
+        modifier = modifier.clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.5f)).padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.SignalCellularAlt, contentDescription = null, modifier = Modifier.size(20.dp), tint = tint)
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = state.name, color = Color.White, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun CommandOverlay(displayCommands: List<String>, modifier: Modifier) {
+    Column(modifier = modifier.width(200.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        displayCommands.forEachIndexed { index, command ->
+            val alphaValue = when(index) {
+                0 -> 1.0f
+                1 -> 0.6f
+                2 -> 0.3f
+                else -> 0f
+            }
+            InstructionItem(command, alphaValue)
+        }
+    }
+}
+
+@Composable
+private fun InstructionItem(instruction: String, alphaValue: Float) {
     val context = LocalContext.current
     val currentConfig = LocalConfiguration.current
     val lang = SessionManager.language
@@ -251,21 +222,14 @@ private fun playInstructionAudio(context: Context, instruction: String) {
     
     val audioResId = localizedContext.resources.getIdentifier(audioName, "raw", context.packageName)
 
-    if (audioResId == 0) {
-        Log.w("StreamingScreen", "Audio resource not found for: $audioName in lang: $lang")
-        return
-    }
+    if (audioResId == 0) return
 
     try {
         activeMediaPlayer?.let {
-            if (it.isPlaying) {
-                it.stop()
-            }
+            if (it.isPlaying) it.stop()
             it.release()
         }
-    } catch (e: Exception) {
-        Log.e("StreamingScreen", "Error stopping player", e)
-    }
+    } catch (e: Exception) {}
 
     try {
         activeMediaPlayer = MediaPlayer.create(localizedContext, audioResId)?.apply {
@@ -276,7 +240,6 @@ private fun playInstructionAudio(context: Context, instruction: String) {
             start()
         }
     } catch (e: Exception) {
-        Log.e("StreamingScreen", "Error playing audio: $audioName", e)
         activeMediaPlayer = null
     }
 }

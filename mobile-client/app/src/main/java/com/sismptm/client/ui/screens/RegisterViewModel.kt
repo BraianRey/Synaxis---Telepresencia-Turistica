@@ -2,9 +2,9 @@ package com.sismptm.client.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sismptm.client.data.remote.RegisterClientRequest
-import com.sismptm.client.data.remote.RetrofitClient
-import com.sismptm.client.utils.NetworkConfig
+import com.sismptm.client.core.network.NetworkConfig
+import com.sismptm.client.core.network.RetrofitClient
+import com.sismptm.client.data.remote.api.dto.RegisterClientRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

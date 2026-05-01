@@ -2,20 +2,22 @@ package com.sismptm.partner.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sismptm.partner.data.remote.RegisterPartnerRequest
-import com.sismptm.partner.data.remote.RetrofitClient
-import com.sismptm.partner.utils.SessionManager
+import com.sismptm.partner.data.remote.api.dto.RegisterPartnerRequest
+import com.sismptm.partner.data.repository.PartnerRepositoryImpl
+import com.sismptm.partner.domain.usecase.auth.RegisterUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.Locale
 
 /**
- * ViewModel for the partner registration screen.
- * Holds UI state and calls the backend endpoint.
+ * ViewModel for partner registration flow, including comprehensive error handling.
  */
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(
+    private val registerUseCase: RegisterUseCase = RegisterUseCase(PartnerRepositoryImpl())
+) : ViewModel() {
 
     sealed interface RegisterUiState {
         object Idle : RegisterUiState
@@ -48,36 +50,40 @@ class RegisterViewModel : ViewModel() {
                     termsAccepted = termsAccepted,
                     language = language
                 )
-                val response = RetrofitClient.apiService.registerPartner(request)
+                val response = registerUseCase(request)
                 if (response.isSuccessful) {
                     _uiState.value = RegisterUiState.Success
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    _uiState.value = RegisterUiState.Error(
-                        parseErrorMessage(response.code(), errorBody)
-                    )
+                    _uiState.value = RegisterUiState.Error(parseError(response.code(), errorBody))
                 }
             } catch (e: Exception) {
-                _uiState.value = RegisterUiState.Error(parseErrorMessage(e))
+                _uiState.value = RegisterUiState.Error(parseConnectionError(e))
             }
         }
     }
 
+    private fun parseError(code: Int, body: String?): String {
+        val backendMessage = runCatching {
+            if (body.isNullOrBlank()) "" else JSONObject(body).optString("error", "")
+        }.getOrDefault("")
+        
+        if (backendMessage.isNotBlank()) return backendMessage
+        
+        return when (code) {
+            409 -> "This email is already registered."
+            400 -> "Invalid data. Please verify all fields."
+            else -> "Server error ($code). Please try again later."
+        }
+    }
+
+    private fun parseConnectionError(exception: Exception): String = when {
+        exception.message?.contains("failed to connect") == true -> "Connection failed. Please check your internet."
+        exception.message?.contains("timeout") == true -> "Request timed out. Please try again."
+        else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
+    }
+
     fun resetState() {
         _uiState.value = RegisterUiState.Idle
-    }
-
-    private fun parseErrorMessage(code: Int, body: String?): String = when (code) {
-        409 -> "Email already registered."
-        400 -> "Invalid data. Check all fields."
-        else -> "Server error ($code). Please try again."
-    }
-
-    private fun parseErrorMessage(exception: Exception): String = when {
-        exception.message?.contains("failed to connect") == true ->
-            "Connection failed. Is the backend running?"
-        exception.message?.contains("timeout") == true ->
-            "Connection timeout. Check your network."
-        else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
     }
 }

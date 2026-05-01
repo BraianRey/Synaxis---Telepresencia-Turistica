@@ -16,42 +16,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sismptm.partner.data.remote.RetrofitClient
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import com.sismptm.partner.R
 
-class ServiceReadyViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<ReadyUiState>(ReadyUiState.Idle)
-    val uiState: StateFlow<ReadyUiState> = _uiState
-
-    sealed interface ReadyUiState {
-        object Idle : ReadyUiState
-        object Loading : ReadyUiState
-        object Success : ReadyUiState
-        data class Error(val message: String) : ReadyUiState
-    }
-
-    fun markAsReady(serviceId: Long) {
-        viewModelScope.launch {
-            _uiState.value = ReadyUiState.Loading
-            try {
-                val response = RetrofitClient.apiService.markServiceAsReady(serviceId)
-                if (response.isSuccessful) {
-                    _uiState.value = ReadyUiState.Success
-                } else {
-                    _uiState.value = ReadyUiState.Error("Failed to notify server. Please try again.")
-                }
-            } catch (e: Exception) {
-                _uiState.value = ReadyUiState.Error(e.localizedMessage ?: "Connection error")
-            }
-        }
-    }
-}
-
+/**
+ * Screen that prepares the partner for the streaming session after accepting a tour.
+ */
 @Composable
 fun ServiceReadyScreen(
     serviceId: Long,
@@ -93,13 +63,13 @@ fun ServiceReadyScreen(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Service Accepted!",
+                    text = "Ready to Start?",
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Service ID: #$serviceId",
+                    text = "Service Reference: #$serviceId",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF9DA5B3)
                 )
@@ -116,7 +86,7 @@ fun ServiceReadyScreen(
                 ) {
                     Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFF2563EB))
                     Text(
-                        text = "The client is being notified. Please tap below when you are physically ready to start the streaming.",
+                        text = "The client has been notified. Please confirm your readiness to begin the live broadcast.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFB9C0CB)
                     )
@@ -142,7 +112,7 @@ fun ServiceReadyScreen(
                 if (uiState is ServiceReadyViewModel.ReadyUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
                 } else {
-                    Text("I AM READY", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("START TRANSMISSION", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
@@ -151,7 +121,7 @@ fun ServiceReadyScreen(
             onClick = onBack,
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            Text("Cancel and go back", color = Color(0xFF9DA5B3))
+            Text("Go back to dashboard", color = Color(0xFF9DA5B3))
         }
     }
 }

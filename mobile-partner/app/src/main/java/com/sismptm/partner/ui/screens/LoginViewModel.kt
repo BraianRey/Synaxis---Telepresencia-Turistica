@@ -2,16 +2,24 @@ package com.sismptm.partner.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sismptm.partner.data.remote.LoginRequest
-import com.sismptm.partner.data.remote.RetrofitClient
-import com.sismptm.partner.utils.SessionManager
+import com.sismptm.partner.core.session.SessionManager
+import com.sismptm.partner.data.remote.api.dto.LoginRequest
+import com.sismptm.partner.domain.usecase.auth.LoginUseCase
+import com.sismptm.partner.domain.usecase.auth.CheckServerStatusUseCase
+import com.sismptm.partner.data.repository.PartnerRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class LoginViewModel : ViewModel() {
+/**
+ * ViewModel for the login screen, managing authentication and server availability checks.
+ */
+class LoginViewModel(
+    private val loginUseCase: LoginUseCase = LoginUseCase(PartnerRepositoryImpl()),
+    private val checkServerStatusUseCase: CheckServerStatusUseCase = CheckServerStatusUseCase(PartnerRepositoryImpl())
+) : ViewModel() {
 
     sealed interface LoginUiState {
         object Idle : LoginUiState
@@ -30,12 +38,9 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
             try {
-                val response = RetrofitClient.apiService.loginPartner(
-                    LoginRequest(email = email.trim(), password = password)
-                )
+                val response = loginUseCase(LoginRequest(email = email.trim(), password = password))
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null) {
+                    response.body()?.let { body ->
                         SessionManager.saveSession(
                             token = body.accessToken,
                             id = body.id,
@@ -46,9 +51,8 @@ class LoginViewModel : ViewModel() {
                     }
                     _uiState.value = LoginUiState.Success
                 } else {
-                    _uiState.value = LoginUiState.Error(
-                        parseError(response.code(), response.errorBody()?.string())
-                    )
+                    val errorBody = response.errorBody()?.string()
+                    _uiState.value = LoginUiState.Error(parseError(response.code(), errorBody))
                 }
             } catch (ex: Exception) {
                 _uiState.value = LoginUiState.Error(parseConnectionError(ex))
@@ -59,7 +63,7 @@ class LoginViewModel : ViewModel() {
     fun checkAvailability() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.availabilityPing()
+                val response = checkServerStatusUseCase()
                 if (response.isSuccessful) {
                     _pingState.value = "Server Online: ${response.body()?.status}"
                 } else {
@@ -75,16 +79,13 @@ class LoginViewModel : ViewModel() {
         _pingState.value = null
     }
 
-    fun resetState() {
-        _uiState.value = LoginUiState.Idle
-    }
-
     private fun parseError(code: Int, body: String?): String {
         val backendMessage = runCatching {
             if (body.isNullOrBlank()) "" else JSONObject(body).optString("error", "")
         }.getOrDefault("")
-        if (backendMessage.isNotBlank()) return backendMessage
-        return if (code == 401) "Invalid credentials." else "Server error. Please try again."
+        return backendMessage.ifBlank {
+            if (code == 401) "Invalid credentials." else "Server error ($code). Please try again."
+        }
     }
 
     private fun parseConnectionError(exception: Exception): String = when {
@@ -93,5 +94,9 @@ class LoginViewModel : ViewModel() {
         exception.message?.contains("timeout") == true ->
             "Connection timeout. Check your network."
         else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
+    }
+
+    fun resetState() {
+        _uiState.value = LoginUiState.Idle
     }
 }

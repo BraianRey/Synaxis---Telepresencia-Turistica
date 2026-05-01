@@ -2,10 +2,10 @@ package com.sismptm.client.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sismptm.client.data.remote.CreateServiceRequest
-import com.sismptm.client.data.remote.RetrofitClient
-import com.sismptm.client.data.remote.ServiceResponse
-import com.sismptm.client.utils.SessionManager
+import com.sismptm.client.core.network.RetrofitClient
+import com.sismptm.client.core.session.SessionManager
+import com.sismptm.client.data.remote.api.dto.CreateServiceRequest
+import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,8 +32,8 @@ class RequestTourViewModel : ViewModel() {
         latitude: Double,
         locationDescription: String?
     ) {
-        val clientId = SessionManager.clientId
-        if (clientId == 0L) {
+        val clientId = SessionManager.userId
+        if (clientId <= 0L) {
             _uiState.value = RequestUiState.Error("Session expired. Please log in again.")
             return
         }
@@ -86,8 +86,8 @@ class RequestTourViewModel : ViewModel() {
     }
 
     fun checkActiveServiceBeforeCreate() {
-        val clientId = SessionManager.clientId
-        if (clientId == 0L) {
+        val clientId = SessionManager.userId
+        if (clientId <= 0L) {
             return
         }
 
@@ -121,9 +121,9 @@ class RequestTourViewModel : ViewModel() {
     }
 
     private suspend fun resolveActiveService(message: String) {
-        val clientId = SessionManager.clientId
+        val clientId = SessionManager.userId
 
-        if (clientId == 0L) {
+        if (clientId <= 0L) {
             _uiState.value = RequestUiState.Error(message)
             return
         }
