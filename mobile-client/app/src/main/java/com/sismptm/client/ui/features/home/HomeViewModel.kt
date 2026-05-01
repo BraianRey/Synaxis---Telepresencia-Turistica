@@ -3,8 +3,8 @@ package com.sismptm.client.ui.features.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.core.network.RetrofitClient
-import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
+import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.domain.model.MapPin
@@ -14,10 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-/**
- * ViewModel for the Home screen.
- * Manages destination lists, map pins, and the user's service history.
- */
 class HomeViewModel : ViewModel() {
 
     sealed interface ClientServicesUiState {
@@ -28,21 +24,16 @@ class HomeViewModel : ViewModel() {
     }
 
     private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = _uiState
 
     private val _servicesState = MutableStateFlow<ClientServicesUiState>(ClientServicesUiState.Idle)
     val servicesState: StateFlow<ClientServicesUiState> = _servicesState.asStateFlow()
 
     init {
-        loadInitialData()
-        refreshUserProfile()
-        loadClientServices()
-    }
-
-    private fun loadInitialData() {
-        val name = SessionManager.userName
+        // Step 1: Display name immediately from local session
+        val localName = SessionManager.userName
         _uiState.value = _uiState.value.copy(
-            userName = if (name.isNotBlank()) name else "Traveler",
+            userName = if (localName.isNotBlank()) localName else "Viajero",
             isLoading = false,
             destinations = listOf(
                 Destination(1, "Popayan", "Colombia", "Puente del Humilladero", 3),
@@ -57,25 +48,24 @@ class HomeViewModel : ViewModel() {
                 MapPin(4, "Bogota", 5, 0.2f, 0.8f)
             )
         )
-    }
 
-    private fun refreshUserProfile() {
+        // Step 2: Refresh from backend in background
+        val apiService = RetrofitClient.apiService
         viewModelScope.launch {
             try {
-                val profile = RetrofitClient.apiService.getMyProfile()
+                val profile = apiService.getMyProfile()
                 val fullName = profile.name.trim()
                 if (fullName.isNotBlank()) {
                     _uiState.value = _uiState.value.copy(userName = fullName)
                 }
-            } catch (e: Exception) {
-                // Silently fail and keep local session name
+            } catch (_: Exception) {
+                // Keep local name, don't show error
             }
         }
+
+        loadClientServices()
     }
 
-    /**
-     * Fetches the list of services requested by the current client.
-     */
     fun loadClientServices() {
         val clientId = SessionManager.userId
         if (clientId == -1L) {
@@ -85,8 +75,9 @@ class HomeViewModel : ViewModel() {
 
         viewModelScope.launch {
             _servicesState.value = ClientServicesUiState.Loading
-            try {
-                val response = RetrofitClient.apiService.getServicesByClient(clientId)
+            runCatching {
+                RetrofitClient.apiService.getServicesByClient(clientId)
+            }.onSuccess { response ->
                 if (response.isSuccessful) {
                     val services = response.body().orEmpty()
                         .sortedByDescending { it.serviceId }
@@ -96,9 +87,9 @@ class HomeViewModel : ViewModel() {
                         parseBackendError(response.code(), response.errorBody()?.string())
                     )
                 }
-            } catch (e: Exception) {
+            }.onFailure { ex ->
                 _servicesState.value = ClientServicesUiState.Error(
-                    e.localizedMessage ?: "Connection error. Please check your network."
+                    ex.localizedMessage ?: "Connection error"
                 )
             }
         }
@@ -112,10 +103,11 @@ class HomeViewModel : ViewModel() {
         if (backendMessage.isNotBlank()) return backendMessage
 
         return when (code) {
-            401 -> "Unauthorized session. Please log in again."
-            403 -> "Permission denied."
+            401 -> "Unauthorized. Please log in again."
+            403 -> "You do not have permission to view these services."
             404 -> "Services not found."
             else -> "Server error ($code). Please try again."
         }
     }
 }
+

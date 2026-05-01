@@ -29,10 +29,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
 import com.sismptm.client.domain.validation.RegisterValidator
-import com.sismptm.client.ui.components.ProfilePictureUpload
+import com.sismptm.client.ui.common.ProfilePictureUpload
 
 /**
  * Screen that handles the registration of a new user.
+ * @param onRegisterSuccess Callback triggered upon successful registration.
+ * @param onNavigateToLogin Callback to navigate back to the login screen.
  */
 @Composable
 fun RegisterScreen(
@@ -48,13 +50,13 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    
     val emailHasError = email.isNotBlank() && !RegisterValidator.isValidEmail(email)
     val passwordMismatch = confirmPassword.isNotBlank() && password != confirmPassword
 
     val uiState by viewModel.uiState.collectAsState()
     val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading
 
+    // Navigate to home when registration is successful
     LaunchedEffect(uiState) {
         if (uiState is RegisterViewModel.RegisterUiState.Success) {
             onRegisterSuccess()
@@ -158,7 +160,7 @@ fun RegisterScreen(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Toggle password visibility"
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
                     )
                 }
             },
@@ -191,7 +193,7 @@ fun RegisterScreen(
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                     Icon(
                         imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Toggle password visibility"
+                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
                     )
                 }
             },
@@ -242,6 +244,7 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Show error if backend call fails
         if (uiState is RegisterViewModel.RegisterUiState.Error) {
             val errorMsg = (uiState as RegisterViewModel.RegisterUiState.Error).message
             Card(
@@ -323,3 +326,5 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(20.dp))
     }
 }
+
+

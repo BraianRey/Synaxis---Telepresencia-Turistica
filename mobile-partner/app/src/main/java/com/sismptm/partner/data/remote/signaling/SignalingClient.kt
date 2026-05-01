@@ -16,6 +16,8 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
 
     private val client = OkHttpClient.Builder()
         .pingInterval(15, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
         .build()
 
     private var webSocket: WebSocket? = null
@@ -54,7 +56,10 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e(TAG, "WebSocket failure: ${t.message}")
-                mainHandler.post { listener.onError(t.message ?: "Connection error") }
+                mainHandler.post { 
+                    listener.onError(t.message ?: "Connection error")
+                    listener.onDisconnected()
+                }
                 attemptReconnect()
             }
 
@@ -86,6 +91,7 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
     fun disconnect() {
         isManualDisconnect = true
         webSocket?.close(1000, "Normal closure")
+        webSocket = null
     }
 
     private fun handleMessage(text: String) {

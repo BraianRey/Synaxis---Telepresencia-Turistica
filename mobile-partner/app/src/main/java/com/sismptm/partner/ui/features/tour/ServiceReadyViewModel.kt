@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for the Service Ready screen, handles the transition from acceptance to streaming.
+ * ViewModel for the Service Ready screen, handling the transition from acceptance to streaming.
  */
 class ServiceReadyViewModel(
     private val markServiceReadyUseCase: MarkServiceReadyUseCase = MarkServiceReadyUseCase(PartnerRepositoryImpl())
@@ -41,3 +41,4 @@ class ServiceReadyViewModel(
         }
     }
 }
+

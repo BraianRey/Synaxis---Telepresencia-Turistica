@@ -3,7 +3,6 @@ package com.sismptm.client.ui.features.auth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,10 +13,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.R
-import com.sismptm.client.ui.components.HikerIllustration
+import com.sismptm.client.ui.common.HikerIllustration
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 /**
  * Initial screen of the application that welcomes the user.
+ * @param onGetStarted Callback to navigate to the registration screen.
+ * @param onSignIn Callback to navigate to the login screen.
+ * @param onNavigateToStreaming Temporary callback to test the Streaming UI.
  */
 @Composable
 fun WelcomeScreen(
@@ -122,3 +125,5 @@ fun WelcomeScreen(
         }
     }
 }
+
+

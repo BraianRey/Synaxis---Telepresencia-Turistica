@@ -11,11 +11,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.sismptm.partner.ui.screens.*
+import com.sismptm.partner.ui.features.auth.LoginScreen
+import com.sismptm.partner.ui.features.auth.RegisterScreen
+import com.sismptm.partner.ui.features.home.HomeScreen
+import com.sismptm.partner.ui.features.streaming.StreamingScreen
+import com.sismptm.partner.ui.features.tour.RequestDetailScreen
+import com.sismptm.partner.ui.features.tour.ServiceDetailScreen
+import com.sismptm.partner.ui.features.tour.ServiceReadyScreen
 
 /**
  * Defines the navigation structure and routes for the Partner application.
- * Routes are pointing back to com.sismptm.partner.ui.screens as requested.
+ * Routes are pointing to the new features architecture.
  */
 sealed class Screen(val route: String) {
     object Login : Screen("login")

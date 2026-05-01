@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 /**
- * ViewModel responsible for handling the user login flow.
+ * ViewModel for the login screen.
+ * Updated to use the new core infrastructure.
  */
 class LoginViewModel : ViewModel() {
 
@@ -28,7 +29,7 @@ class LoginViewModel : ViewModel() {
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     /**
-     * Attempts to log in the user with the provided credentials.
+     * Attempts to log in with the provided email and password.
      */
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -39,12 +40,14 @@ class LoginViewModel : ViewModel() {
                 )
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
+                        // Using the new unified SessionManager
                         SessionManager.saveSession(
                             token = loginResponse.accessToken,
                             id = loginResponse.id,
                             name = loginResponse.name,
                             email = loginResponse.email,
-                            role = loginResponse.role
+                            role = loginResponse.role,
+                            lang = loginResponse.language
                         )
                     }
                     _uiState.value = LoginUiState.Success
@@ -59,9 +62,6 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Resets the UI state to Idle.
-     */
     fun resetState() {
         _uiState.value = LoginUiState.Idle
     }
@@ -81,10 +81,11 @@ class LoginViewModel : ViewModel() {
             exception.message?.contains("failed to connect", ignoreCase = true) == true ->
                 "Could not connect to the server at $baseUrl."
             exception.message?.contains("timeout", ignoreCase = true) == true ->
-                "Connection timed out. Please check your internet."
+                "Connection timed out. Please check your network."
             exception.message?.contains("refused", ignoreCase = true) == true ->
                 "Connection refused. Ensure the backend server is running."
-            else -> "Error: ${exception.localizedMessage ?: "An unexpected error occurred."}"
+            else -> "Error: ${exception.localizedMessage ?: "Unknown error"}"
         }
     }
 }
+

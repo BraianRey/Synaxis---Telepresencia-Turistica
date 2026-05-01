@@ -11,16 +11,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.sismptm.client.ui.screens.LoginScreen
-import com.sismptm.client.ui.screens.PartnerSearchScreen
-import com.sismptm.client.ui.screens.RegisterScreen
-import com.sismptm.client.ui.screens.RequestScreen
-import com.sismptm.client.ui.screens.ServiceDetailScreen
-import com.sismptm.client.ui.screens.ServiceWaitingScreen
-import com.sismptm.client.ui.screens.StreamingScreen
-import com.sismptm.client.ui.screens.WelcomeScreen
-import com.sismptm.client.ui.screens.MapServiceScreen
-import com.sismptm.client.ui.screens.HomeScreen
+import com.sismptm.client.ui.features.auth.LoginScreen
+import com.sismptm.client.ui.features.map.PartnerSearchScreen
+import com.sismptm.client.ui.features.auth.RegisterScreen
+import com.sismptm.client.ui.features.tour.RequestScreen
+import com.sismptm.client.ui.features.tour.ServiceDetailScreen
+import com.sismptm.client.ui.features.tour.ServiceWaitingScreen
+import com.sismptm.client.ui.features.streaming.StreamingScreen
+import com.sismptm.client.ui.features.auth.WelcomeScreen
+import com.sismptm.client.ui.features.map.MapServiceScreen
+import com.sismptm.client.ui.features.home.HomeScreen
 
 /**
  * Sealed class representing all navigation routes in the mobile-client application.
@@ -198,3 +198,4 @@ fun NavGraph() {
         }
     }
 }
+

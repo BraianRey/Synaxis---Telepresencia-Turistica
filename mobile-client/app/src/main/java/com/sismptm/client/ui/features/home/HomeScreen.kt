@@ -11,7 +11,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,24 +33,23 @@ import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
+import com.sismptm.client.ui.features.tour.ServiceViewModel
 
-/**
- * Main dashboard for the authenticated user.
- */
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
     onLogout: () -> Unit,
     onNavigateToMapService: () -> Unit,
-    homeViewModel: HomeViewModel = viewModel()
+    homeViewModel: HomeViewModel = viewModel(),
+    serviceViewModel: ServiceViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        bottomBar = {} // Bottom navigation can be added here later
+        bottomBar = {}
     ) { padding ->
         Box(
             modifier = Modifier
@@ -125,7 +127,7 @@ private fun HomeHeader(userName: String) {
                 text = stringResource(R.string.home_greeting, userName),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                color = Color(0xFFFFFFFF)
             )
             Text(
                 text = stringResource(R.string.home_subtitle),
@@ -143,7 +145,7 @@ private fun HomeHeader(userName: String) {
         ) {
             Icon(
                 imageVector = Icons.Outlined.Person,
-                contentDescription = "User profile",
+                contentDescription = "Avatar",
                 tint = Color(0xFF666666),
                 modifier = Modifier.size(28.dp)
             )
@@ -170,14 +172,14 @@ private fun SearchBar() {
         leadingIcon = {
             Icon(
                 imageVector = Icons.Outlined.Search,
-                contentDescription = "Search icon",
+                contentDescription = "Search",
                 tint = Color(0xFF888888)
             )
         },
         trailingIcon = {
             Icon(
                 imageVector = Icons.Outlined.Mic,
-                contentDescription = "Voice search",
+                contentDescription = "Microphone",
                 tint = Color(0xFF888888)
             )
         },
@@ -188,9 +190,52 @@ private fun SearchBar() {
             unfocusedContainerColor = Color(0xFF2C2C2C),
             focusedContainerColor = Color(0xFF333333),
             unfocusedTextColor = Color(0xFFDDDDDD),
-            focusedTextColor = Color.White
+            focusedTextColor = Color(0xFFFFFFFF)
         )
     )
+}
+
+@Composable
+private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color(0x4400CC44))
+            )
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF1A1A1A))
+            )
+            Icon(
+                imageVector = Icons.Outlined.Videocam,
+                contentDescription = city,
+                tint = Color(0xFF00CC44),
+                modifier = Modifier.size(16.dp)
+            )
+        }
+        Card(
+            modifier = Modifier
+                .padding(top = 4.dp)
+                .wrapContentSize(),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xCC000000))
+        ) {
+            Text(
+                text = stringResource(R.string.home_city_guides, city, guides),
+                fontSize = 10.sp,
+                color = Color.White,
+                modifier = Modifier.padding(6.dp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -205,7 +250,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.2.sp,
-            color = Color.White
+            color = Color(0xFFFFFFFF)
         )
         Spacer(modifier = Modifier.height(12.dp))
         LazyRow(
@@ -251,7 +296,7 @@ private fun DestinationCard(destination: Destination) {
                     text = destination.city,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color(0xFFFFFFFF)
                 )
                 Text(
                     text = destination.country,
@@ -268,7 +313,7 @@ private fun DestinationCard(destination: Destination) {
                     text = destination.placeName,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color(0xFFFFFFFF)
                 )
                 Text(
                     text = stringResource(R.string.home_active_partners, destination.activePartners),
@@ -444,7 +489,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
                 text = stringResource(R.string.home_profile),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color(0xFFFFFFFF)
             )
             Spacer(Modifier.height(32.dp))
             OutlinedButton(
@@ -473,3 +518,4 @@ private fun ProfileTab(onLogout: () -> Unit) {
         }
     }
 }
+

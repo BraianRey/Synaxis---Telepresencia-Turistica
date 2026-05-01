@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
- * ViewModel for the client registration flow.
+ * ViewModel for the client registration screen.
+ * Holds UI state and calls the backend endpoint.
  */
 class RegisterViewModel : ViewModel() {
 
@@ -26,9 +27,6 @@ class RegisterViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    /**
-     * Registers a new user with the provided information.
-     */
     fun register(
         name: String,
         email: String,
@@ -63,34 +61,32 @@ class RegisterViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Resets the UI state to Idle.
-     */
     fun resetState() {
         _uiState.value = RegisterUiState.Idle
     }
 
     private fun parseErrorMessage(code: Int, body: String?): String = when (code) {
         409  -> "Email already registered."
-        400  -> "Invalid data. Please check all fields."
-        else -> "Server error ($code). Please try again."
+        400  -> body?.takeIf { it.isNotBlank() } ?: "Invalid data. Check all fields."
+        else -> body?.takeIf { it.isNotBlank() } ?: "Server error ($code). Please try again."
     }
 
     private fun parseErrorMessage(exception: Exception): String {
-        val baseUrl = NetworkConfig.BASE_URL
+        val backendUrl = NetworkConfig.BASE_URL
         return when {
             exception.message?.contains("failed to connect", ignoreCase = true) == true -> {
-                "Could not connect to the server at $baseUrl."
+                "No se pudo conectar al backend en $backendUrl"
             }
             exception.message?.contains("timeout", ignoreCase = true) == true -> {
-                "Connection timed out. Please check your internet."
+                "Tiempo de conexión agotado hacia $backendUrl. Verifica tu red."
             }
-            exception.message?.contains("refused", ignoreCase = true) == true -> {
-                "Connection refused. Ensure the backend server is running."
+            exception.message?.contains("Connection refused", ignoreCase = true) == true -> {
+                "El backend rechazó la conexión en $backendUrl. ¿Está corriendo?"
             }
             else -> {
-                "Error: ${exception.localizedMessage ?: "An unexpected error occurred."}"
+                "Error: ${exception.localizedMessage ?: "Error desconocido"}"
             }
         }
     }
 }
+
