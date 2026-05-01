@@ -20,8 +20,18 @@ class HomeViewModel : ViewModel() {
         data class Error(val message: String) : RequestsUiState
     }
 
+    sealed interface PartnerServicesUiState {
+        object Idle : PartnerServicesUiState
+        object Loading : PartnerServicesUiState
+        data class Success(val services: List<ServiceResponse>) : PartnerServicesUiState
+        data class Error(val message: String) : PartnerServicesUiState
+    }
+
     private val _requestsState = MutableStateFlow<RequestsUiState>(RequestsUiState.Idle)
     val requestsState: StateFlow<RequestsUiState> = _requestsState.asStateFlow()
+
+    private val _partnerServicesState = MutableStateFlow<PartnerServicesUiState>(PartnerServicesUiState.Idle)
+    val partnerServicesState: StateFlow<PartnerServicesUiState> = _partnerServicesState.asStateFlow()
 
     private val _acceptedTour = MutableStateFlow<ServiceResponse?>(null)
     val acceptedTour: StateFlow<ServiceResponse?> = _acceptedTour.asStateFlow()
@@ -81,6 +91,35 @@ class HomeViewModel : ViewModel() {
                 _acceptErrorMessage.value = e.localizedMessage ?: "Connection error"
             } finally {
                 _acceptingServiceId.value = null
+            }
+        }
+    }
+
+    fun loadPartnerServices() {
+        val partnerId = SessionManager.partnerId
+        if (partnerId == 0L) {
+            _partnerServicesState.value = PartnerServicesUiState.Error("Session expired. Please log in again.")
+            return
+        }
+
+        viewModelScope.launch {
+            _partnerServicesState.value = PartnerServicesUiState.Loading
+            runCatching {
+                RetrofitClient.apiService.getServicesByPartner(partnerId)
+            }.onSuccess { response ->
+                if (response.isSuccessful) {
+                    val services = response.body().orEmpty()
+                        .sortedByDescending { it.serviceId }
+                    _partnerServicesState.value = PartnerServicesUiState.Success(services)
+                } else {
+                    _partnerServicesState.value = PartnerServicesUiState.Error(
+                        parseBackendError(response.code(), response.errorBody()?.string())
+                    )
+                }
+            }.onFailure { ex ->
+                _partnerServicesState.value = PartnerServicesUiState.Error(
+                    ex.localizedMessage ?: "Connection error"
+                )
             }
         }
     }

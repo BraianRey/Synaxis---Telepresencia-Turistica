@@ -90,6 +90,22 @@
     <string name="accept">Accept</string>
     <string name="ok">OK</string>
     <string name="debug_streaming">Debug Streaming</string>
+    <string name="error_accept_request">Could not accept request</string>
+    <string name="tab_requests">Requests</string>
+    <string name="tab_my_services">My Services</string>
+    <string name="status_offline_title">You are offline</string>
+    <string name="status_offline_explanation">Go online to receive incoming tour requests.</string>
+    <string name="retry">Retry</string>
+    <string name="waiting_for_requests">Waiting for requests...</string>
+    <string name="services_active">Active services</string>
+    <string name="services_no_active">No active services</string>
+    <string name="services_history">Service history</string>
+    <string name="services_no_history">No services in history</string>
+    <string name="services_idle">Service list is not loaded yet.</string>
+    <string name="label_client">Client</string>
+    <string name="label_location">Location</string>
+    <string name="label_hours">Hours</string>
+    <string name="label_rate">Rate</string>
 
     <!-- Tour detail dialog -->
     <string name="tour_accepted_title">Tour Accepted</string>
@@ -104,6 +120,7 @@
     <string name="tour_detail_status">Status: %1$s</string>
 
     <!-- Streaming Screen -->
+    <string name="streaming_title">Live Stream</string>
     <string name="camera_mic_permission_required">Camera and Microphone Required</string>
     <string name="camera_mic_permission_explanation">This app needs camera and microphone access to
         start the streaming session.</string>

@@ -49,10 +49,73 @@
     <!-- Actions -->
     <string name="send_location">Enviar ubicación actual</string>
 
+    <!-- New Home Screen Strings -->
+    <string name="greeting">¡Hola, %s!</string>
+    <string name="connection_status">ESTADO DE CONEXIÓN</string>
+    <string name="transmit_now">Transmitir ahora</string>
+    <string name="active">Activo</string>
+    <string name="inactive">Inactivo</string>
+    <string name="daily_summary">RESUMEN DE HOY</string>
+    <string name="average_rating">Tu calificación promedio</string>
+    <string name="rating_placeholder">-- / 5.0</string>
+    <string name="reviews_placeholder">-- reseñas recibidas hoy</string>
+    <string name="average_rating_value">%1$.1f / 5.0</string>
+    <string name="reviews_received_today">%1$d reseñas recibidas hoy</string>
+    <string name="daily_earnings">Ganancias del día</string>
+    <string name="daily_earnings_amount">$%1$.2f</string>
+    <string name="earnings_placeholder">--</string>
+    <string name="pending_requests">SOLICITUDES PENDIENTES EN TU CIUDAD</string>
+    <string name="no_pending_requests">No hay solicitudes pendientes</string>
+    <string name="reject">RECHAZAR</string>
+    <string name="button_accept">ACEPTAR</string>
+    <string name="home">Inicio</string>
+    <string name="history">Historial</string>
+    <string name="profile">Perfil</string>
+    <string name="permission_required">Permiso de ubicación requerido</string>
+    <string name="default_partner_name">Socio</string>
+    <string name="permission_description">La aplicación necesita permiso de ubicación para transmitir tu estado y recibir solicitudes.</string>
+    <string name="request_permission">Solicitar permiso</string>
+    <string name="estimated_duration">Duración estimada: %d min</string>
+    <string name="estimated_payment">Pago estimado: $%.2f</string>
+    <string name="error_load_requests">No se pudieron cargar las solicitudes pendientes</string>
+    <string name="error_update_availability">No se pudo actualizar la disponibilidad</string>
+    <string name="login_error_connection">Error de conexión. Inténtalo de nuevo.</string>
+    <string name="login_error_invalid_credentials">Credenciales inválidas.</string>
+    <string name="login_error_server">Error del servidor. Inténtalo de nuevo.</string>
+    <string name="ok">Aceptar</string>
+    <string name="error_accept_request">No se pudo aceptar la solicitud</string>
+    <string name="tab_requests">Solicitudes</string>
+    <string name="tab_my_services">Mis servicios</string>
+    <string name="status_offline_title">Estás desconectado</string>
+    <string name="status_offline_explanation">Conéctate para recibir solicitudes de tours.</string>
+    <string name="retry">Reintentar</string>
+    <string name="waiting_for_requests">Esperando solicitudes...</string>
+    <string name="services_active">Servicios activos</string>
+    <string name="services_no_active">No hay servicios activos</string>
+    <string name="services_history">Historial de servicios</string>
+    <string name="services_no_history">No hay servicios en el historial</string>
+    <string name="services_idle">La lista de servicios aún no se ha cargado.</string>
+    <string name="label_client">Cliente</string>
+    <string name="label_location">Ubicación</string>
+    <string name="label_hours">Horas</string>
+    <string name="label_rate">Tarifa</string>
+
+    <!-- Tour detail dialog -->
+    <string name="tour_accepted_title">Tour aceptado</string>
+    <string name="tour_accepted_message">Has aceptado la solicitud de tour.</string>
+    <string name="tour_detail_service_id">ID del servicio: %1$s</string>
+    <string name="tour_detail_client">Cliente: %1$s</string>
+    <string name="tour_detail_area">Área: %1$s</string>
+    <string name="tour_detail_meeting_point">Punto de encuentro: %1$s</string>
+    <string name="tour_detail_duration">Duración: %1$s min</string>
+    <string name="tour_detail_hourly_rate">Tarifa: $%1$s COP/h</string>
+    <string name="tour_detail_requested_at">Solicitado en: %1$s</string>
+    <string name="tour_detail_status">Estado: %1$s</string>
+
     <!-- Streaming Screen -->
     <string name="streaming_title">Transmisión en Vivo</string>
     <string name="debug_streaming">Probar Streaming</string>
-    <string name="connection_quality">Calidad de Conexión</string>
+    <string name="connection_quality">Calidad de Conexión: %1$s</string>
     <string name="instruction_up">ADELANTE</string>
     <string name="instruction_down">RETROCEDE</string>
     <string name="instruction_left">IZQUIERDA</string>

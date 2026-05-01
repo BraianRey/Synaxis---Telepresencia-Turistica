@@ -2,11 +2,18 @@ package com.synexis.management_service.config;
 
 import com.synexis.management_service.dto.request.RegisterClientRequest;
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
+import com.synexis.management_service.entity.Client;
+import com.synexis.management_service.entity.Partner;
+import com.synexis.management_service.entity.ServiceEntity;
+import com.synexis.management_service.entity.ServiceStatus;
 import com.synexis.management_service.entity.UserLanguage;
 import com.synexis.management_service.repository.ClientRepository;
 import com.synexis.management_service.repository.PartnerRepository;
+import com.synexis.management_service.repository.ServiceRepository;
 import com.synexis.management_service.service.ClientService;
 import com.synexis.management_service.service.PartnerService;
+
+import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,15 +35,18 @@ public class DataInitializer implements ApplicationRunner {
     private final PartnerService partnerService;
     private final ClientRepository clientRepository;
     private final PartnerRepository partnerRepository;
+    private final ServiceRepository serviceRepository;
 
     public DataInitializer(ClientService clientService,
             PartnerService partnerService,
             ClientRepository clientRepository,
-            PartnerRepository partnerRepository) {
+            PartnerRepository partnerRepository,
+            ServiceRepository serviceRepository) {
         this.clientService = clientService;
         this.partnerService = partnerService;
         this.clientRepository = clientRepository;
         this.partnerRepository = partnerRepository;
+        this.serviceRepository = serviceRepository;
     }
 
     @Override
@@ -44,6 +54,7 @@ public class DataInitializer implements ApplicationRunner {
         log.info("\n\n=== DataInitializer: starting seed ===\n\n");
         seedClients();
         seedPartners();
+        seedServices();
         log.info("\n\n=== DataInitializer: seed complete ===\n\n");
     }
 
@@ -97,6 +108,84 @@ public class DataInitializer implements ApplicationRunner {
             log.info("Partner seeded: {}", email);
         } catch (Exception e) {
             log.warn("Could not seed partner {}: {}", email, e.getMessage());
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // SERVICES
+    // ------------------------------------------------------------------
+    private void seedServices() {
+        // Only seed if no services exist yet
+        if (serviceRepository.count() > 0) {
+            log.info("Services already exist, skipping seed.");
+            return;
+        }
+
+        Client ana = clientRepository.findByEmailIgnoreCase("ana.seed@gmail.com").orElse(null);
+        Client luis = clientRepository.findByEmailIgnoreCase("luis.seed@gmail.com").orElse(null);
+        Client john = clientRepository.findByEmailIgnoreCase("john.seed@gmail.com").orElse(null);
+
+        Partner carlos = partnerRepository.findByEmailIgnoreCase("carlos.seed@gmail.com").orElse(null);
+        Partner laura = partnerRepository.findByEmailIgnoreCase("laura.seed@gmail.com").orElse(null);
+
+        if (ana == null || luis == null || john == null || carlos == null || laura == null) {
+            log.warn("Seed users not found, skipping service seed.");
+            return;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // COMPLETED — visible in history for both client and partner
+        seedService(ana, carlos, "Puente del Humilladero, Popayán",
+                2, ServiceStatus.COMPLETED,
+                3.4264, -76.5102,
+                now.minusDays(10), now.minusDays(10).plusHours(1),
+                now.minusDays(10).plusHours(1), now.minusDays(10).plusHours(3));
+
+        seedService(luis, carlos, "Cristo Rey, Cali",
+                3, ServiceStatus.COMPLETED,
+                6.2105, -75.5677,
+                now.minusDays(5), now.minusDays(5).plusHours(1),
+                now.minusDays(5).plusHours(2), now.minusDays(5).plusHours(5));
+
+        // CANCELLED — also visible in history
+        seedService(john, laura, "Comuna 13, Medellín",
+                1, ServiceStatus.CANCELLED,
+                6.2518, -75.5636,
+                now.minusDays(3), null, null, null);
+
+        // ACCEPTED — visible in active for both client and partner
+        seedService(ana, laura, "La Candelaria, Bogotá",
+                4, ServiceStatus.ACCEPTED,
+                4.5981, -74.0758,
+                now.minusHours(2), now.minusHours(1), null, null);
+
+        log.info("Services seeded.");
+    }
+
+    private void seedService(Client client, Partner partner,
+            String locationDescription, int agreedHours,
+            ServiceStatus status,
+            double latitude, double longitude,
+            LocalDateTime requestedAt, LocalDateTime acceptedAt,
+            LocalDateTime startedAt, LocalDateTime endedAt) {
+        try {
+            ServiceEntity service = new ServiceEntity();
+            service.setClient(client);
+            service.setPartner(partner);
+            service.setStartLocationDescription(locationDescription);
+            service.setAgreedHours(agreedHours);
+            service.setStatus(status);
+            service.setLatitude(latitude);
+            service.setLongitude(longitude);
+            service.setRequestedAt(requestedAt);
+            service.setAcceptedAt(acceptedAt);
+            service.setStartedAt(startedAt);
+            service.setEndedAt(endedAt);
+            serviceRepository.save(service);
+            log.info("Service seeded: {} → {} [{}]", client.getId(), partner.getId(), status);
+        } catch (Exception e) {
+            log.warn("Could not seed service: {}", e.getMessage());
         }
     }
 }
