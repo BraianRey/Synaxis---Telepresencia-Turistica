@@ -7,13 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.sismptm.client.core.session.SessionManager
+import com.sismptm.client.core.utils.LanguageContext
 import com.sismptm.client.ui.navigation.NavGraph
 import com.sismptm.client.ui.theme.SISPTMClientTheme
-import com.sismptm.client.utils.LanguageContext
 
 /**
  * Main activity of the application.
@@ -27,8 +27,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val userLanguage by remember { mutableStateOf("es") }
-
+            val userLanguage by SessionManager.languageFlow.collectAsState()
 
             LanguageContext(languageCode = userLanguage) {
                 SISPTMClientTheme {
@@ -38,7 +37,6 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavGraph()
                     }
-
                 }
             }
         }

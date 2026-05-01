@@ -1,0 +1,99 @@
+﻿> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+.\gradlew : e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/scree
+ns/StreamingViewModel.kt:18:36 Unresolved reference 'SignalingClientListener'.
+En línea: 1 Carácter: 1
++ .\gradlew compileDebugKotlin > compile_errors.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (e: file:///D:/S...lientListener'.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:21:34 Unresolved reference 'SignalingClient'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:22:32 Unresolved reference 'WebRTCManager'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:41:27 Unresolved reference 'SignalingClient'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:43:25 Unresolved reference 'WebRTCManager'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:44:23 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:47:11 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:47:17 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:48:13 Unresolved reference 'createPeerConnection'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:49:13 Unresolved reference 'setOnIceCandidateCallback'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:49:41 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:50:34 Unresolved reference 'sendIceCandidate'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:51:37 Unresolved reference 'sdp'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:52:40 Unresolved reference 'sdpMid'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:53:47 Unresolved reference 'sdpMLineIndex'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:57:13 Unresolved reference 'setOnConnectionStateChangeListener'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:57:50 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:70:26 Unresolved reference 'connect'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:101:24 Unresolved reference 'createPeerConnection'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:102:26 Unresolved reference 'sendJoin'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:109:26 Unresolved reference 'sendCommand'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:112:5 'onConnectionOpened' overrides nothing.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:114:26 Unresolved reference 'sendJoin'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:117:5 'onOfferReceived' overrides nothing.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:118:24 Unresolved reference 'handleOfferAndAnswer'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:118:52 Cannot infer type for this parameter. Specify it explicitly.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:119:30 Unresolved reference 'sendSdp'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:123:5 'onAnswerReceived' overrides nothing.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:125:5 'onIceCandidateReceived' overrides nothing.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:126:24 Unresolved reference 'addIceCandidate'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:133:24 Unresolved reference 'close'.
+e: file:///D:/Synaxis---Telepresencia-Turistica/mobile-client/app/src/main/java/com/sismptm/client/ui/screens/Streaming
+ViewModel.kt:134:26 Unresolved reference 'close'.
+
+> Task :app:compileDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing 
+org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4s
+7 actionable tasks: 1 executed, 6 up-to-date

@@ -11,22 +11,35 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.sismptm.partner.ui.screens.*
+import com.sismptm.partner.ui.features.auth.LoginScreen
+import com.sismptm.partner.ui.features.auth.RegisterScreen
+import com.sismptm.partner.ui.features.home.HomeScreen
+import com.sismptm.partner.ui.features.streaming.StreamingScreen
+import com.sismptm.partner.ui.features.tour.RequestDetailScreen
+import com.sismptm.partner.ui.features.tour.ServiceDetailScreen
+import com.sismptm.partner.ui.features.tour.ServiceReadyScreen
 
+/**
+ * Defines the navigation structure and routes for the Partner application.
+ * Routes are pointing to the new features architecture.
+ */
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    object SolicitudDetail : Screen("solicitud_detail")
-    object ServicioDetail : Screen("servicio_detail")
     object ServiceReady : Screen("service_ready/{serviceId}") {
         fun createRoute(serviceId: Long) = "service_ready/$serviceId"
     }
     object Streaming : Screen("streaming/{serviceId}") {
         fun createRoute(serviceId: Long) = "streaming/$serviceId"
     }
+    object RequestDetail : Screen("request_detail")
+    object ServiceDetail : Screen("service_detail")
 }
 
+/**
+ * Main navigation graph implementation using Jetpack Compose Navigation.
+ */
 @Composable
 fun PartnerNavGraph() {
     val navController = rememberNavController()
@@ -50,7 +63,6 @@ fun PartnerNavGraph() {
                     navController.navigate(Screen.Register.route)
                 },
                 onNavigateToStreaming = {
-                    // Default fallback or test route
                     navController.navigate(Screen.Streaming.createRoute(0L))
                 }
             )
@@ -107,15 +119,15 @@ fun PartnerNavGraph() {
             )
         }
 
-        composable(Screen.SolicitudDetail.route) {
+        composable(Screen.RequestDetail.route) {
             RequestDetailScreen(
-                onAccept = { navController.navigate(Screen.ServicioDetail.route) },
+                onAccept = { navController.navigate(Screen.ServiceDetail.route) },
                 onReject = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
         }
 
-        composable(Screen.ServicioDetail.route) {
+        composable(Screen.ServiceDetail.route) {
             ServiceDetailScreen(
                 onComplete = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
