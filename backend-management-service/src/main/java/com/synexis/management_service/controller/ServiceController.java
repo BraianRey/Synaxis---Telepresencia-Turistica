@@ -3,10 +3,12 @@ package com.synexis.management_service.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 import com.synexis.management_service.dto.request.RegisterServiceRequest;
+import com.synexis.management_service.dto.response.PaymentSummaryResponse;
 import com.synexis.management_service.dto.response.ServiceResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.Partner;
@@ -179,6 +182,18 @@ public class ServiceController {
                 .orElseGet(() -> partnerRepository.findByKeycloakId(keycloakId)
                         .map(p -> serviceService.getServiceForPartner(serviceId, p.getId()))
                         .orElseThrow(() -> new ResourceNotFoundException("User not found for current user")));
+    }
+
+    @GetMapping("/{serviceId}/payment")
+    @PreAuthorize("hasAnyRole('CLIENT', 'PARTNER')")
+    public ResponseEntity<PaymentSummaryResponse> getPaymentSummary(@PathVariable Long serviceId) {
+        return ResponseEntity.ok(serviceService.getPaymentSummary(serviceId));
+    }
+
+    @PatchMapping("/{serviceId}/payment/confirm")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<PaymentSummaryResponse> confirmPayment(@PathVariable Long serviceId) {
+        return ResponseEntity.ok(serviceService.confirmPayment(serviceId));
     }
 
     /**
