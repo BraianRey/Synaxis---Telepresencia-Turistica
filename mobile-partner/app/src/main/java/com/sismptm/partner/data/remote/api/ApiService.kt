@@ -34,4 +34,10 @@ interface ApiService {
 
     @POST("api/services/{serviceId}/ready")
     suspend fun markServiceAsReady(@Path("serviceId") serviceId: Long): Response<Unit>
+
+    @POST("api/services/{serviceId}/complete")
+    suspend fun completeService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    @GET("api/services/{serviceId}")
+    suspend fun getServiceById(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 }

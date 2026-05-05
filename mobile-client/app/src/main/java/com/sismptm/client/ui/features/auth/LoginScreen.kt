@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
+import com.sismptm.client.ui.theme.*
 
 @Composable
 fun LoginScreen(
@@ -76,7 +77,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Background)
             .verticalScroll(rememberScrollState())
             .padding(vertical = 48.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -93,20 +94,20 @@ fun LoginScreen(
                 text = stringResource(R.string.login_title),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.welcome_back),
                 fontSize = 14.sp,
-                color = Color(0xFF9E9E9E)
+                color = TextTertiary
             )
         }
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text(stringResource(R.string.email_placeholder)) },
+            placeholder = { Text(stringResource(R.string.email_placeholder), color = TextTertiary) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -120,8 +121,12 @@ fun LoginScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = PrimaryAccent,
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = CardBackground,
+                unfocusedContainerColor = CardBackground,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             )
         )
 
@@ -130,13 +135,14 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = { Text(stringResource(R.string.password_placeholder)) },
+            placeholder = { Text(stringResource(R.string.password_placeholder), color = TextTertiary) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        tint = TextTertiary
                     )
                 }
             },
@@ -158,8 +164,12 @@ fun LoginScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = PrimaryAccent,
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = CardBackground,
+                unfocusedContainerColor = CardBackground,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             )
         )
 
@@ -168,14 +178,14 @@ fun LoginScreen(
         if (uiState is LoginViewModel.LoginUiState.Error) {
             val errorMsg = (uiState as LoginViewModel.LoginUiState.Error).message
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                colors = CardDefaults.cardColors(containerColor = Error.copy(alpha = 0.1f)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
             ) {
                 Text(
                     text = errorMsg,
-                    color = Color(0xFFC62828),
+                    color = Error,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(12.dp)
                 )
@@ -191,15 +201,15 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .height(54.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1E88E5),
-                disabledContainerColor = Color(0xFFBBDEFB)
+                containerColor = PrimaryAccent,
+                disabledContainerColor = PrimaryAccent.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = Color.White,
+                    color = TextPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -207,7 +217,7 @@ fun LoginScreen(
                     text = stringResource(R.string.login_button),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = TextPrimary
                 )
             }
         }
@@ -221,16 +231,15 @@ fun LoginScreen(
             Text(
                 text = stringResource(R.string.new_here),
                 fontSize = 14.sp,
-                color = Color(0xFF9E9E9E)
+                color = TextTertiary
             )
             Text(
                 text = stringResource(R.string.create_account),
                 fontSize = 14.sp,
-                color = Color(0xFF1E88E5),
+                color = PrimaryAccent,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable(onClick = onNavigateToRegister)
             )
         }
     }
 }
-

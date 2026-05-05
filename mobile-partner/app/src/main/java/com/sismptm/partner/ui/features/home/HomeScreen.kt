@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.sismptm.partner.ui.theme.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -78,14 +79,14 @@ fun HomeScreen(
 @Composable
 private fun HomePermissionDeniedScreen(onRetry: () -> Unit) {
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF12151B)).padding(24.dp),
+        modifier = Modifier.fillMaxSize().background(Background).padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(text = stringResource(R.string.gps_permission_required), style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
-            Text(text = stringResource(R.string.gps_permission_explanation), style = MaterialTheme.typography.bodyLarge, color = Color(0xFFB9C0CB), textAlign = TextAlign.Center)
+            Text(text = stringResource(R.string.gps_permission_required), style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+            Text(text = stringResource(R.string.gps_permission_explanation), style = MaterialTheme.typography.bodyLarge, color = TextTertiary, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))) {
+            Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)) {
                 Text(stringResource(R.string.grant_permissions))
             }
         }
@@ -146,14 +147,14 @@ private fun HomeContent(
             Button(
                 onClick = { SessionManager.clearSession(); onLogout() },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2430))
+                colors = ButtonDefaults.buttonColors(containerColor = CardBackground)
             ) {
-                Text(stringResource(R.string.logout), color = Color.White)
+                Text(stringResource(R.string.logout), color = TextPrimary)
             }
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Color(0xFF12151B))) {
-            TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFF1E2430), contentColor = Color.White) {
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
+            TabRow(selectedTabIndex = selectedTab, containerColor = CardBackground, contentColor = TextPrimary) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.tab_requests)) })
                 Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.tab_my_services)) })
             }
@@ -188,7 +189,7 @@ private fun RequestsTabContent(
                 onClick = { LocationManager.requestSingleUpdate() },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryAccent)
             ) {
                 Text(text = stringResource(R.string.send_location))
             }
@@ -203,18 +204,18 @@ private fun RequestsTabContent(
             when (requestsState) {
                 is HomeViewModel.RequestsUiState.Loading -> item {
                     Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color(0xFF2563EB))
+                        CircularProgressIndicator(color = PrimaryAccent)
                     }
                 }
                 is HomeViewModel.RequestsUiState.Success -> {
                     if (requestsState.requests.isEmpty()) {
-                        item { Text(stringResource(R.string.no_requests_yet), color = Color(0xFFB9C0CB)) }
+                        item { Text(stringResource(R.string.no_requests_yet), color = TextTertiary) }
                     } else {
                         items(requestsState.requests, key = { it.serviceId }) { service ->
                             val location = service.startLocationDescription?.ifBlank { "Unspecified" } ?: "Unspecified"
                             val duration = "${service.agreedHours}h"
                             val price = "${"%.0f".format(service.hourlyRate)} COP/h"
-                            val clientName = service.clientName.ifBlank { "Client #${service.clientId}" }
+                            val clientName = service.clientName?.ifBlank { "Client #${service.clientId}" } ?: "Client #${service.clientId}"
 
                             RequestCard(
                                 clientName = clientName,
@@ -229,7 +230,7 @@ private fun RequestsTabContent(
                         }
                     }
                 }
-                is HomeViewModel.RequestsUiState.Error -> item { Text(requestsState.message, color = Color(0xFFEF4444)) }
+                is HomeViewModel.RequestsUiState.Error -> item { Text(requestsState.message, color = Error) }
                 else -> {}
             }
         }
@@ -239,7 +240,7 @@ private fun RequestsTabContent(
 @Composable
 private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState) {
     when (partnerServicesState) {
-        HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = Color(0xFF2563EB)) }
+        HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryAccent) }
         is HomeViewModel.PartnerServicesUiState.Success -> {
             val activeStatuses = setOf("ACCEPTED", "STARTED")
             val activeServices = partnerServicesState.services.filter { it.status.uppercase() in activeStatuses }
@@ -262,26 +263,26 @@ private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServ
                 }
             }
         }
-        is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Color(0xFFEF4444)) }
+        is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Error) }
         else -> {}
     }
 }
 
 @Composable
 private fun SectionHeader(text: String) {
-    Text(text = text, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp))
+    Text(text = text, style = MaterialTheme.typography.titleMedium, color = TextPrimary, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp))
 }
 
 @Composable
 private fun ServiceHistoryCard(service: ServiceResponse) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Service #${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Service #${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold)
                 ServiceStatusBadge(service.status)
             }
-            Text("${stringResource(R.string.label_client)}: ${service.clientName.ifBlank { "Client #${service.clientId}" }}", color = Color(0xFFB9C0CB))
-            Text("${stringResource(R.string.label_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h", color = Color(0xFFB9C0CB))
+            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { "Client #${service.clientId}" } ?: "Client #${service.clientId}"}", color = TextTertiary)
+            Text("${stringResource(R.string.label_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h", color = TextTertiary)
         }
     }
 }
@@ -308,36 +309,36 @@ private fun HeaderSection(partnerName: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = buildAnnotatedString {
-                pushStyle(SpanStyle(color = Color(0xFF9DA5B3), fontSize = 16.sp))
+                pushStyle(SpanStyle(color = TextTertiary, fontSize = 16.sp))
                 append(stringResource(R.string.welcome_back) + "\n")
                 pop()
-                pushStyle(SpanStyle(color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold))
+                pushStyle(SpanStyle(color = TextPrimary, fontSize = 24.sp, fontWeight = FontWeight.Bold))
                 append(partnerName)
                 pop()
             },
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFF2563EB)), contentAlignment = Alignment.Center) {
-            Text(partnerName.take(1).uppercase(), color = Color.White, fontWeight = FontWeight.Bold)
+        Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(PrimaryAccent), contentAlignment = Alignment.Center) {
+            Text(partnerName.take(1).uppercase(), color = TextPrimary, fontWeight = FontWeight.Bold)
         }
     }
 }
 
 @Composable
 private fun AvailabilityCard(isOnline: Boolean, onToggleOnline: (Boolean) -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))) {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.availability_status), style = MaterialTheme.typography.titleMedium, color = Color.White)
-                    Text(stringResource(R.string.availability_explanation), style = MaterialTheme.typography.bodyMedium, color = Color(0xFFB9C0CB))
+                    Text(stringResource(R.string.availability_status), style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                    Text(stringResource(R.string.availability_explanation), style = MaterialTheme.typography.bodyMedium, color = TextTertiary)
                 }
                 Switch(checked = isOnline, onCheckedChange = onToggleOnline)
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(if (isOnline) Color(0xFF22C55E) else Color(0xFFEF4444)))
-                Text(text = if (isOnline) stringResource(R.string.status_online) else stringResource(R.string.status_offline), color = Color(0xFFD1D5DB))
+                Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(if (isOnline) Success else Error))
+                Text(text = if (isOnline) stringResource(R.string.status_online) else stringResource(R.string.status_offline), color = TextSecondary)
             }
         }
     }
@@ -353,10 +354,10 @@ private fun StatsGrid() {
 
 @Composable
 private fun StatsCard(modifier: Modifier, title: String, value: String) {
-    Card(modifier = modifier, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430))) {
+    Card(modifier = modifier, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = Color(0xFFD1D5DB))
-            Text(value, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = TextSecondary)
+            Text(value, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -364,19 +365,19 @@ private fun StatsCard(modifier: Modifier, title: String, value: String) {
 @Composable
 private fun IncomingRequestsHeader(newCount: Int) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(text = stringResource(R.string.incoming_requests), style = MaterialTheme.typography.titleLarge, color = Color.White, fontWeight = FontWeight.SemiBold)
-        Box(modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFF2563EB)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-            Text(stringResource(R.string.new_requests_count, newCount), color = Color.White, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelSmall)
+        Text(text = stringResource(R.string.incoming_requests), style = MaterialTheme.typography.titleLarge, color = TextPrimary, fontWeight = FontWeight.SemiBold)
+        Box(modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(PrimaryAccent).padding(horizontal = 10.dp, vertical = 4.dp)) {
+            Text(stringResource(R.string.new_requests_count, newCount), color = TextPrimary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelSmall)
         }
     }
 }
 
 @Composable
 private fun OfflineStatusCard() {
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430).copy(alpha = 0.5f))) {
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = CardBackground.copy(alpha = 0.5f))) {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.status_offline_title), color = Color(0xFFEF4444), fontWeight = FontWeight.SemiBold)
-            Text(stringResource(R.string.status_offline_explanation), textAlign = TextAlign.Center, color = Color(0xFFB9C0CB))
+            Text(stringResource(R.string.status_offline_title), color = Error, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.status_offline_explanation), textAlign = TextAlign.Center, color = TextTertiary)
         }
     }
 }

@@ -10,19 +10,73 @@ data class CreateServiceRequest(
     val startLocationDescription: String?
 )
 
+/**
+ * Service response with comprehensive information including client and partner details.
+ */
 data class ServiceResponse(
     val serviceId: Long,
+    // Client information
     val clientId: Long,
     val clientName: String? = null,
+    val clientEmail: String? = null,
+    val clientPicDirectory: String? = null,
+    // Partner information
     val partnerId: Long?,
+    val partnerName: String? = null,
+    val partnerEmail: String? = null,
+    val partnerPicDirectory: String? = null,
+    // Service details
     val longitude: Double,
     val latitude: Double,
     val startLocationDescription: String?,
     val agreedHours: Int,
-    val hourlyRate: Double,
+    val hourlyRate: Double? = 15000.0,
     val status: String,
     val requestedAt: String?,
     val acceptedAt: String?,
     val startedAt: String?,
     val endedAt: String?
-)
+) {
+    /**
+     * Calculates the service duration in minutes.
+     */
+    fun getDurationMinutes(): Long? {
+        if (startedAt == null || endedAt == null) return null
+        return try {
+            val start = java.time.Instant.parse(startedAt)
+            val end = java.time.Instant.parse(endedAt)
+            java.time.Duration.between(start, end).toMinutes()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Calculates the total cost based on duration and hourly rate.
+     */
+    fun getTotalCost(): Double? {
+        val durationMinutes = getDurationMinutes()
+        if (durationMinutes == null || hourlyRate == null) return null
+        val hours = durationMinutes / 60.0
+        return kotlin.math.round(hours * hourlyRate * 100.0) / 100.0
+    }
+
+    /**
+     * Gets formatted duration string (e.g., "45 min" or "1h 30m").
+     */
+    fun getFormattedDuration(): String {
+        val minutes = getDurationMinutes() ?: return "N/A"
+        if (minutes < 60) return "$minutes min"
+        val hours = minutes / 60
+        val remainingMinutes = minutes % 60
+        return if (remainingMinutes == 0L) "${hours}h" else "${hours}h ${remainingMinutes}m"
+    }
+
+    /**
+     * Gets formatted cost string with currency.
+     */
+    fun getFormattedCost(): String {
+        val cost = getTotalCost() ?: return "N/A"
+        return String.format("$%,.0f COP", cost)
+    }
+}

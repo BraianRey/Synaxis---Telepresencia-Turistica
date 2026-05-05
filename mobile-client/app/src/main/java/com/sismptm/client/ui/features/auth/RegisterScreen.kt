@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
 import com.sismptm.client.domain.validation.RegisterValidator
 import com.sismptm.client.ui.common.ProfilePictureUpload
+import com.sismptm.client.ui.theme.*
 
 /**
  * Screen that handles the registration of a new user.
@@ -67,7 +68,7 @@ fun RegisterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Background)
             .verticalScroll(rememberScrollState())
             .padding(vertical = 24.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -82,13 +83,13 @@ fun RegisterScreen(
                 text = stringResource(R.string.register_title),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.register_subtitle),
                 fontSize = 14.sp,
-                color = Color(0xFF9E9E9E)
+                color = TextTertiary
             )
         }
 
@@ -102,7 +103,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = fullName,
             onValueChange = { fullName = it },
-            placeholder = { Text(stringResource(R.string.full_name_placeholder)) },
+            placeholder = { Text(stringResource(R.string.full_name_placeholder), color = TextTertiary) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Next
@@ -116,8 +117,12 @@ fun RegisterScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = PrimaryAccent,
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = CardBackground,
+                unfocusedContainerColor = CardBackground,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             )
         )
 
@@ -126,11 +131,11 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text(stringResource(R.string.email_placeholder)) },
+            placeholder = { Text(stringResource(R.string.email_placeholder), color = TextTertiary) },
             isError = emailHasError,
             supportingText = {
                 if (emailHasError) {
-                    Text(text = stringResource(R.string.invalid_email))
+                    Text(text = stringResource(R.string.invalid_email), color = Error)
                 }
             },
             keyboardOptions = KeyboardOptions(
@@ -144,8 +149,12 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = PrimaryAccent,
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = CardBackground,
+                unfocusedContainerColor = CardBackground,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             )
         )
 
@@ -154,13 +163,14 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = { Text(stringResource(R.string.password_placeholder)) },
+            placeholder = { Text(stringResource(R.string.password_placeholder), color = TextTertiary) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        tint = TextTertiary
                     )
                 }
             },
@@ -177,8 +187,12 @@ fun RegisterScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = PrimaryAccent,
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = CardBackground,
+                unfocusedContainerColor = CardBackground,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             )
         )
 
@@ -187,20 +201,21 @@ fun RegisterScreen(
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
-            placeholder = { Text(stringResource(R.string.confirm_password)) },
+            placeholder = { Text(stringResource(R.string.confirm_password), color = TextTertiary) },
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                     Icon(
                         imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                        tint = TextTertiary
                     )
                 }
             },
             isError = passwordMismatch,
             supportingText = {
                 if (passwordMismatch) {
-                    Text(text = stringResource(R.string.passwords_do_not_match))
+                    Text(text = stringResource(R.string.passwords_do_not_match), color = Error)
                 }
             },
             keyboardOptions = KeyboardOptions(
@@ -214,8 +229,12 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF1E88E5),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = PrimaryAccent,
+                unfocusedBorderColor = BorderSubtle,
+                focusedContainerColor = CardBackground,
+                unfocusedContainerColor = CardBackground,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary
             )
         )
 
@@ -231,13 +250,14 @@ fun RegisterScreen(
                 checked = acceptedTerms,
                 onCheckedChange = { acceptedTerms = it },
                 colors = CheckboxDefaults.colors(
-                    checkedColor = Color(0xFF1E88E5)
+                    checkedColor = PrimaryAccent,
+                    uncheckedColor = TextTertiary
                 )
             )
             Text(
                 text = stringResource(R.string.accept_terms),
                 fontSize = 13.sp,
-                color = Color.Black,
+                color = TextSecondary,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -248,14 +268,14 @@ fun RegisterScreen(
         if (uiState is RegisterViewModel.RegisterUiState.Error) {
             val errorMsg = (uiState as RegisterViewModel.RegisterUiState.Error).message
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                colors = CardDefaults.cardColors(containerColor = Error.copy(alpha = 0.1f)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
             ) {
                 Text(
                     text = errorMsg,
-                    color = Color(0xFFC62828),
+                    color = Error,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(12.dp)
                 )
@@ -282,15 +302,15 @@ fun RegisterScreen(
                 .fillMaxWidth()
                 .height(54.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1E88E5),
-                disabledContainerColor = Color(0xFFBBDEFB)
+                containerColor = PrimaryAccent,
+                disabledContainerColor = PrimaryAccent.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = Color.White,
+                    color = TextPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -298,7 +318,7 @@ fun RegisterScreen(
                     text = stringResource(R.string.get_started),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    color = TextPrimary
                 )
             }
         }
@@ -312,12 +332,12 @@ fun RegisterScreen(
             Text(
                 text = stringResource(R.string.already_user),
                 fontSize = 14.sp,
-                color = Color(0xFF9E9E9E)
+                color = TextTertiary
             )
             Text(
                 text = stringResource(R.string.sign_in),
                 fontSize = 14.sp,
-                color = Color(0xFF1E88E5),
+                color = PrimaryAccent,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable(onClick = onNavigateToLogin)
             )
@@ -326,5 +346,3 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(20.dp))
     }
 }
-
-
