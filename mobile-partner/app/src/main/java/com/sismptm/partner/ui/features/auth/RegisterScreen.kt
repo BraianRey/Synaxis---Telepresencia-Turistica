@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import com.sismptm.partner.domain.validation.RegisterValidator
+import com.sismptm.partner.ui.theme.*
 
 private data class CityOption(val label: String, val longitude: Double, val latitude: Double)
 
@@ -80,27 +80,45 @@ fun RegisterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Background)
             .verticalScroll(rememberScrollState())
             .padding(vertical = 24.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = stringResource(id = R.string.register_title), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Text(
+            text = stringResource(id = R.string.register_title),
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = stringResource(id = R.string.register_subtitle), fontSize = 14.sp, color = Color(0xFF9E9E9E))
+        Text(
+            text = stringResource(id = R.string.register_subtitle),
+            fontSize = 14.sp,
+            color = TextSecondary
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text(stringResource(id = R.string.full_name)) },
+            label = { Text(stringResource(id = R.string.full_name), color = TextTertiary) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BorderFocus,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                focusedLabelColor = TextTertiary,
+                unfocusedLabelColor = TextTertiary,
+                focusedContainerColor = InputBackground,
+                unfocusedContainerColor = InputBackground
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -108,15 +126,25 @@ fun RegisterScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text(stringResource(id = R.string.email)) },
+            label = { Text(stringResource(id = R.string.email), color = TextTertiary) },
             isError = emailHasError,
-            supportingText = { if (emailHasError) Text(stringResource(R.string.invalid_email)) },
+            supportingText = { if (emailHasError) Text(stringResource(R.string.invalid_email), color = Error) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BorderFocus,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                focusedLabelColor = TextTertiary,
+                unfocusedLabelColor = TextTertiary,
+                focusedContainerColor = InputBackground,
+                unfocusedContainerColor = InputBackground,
+                errorBorderColor = Error
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -124,11 +152,15 @@ fun RegisterScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(stringResource(id = R.string.password)) },
+            label = { Text(stringResource(id = R.string.password), color = TextTertiary) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null,
+                        tint = TextSecondary
+                    )
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
@@ -136,7 +168,16 @@ fun RegisterScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BorderFocus,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                focusedLabelColor = TextTertiary,
+                unfocusedLabelColor = TextTertiary,
+                focusedContainerColor = InputBackground,
+                unfocusedContainerColor = InputBackground
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -144,21 +185,35 @@ fun RegisterScreen(
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
-            label = { Text(stringResource(id = R.string.confirm_password)) },
+            label = { Text(stringResource(id = R.string.confirm_password), color = TextTertiary) },
             visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                    Icon(imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                    Icon(
+                        imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null,
+                        tint = TextSecondary
+                    )
                 }
             },
             isError = passwordMismatch,
-            supportingText = { if (passwordMismatch) Text(stringResource(R.string.passwords_do_not_match)) },
+            supportingText = { if (passwordMismatch) Text(stringResource(R.string.passwords_do_not_match), color = Error) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = BorderFocus,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                focusedLabelColor = TextTertiary,
+                unfocusedLabelColor = TextTertiary,
+                focusedContainerColor = InputBackground,
+                unfocusedContainerColor = InputBackground,
+                errorBorderColor = Error
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -171,23 +226,34 @@ fun RegisterScreen(
                 value = selectedCity?.label.orEmpty(),
                 onValueChange = {},
                 readOnly = true,
-                label = { Text(stringResource(id = R.string.select_area)) },
+                label = { Text(stringResource(id = R.string.select_area), color = TextTertiary) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded) },
                 modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF2563EB), unfocusedBorderColor = Color(0xFFE0E0E0))
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = BorderFocus,
+                    unfocusedBorderColor = BorderSubtle,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedLabelColor = TextTertiary,
+                    unfocusedLabelColor = TextTertiary,
+                    focusedContainerColor = InputBackground,
+                    unfocusedContainerColor = InputBackground
+                )
             )
             ExposedDropdownMenu(
                 expanded = areaExpanded,
-                onDismissRequest = { areaExpanded = false }
+                onDismissRequest = { areaExpanded = false },
+                modifier = Modifier.background(CardBackground)
             ) {
                 cityOptions.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option.label) },
+                        text = { Text(option.label, color = TextPrimary) },
                         onClick = {
                             selectedCity = option
                             areaExpanded = false
-                        }
+                        },
+                        modifier = Modifier.background(CardBackground)
                     )
                 }
             }
@@ -196,15 +262,35 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Checkbox(checked = acceptedTerms, onCheckedChange = { acceptedTerms = it }, colors = CheckboxDefaults.colors(checkedColor = Color(0xFF2563EB)))
-            Text(text = stringResource(id = R.string.accept_terms), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Checkbox(
+                checked = acceptedTerms,
+                onCheckedChange = { acceptedTerms = it },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = PrimaryAccent,
+                    uncheckedColor = BorderSubtle
+                )
+            )
+            Text(
+                text = stringResource(id = R.string.accept_terms),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+                color = TextSecondary
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         if (uiState is RegisterViewModel.RegisterUiState.Error) {
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)), modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                Text(text = (uiState as RegisterViewModel.RegisterUiState.Error).message, color = Color(0xFFC62828), fontSize = 13.sp, modifier = Modifier.padding(12.dp))
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Error.copy(alpha = 0.2f)),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            ) {
+                Text(
+                    text = (uiState as RegisterViewModel.RegisterUiState.Error).message,
+                    color = ErrorLight,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
         }
 
@@ -221,21 +307,20 @@ fun RegisterScreen(
             },
             enabled = isFormValid && !isLoading,
             modifier = Modifier.fillMaxWidth().height(54.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary, strokeWidth = 2.dp)
             } else {
-                Text(text = stringResource(id = R.string.register_button), fontWeight = FontWeight.SemiBold)
+                Text(text = stringResource(id = R.string.register_button), fontWeight = FontWeight.SemiBold, color = TextPrimary)
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         TextButton(onClick = onNavigateToLogin) {
-            Text(text = stringResource(id = R.string.already_have_account), color = Color(0xFF2563EB))
+            Text(text = stringResource(id = R.string.already_have_account), color = PrimaryAccent)
         }
     }
 }
-
