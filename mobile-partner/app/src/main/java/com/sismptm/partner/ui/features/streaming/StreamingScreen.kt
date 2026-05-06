@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -144,11 +145,28 @@ private fun StreamingContent(
             )
         }
 
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.BottomStart).padding(24.dp).background(Color.Black.copy(alpha = 0.4f), CircleShape)
+        // Control buttons at bottom
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("←", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            // End session button (red)
+            Button(
+                onClick = onBack,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("End Session", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

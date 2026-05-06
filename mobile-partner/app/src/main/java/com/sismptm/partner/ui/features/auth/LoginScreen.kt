@@ -17,7 +17,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
+import com.sismptm.partner.ui.theme.*
 
 /**
  * Login screen allowing partners to authenticate and access the dashboard.
@@ -60,7 +60,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(Background)
             .verticalScroll(rememberScrollState())
             .padding(vertical = 48.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -77,14 +77,14 @@ fun LoginScreen(
             Text(
                 text = pingState ?: "Verify server connection",
                 fontSize = 12.sp,
-                color = if (pingState?.contains("Online") == true) Color(0xFF2E7D32) else Color(0xFF757575),
+                color = if (pingState?.contains("Online") == true) Success else TextTertiary,
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { viewModel.checkAvailability() }) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "Check server status",
-                    tint = Color(0xFF2563EB),
+                    tint = PrimaryAccent,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -96,13 +96,13 @@ fun LoginScreen(
             text = stringResource(id = R.string.login_title),
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = TextPrimary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(id = R.string.welcome_back),
             fontSize = 14.sp,
-            color = Color(0xFF9E9E9E)
+            color = TextSecondary
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -110,7 +110,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            placeholder = { Text(stringResource(id = R.string.email)) },
+            placeholder = { Text(stringResource(id = R.string.email), color = TextTertiary) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -122,8 +122,14 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF2563EB),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = BorderFocus,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                focusedPlaceholderColor = TextTertiary,
+                unfocusedPlaceholderColor = TextTertiary,
+                focusedContainerColor = InputBackground,
+                unfocusedContainerColor = InputBackground
             )
         )
 
@@ -132,13 +138,14 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = { Text(stringResource(id = R.string.password)) },
+            placeholder = { Text(stringResource(id = R.string.password), color = TextTertiary) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Toggle password visibility"
+                        contentDescription = "Toggle password visibility",
+                        tint = TextSecondary
                     )
                 }
             },
@@ -158,8 +165,14 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF2563EB),
-                unfocusedBorderColor = Color(0xFFE0E0E0)
+                focusedBorderColor = BorderFocus,
+                unfocusedBorderColor = BorderSubtle,
+                focusedTextColor = TextPrimary,
+                unfocusedTextColor = TextPrimary,
+                focusedPlaceholderColor = TextTertiary,
+                unfocusedPlaceholderColor = TextTertiary,
+                focusedContainerColor = InputBackground,
+                unfocusedContainerColor = InputBackground
             )
         )
 
@@ -168,12 +181,12 @@ fun LoginScreen(
         if (uiState is LoginViewModel.LoginUiState.Error) {
             val errorMsg = (uiState as LoginViewModel.LoginUiState.Error).message
             Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                colors = CardDefaults.cardColors(containerColor = Error.copy(alpha = 0.2f)),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             ) {
                 Text(
                     text = errorMsg,
-                    color = Color(0xFFC62828),
+                    color = ErrorLight,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(12.dp)
                 )
@@ -184,13 +197,13 @@ fun LoginScreen(
             onClick = { viewModel.login(email = email, password = password) },
             enabled = email.isNotBlank() && password.isNotBlank() && !isLoading,
             modifier = Modifier.fillMaxWidth().height(54.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary, strokeWidth = 2.dp)
             } else {
-                Text(text = stringResource(id = R.string.login_button), fontWeight = FontWeight.SemiBold)
+                Text(text = stringResource(id = R.string.login_button), fontWeight = FontWeight.SemiBold, color = TextPrimary)
             }
         }
 
@@ -200,7 +213,10 @@ fun LoginScreen(
             onClick = onNavigateToStreaming,
             modifier = Modifier.fillMaxWidth().height(54.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF2563EB))
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = PrimaryAccent
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryAccent)
         ) {
             Text(text = stringResource(id = R.string.debug_streaming), fontWeight = FontWeight.SemiBold)
         }
@@ -210,10 +226,9 @@ fun LoginScreen(
         Text(
             text = stringResource(R.string.dont_have_account),
             fontSize = 14.sp,
-            color = Color(0xFF2563EB),
+            color = PrimaryAccent,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(vertical = 20.dp).clickable(onClick = onNavigateToRegister)
         )
     }
 }
-

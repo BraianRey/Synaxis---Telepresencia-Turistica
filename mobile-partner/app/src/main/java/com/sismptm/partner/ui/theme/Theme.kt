@@ -9,49 +9,78 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+/**
+ * Synexis Dark Color Scheme - Used for both dark and light themes
+ * to maintain consistent brand identity across the app
+ */
+private val SynexisColorScheme = darkColorScheme(
+    primary = PrimaryAccent,
+    onPrimary = TextPrimary,
+    primaryContainer = PrimaryDark,
+    onPrimaryContainer = TextPrimary,
+    secondary = PrimaryHover,
+    onSecondary = TextPrimary,
+    secondaryContainer = BackgroundElevated,
+    onSecondaryContainer = TextPrimary,
+    tertiary = Success,
+    onTertiary = TextPrimary,
+    tertiaryContainer = SuccessLight,
+    onTertiaryContainer = TextPrimary,
+    error = Error,
+    onError = TextPrimary,
+    errorContainer = ErrorLight,
+    onErrorContainer = TextPrimary,
+    background = Background,
+    onBackground = TextPrimary,
+    surface = Surface,
+    onSurface = TextPrimary,
+    surfaceVariant = CardBackground,
+    onSurfaceVariant = TextSecondary,
+    outline = BorderSubtle,
+    outlineVariant = Divider,
+    scrim = Background.copy(alpha = 0.8f),
+    inverseSurface = TextPrimary,
+    inverseOnSurface = Background,
+    inversePrimary = PrimaryHover,
+    surfaceTint = PrimaryAccent,
+    surfaceBright = BackgroundElevated,
+    surfaceDim = Background,
+    surfaceContainer = CardBackground,
+    surfaceContainerHigh = CardBackgroundHover,
+    surfaceContainerHighest = BackgroundElevated,
+    surfaceContainerLow = Background,
+    surfaceContainerLowest = Background
 )
 
 @Composable
 fun SISPTMPartnerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true, // Always use dark theme for brand consistency
+    // Dynamic color is disabled to maintain brand identity
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-      dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-        val context = LocalContext.current
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-      }
-      darkTheme -> DarkColorScheme
-      else -> LightColorScheme
+    val colorScheme = SynexisColorScheme
+    val view = LocalView.current
+
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = Background.toArgb()
+            window.navigationBarColor = Background.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+        }
     }
 
     MaterialTheme(
-      colorScheme = colorScheme,
-      typography = Typography,
-      content = content
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
     )
 }

@@ -1,5 +1,6 @@
 package com.sismptm.client.ui.features.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,13 +9,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.R
-import com.sismptm.client.ui.common.HikerIllustration
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.sismptm.client.ui.theme.*
 
 /**
  * Initial screen of the application that welcomes the user.
@@ -28,11 +30,10 @@ fun WelcomeScreen(
     onSignIn: () -> Unit,
     onNavigateToStreaming: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
@@ -47,23 +48,25 @@ fun WelcomeScreen(
                     text = stringResource(R.string.welcome_title),
                     fontSize = 42.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = TextPrimary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.welcome_subtitle),
                     fontSize = 14.sp,
-                    color = Color(0xFF9E9E9E),
+                    color = TextTertiary,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            HikerIllustration(
+            Image(
+                painter = painterResource(id = R.drawable.logo_synexis),
+                contentDescription = "Synexis Logo",
                 modifier = Modifier
-                    .width(280.dp)
-                    .height(280.dp)
+                    .width(200.dp)
+                    .height(200.dp)
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -80,7 +83,7 @@ fun WelcomeScreen(
                         .fillMaxWidth()
                         .height(54.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E88E5)
+                        containerColor = PrimaryAccent
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -88,7 +91,7 @@ fun WelcomeScreen(
                         text = stringResource(R.string.get_started),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = TextPrimary
                     )
                 }
 
@@ -101,12 +104,12 @@ fun WelcomeScreen(
                     Text(
                         text = stringResource(R.string.already_user),
                         fontSize = 14.sp,
-                        color = Color(0xFF9E9E9E)
+                        color = TextTertiary
                     )
                     Text(
                         text = stringResource(R.string.sign_in),
                         fontSize = 14.sp,
-                        color = Color(0xFF1E88E5),
+                        color = PrimaryAccent,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable(onClick = onSignIn)
                     )
@@ -121,9 +124,7 @@ fun WelcomeScreen(
                 .align(Alignment.TopEnd)
                 .padding(top = 40.dp, end = 16.dp)
         ) {
-            Text("Test Stream UI", color = Color(0xFF1E88E5), fontSize = 12.sp)
+            Text("Test Stream UI", color = PrimaryAccent, fontSize = 12.sp)
         }
     }
 }
-
-

@@ -11,9 +11,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,13 +55,18 @@ fun HomeScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
-        bottomBar = {}
+        bottomBar = {
+            BottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
+        }
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFF1A1A1A))
+                .background(Background)
         ) {
             when (selectedTab) {
                 0 -> ExploreTabContent(
@@ -95,14 +106,14 @@ private fun ExploreTabContent(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 20.dp),
-            border = BorderStroke(1.dp, Color(0xFF2196F3)),
+            border = BorderStroke(1.dp, PrimaryAccent),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                 text = "Request service",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF2196F3)
+                color = PrimaryAccent
             )
         }
 
@@ -117,7 +128,7 @@ private fun HomeHeader(userName: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1A1A1A))
+            .background(Background)
             .padding(20.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -127,26 +138,26 @@ private fun HomeHeader(userName: String) {
                 text = stringResource(R.string.home_greeting, userName),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFFFFFFFF)
+                color = TextPrimary
             )
             Text(
                 text = stringResource(R.string.home_subtitle),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFCCCCCC)
+                color = TextSecondary
             )
         }
         Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF2C2C2C)),
+                .background(CardBackground),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Outlined.Person,
                 contentDescription = "Avatar",
-                tint = Color(0xFF666666),
+                tint = TextTertiary,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -165,7 +176,7 @@ private fun SearchBar() {
         placeholder = {
             Text(
                 text = stringResource(R.string.home_search_hint),
-                color = Color(0xFF888888),
+                color = TextTertiary,
                 fontSize = 14.sp
             )
         },
@@ -173,24 +184,24 @@ private fun SearchBar() {
             Icon(
                 imageVector = Icons.Outlined.Search,
                 contentDescription = "Search",
-                tint = Color(0xFF888888)
+                tint = TextTertiary
             )
         },
         trailingIcon = {
             Icon(
                 imageVector = Icons.Outlined.Mic,
                 contentDescription = "Microphone",
-                tint = Color(0xFF888888)
+                tint = TextTertiary
             )
         },
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedBorderColor = Color.Transparent,
             focusedBorderColor = Color(0xFF444444),
-            unfocusedContainerColor = Color(0xFF2C2C2C),
+            unfocusedContainerColor = CardBackground,
             focusedContainerColor = Color(0xFF333333),
             unfocusedTextColor = Color(0xFFDDDDDD),
-            focusedTextColor = Color(0xFFFFFFFF)
+            focusedTextColor = TextPrimary
         )
     )
 }
@@ -212,7 +223,7 @@ private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifie
                 modifier = Modifier
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF1A1A1A))
+                    .background(Background)
             )
             Icon(
                 imageVector = Icons.Outlined.Videocam,
@@ -250,7 +261,7 @@ private fun DestinationsSection(destinations: List<Destination>) {
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.2.sp,
-            color = Color(0xFFFFFFFF)
+            color = TextPrimary
         )
         Spacer(modifier = Modifier.height(12.dp))
         LazyRow(
@@ -296,12 +307,12 @@ private fun DestinationCard(destination: Destination) {
                     text = destination.city,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFFFFF)
+                    color = TextPrimary
                 )
                 Text(
                     text = destination.country,
                     fontSize = 12.sp,
-                    color = Color(0xFFAAAAAA)
+                    color = TextTertiary
                 )
             }
             Column(
@@ -313,7 +324,7 @@ private fun DestinationCard(destination: Destination) {
                     text = destination.placeName,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFFFFF)
+                    color = TextPrimary
                 )
                 Text(
                     text = stringResource(R.string.home_active_partners, destination.activePartners),
@@ -334,7 +345,7 @@ private fun ToursTabContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF121212)),
+            .background(Background),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -356,15 +367,15 @@ private fun ToursTabContent(
             when (servicesState) {
                 HomeViewModel.ClientServicesUiState.Idle,
                 HomeViewModel.ClientServicesUiState.Loading -> {
-                    CircularProgressIndicator(color = Color(0xFF2196F3))
-                    Text("Loading services...", color = Color(0xFFCCCCCC))
+                    CircularProgressIndicator(color = PrimaryAccent)
+                    Text("Loading services...", color = TextSecondary)
                 }
                 is HomeViewModel.ClientServicesUiState.Error -> {
                     Text(text = servicesState.message, color = Color(0xFFFF8A80))
                 }
                 is HomeViewModel.ClientServicesUiState.Success -> {
                     if (servicesState.services.isEmpty()) {
-                        Text(text = "No service requests yet.", color = Color(0xFFCCCCCC))
+                        Text(text = "No service requests yet.", color = TextSecondary)
                     } else {
                         val activeStatuses = setOf("REQUESTED", "ACCEPTED", "STARTED")
                         val activeServices = servicesState.services.filter { it.status.uppercase() in activeStatuses }
@@ -378,7 +389,7 @@ private fun ToursTabContent(
                                 fontSize = 16.sp
                             )
                             if (activeServices.isEmpty()) {
-                                Text(text = stringResource(R.string.home_services_no_active), color = Color(0xFFCCCCCC))
+                                Text(text = stringResource(R.string.home_services_no_active), color = TextSecondary)
                             } else {
                                 activeServices.forEach { service ->
                                     ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
@@ -394,7 +405,7 @@ private fun ToursTabContent(
                                 fontSize = 16.sp
                             )
                             if (historyServices.isEmpty()) {
-                                Text(text = stringResource(R.string.home_services_no_history), color = Color(0xFFCCCCCC))
+                                Text(text = stringResource(R.string.home_services_no_history), color = TextSecondary)
                             } else {
                                 historyServices.forEach { service ->
                                     ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
@@ -425,9 +436,9 @@ private fun ClientServiceCard(
         ) {
             Text("Service #${service.serviceId}", color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
-            Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = Color(0xFFB9C0CB))
-            Text("Hours: ${service.agreedHours}", color = Color(0xFFB9C0CB))
-            Text("Hourly rate: ${service.hourlyRate} COP", color = Color(0xFFB9C0CB))
+            Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = TextTertiary)
+            Text("Hours: ${service.agreedHours}", color = TextTertiary)
+            Text("Hourly rate: ${service.hourlyRate} COP", color = TextTertiary)
             if (isActive) {
                 Button(
                     onClick = { onOpenWaiting(service.serviceId) },
@@ -471,7 +482,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1A1A1A)),
+            .background(Background),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -481,7 +492,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
             Icon(
                 imageVector = Icons.Outlined.Person,
                 contentDescription = null,
-                tint = Color(0xFF666666),
+                tint = TextTertiary,
                 modifier = Modifier.size(64.dp)
             )
             Spacer(Modifier.height(16.dp))
@@ -489,7 +500,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
                 text = stringResource(R.string.home_profile),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFFFFFFF)
+                color = TextPrimary
             )
             Spacer(Modifier.height(32.dp))
             OutlinedButton(
@@ -497,7 +508,7 @@ private fun ProfileTab(onLogout: () -> Unit) {
                     SessionManager.clearSession()
                     onLogout()
                 },
-                border = BorderStroke(1.dp, Color(0xFF666666)),
+                border = BorderStroke(1.dp, TextTertiary),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth(0.6f)
@@ -506,16 +517,87 @@ private fun ProfileTab(onLogout: () -> Unit) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = null,
-                    tint = Color(0xFFAAAAAA),
+                    tint = TextTertiary,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.home_sign_out),
-                    color = Color(0xFFAAAAAA)
+                    color = TextTertiary
                 )
             }
         }
+    }
+}
+
+/**
+ * Bottom navigation bar with 3 tabs: Explore, Tours, and Profile.
+ */
+@Composable
+private fun BottomNavigationBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    NavigationBar(
+        containerColor = Color(0xFF1E1E1E),
+        tonalElevation = 0.dp
+    ) {
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 0) Icons.Filled.Explore else Icons.Outlined.Explore,
+                    contentDescription = "Explore"
+                )
+            },
+            label = { Text("Explore") },
+            selected = selectedTab == 0,
+            onClick = { onTabSelected(0) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+        
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 1) Icons.Filled.ViewList else Icons.Outlined.ViewList,
+                    contentDescription = "Tours"
+                )
+            },
+            label = { Text("Tours") },
+            selected = selectedTab == 1,
+            onClick = { onTabSelected(1) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+        
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 2) Icons.Filled.Person else Icons.Outlined.Person,
+                    contentDescription = "Profile"
+                )
+            },
+            label = { Text("Profile") },
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
     }
 }
 

@@ -18,6 +18,7 @@ import com.sismptm.partner.ui.features.streaming.StreamingScreen
 import com.sismptm.partner.ui.features.tour.RequestDetailScreen
 import com.sismptm.partner.ui.features.tour.ServiceDetailScreen
 import com.sismptm.partner.ui.features.tour.ServiceReadyScreen
+import com.sismptm.partner.ui.features.tour.PartnerServiceSummaryScreen
 
 /**
  * Defines the navigation structure and routes for the Partner application.
@@ -32,6 +33,9 @@ sealed class Screen(val route: String) {
     }
     object Streaming : Screen("streaming/{serviceId}") {
         fun createRoute(serviceId: Long) = "streaming/$serviceId"
+    }
+    object ServiceSummary : Screen("service_summary/{serviceId}") {
+        fun createRoute(serviceId: Long) = "service_summary/$serviceId"
     }
     object RequestDetail : Screen("request_detail")
     object ServiceDetail : Screen("service_detail")
@@ -115,7 +119,28 @@ fun PartnerNavGraph() {
             val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
             StreamingScreen(
                 serviceId = serviceId,
-                onBack = { navController.popBackStack() }
+                onBack = { 
+                    // Navigate to summary after streaming ends
+                    navController.navigate(Screen.ServiceSummary.createRoute(serviceId)) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ServiceSummary.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+            PartnerServiceSummaryScreen(
+                serviceId = serviceId,
+                onBackToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

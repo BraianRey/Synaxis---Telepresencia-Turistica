@@ -17,6 +17,7 @@ import com.sismptm.client.ui.features.auth.RegisterScreen
 import com.sismptm.client.ui.features.tour.RequestScreen
 import com.sismptm.client.ui.features.tour.ServiceDetailScreen
 import com.sismptm.client.ui.features.tour.ServiceWaitingScreen
+import com.sismptm.client.ui.features.tour.ServiceSummaryScreen
 import com.sismptm.client.ui.features.streaming.StreamingScreen
 import com.sismptm.client.ui.features.auth.WelcomeScreen
 import com.sismptm.client.ui.features.map.MapServiceScreen
@@ -40,6 +41,9 @@ sealed class Screen(val route: String) {
     }
     object Streaming : Screen("streaming/{serviceId}") {
         fun createRoute(serviceId: Long): String = "streaming/$serviceId"
+    }
+    object ServiceSummary : Screen("service_summary/{serviceId}") {
+        fun createRoute(serviceId: Long): String = "service_summary/$serviceId"
     }
 }
 
@@ -175,6 +179,11 @@ fun NavGraph() {
                     navController.navigate(Screen.Streaming.createRoute(sid)) {
                         popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
                     }
+                },
+                onNavigateToSummary = { sid ->
+                    navController.navigate(Screen.ServiceSummary.createRoute(sid)) {
+                        popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -194,6 +203,22 @@ fun NavGraph() {
             StreamingScreen(
                 serviceId = serviceId,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.ServiceSummary.route,
+            arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+            ServiceSummaryScreen(
+                serviceId = serviceId,
+                onBackToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
     }

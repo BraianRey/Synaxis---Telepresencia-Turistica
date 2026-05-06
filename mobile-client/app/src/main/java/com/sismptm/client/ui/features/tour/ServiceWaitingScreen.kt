@@ -192,7 +192,8 @@ class ServiceWaitingViewModel : ViewModel() {
 fun ServiceWaitingScreen(
     serviceId: Long,
     onBackHome: () -> Unit,
-    onNavigateToStreaming: (Long) -> Unit
+    onNavigateToStreaming: (Long) -> Unit,
+    onNavigateToSummary: (Long) -> Unit = {}
 ) {
     val viewModel: ServiceWaitingViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -209,6 +210,13 @@ fun ServiceWaitingScreen(
     LaunchedEffect(status) {
         if (status == "READY") {
             onNavigateToStreaming(serviceId)
+        }
+    }
+
+    // Navigate to summary when service is COMPLETED
+    LaunchedEffect(status) {
+        if (status == "COMPLETED") {
+            onNavigateToSummary(serviceId)
         }
     }
 

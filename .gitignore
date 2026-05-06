@@ -43,3 +43,6 @@ backend-management-service/picProfile/*
 .idea/*
 *.iws
 *.ipr
+
+# OpenCode Agent Context
+CONTEXTO.MD
