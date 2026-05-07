@@ -15,8 +15,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.webrtc.*
+import com.sismptm.partner.core.network.RetrofitClient
+import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 
 data class CommandEvent(val text: String, val id: String = UUID.randomUUID().toString())
 
@@ -46,13 +49,23 @@ class StreamingViewModel(application: Application) :
     private val webRTCManager = WebRTCManager(context = application, listener = this, eglBase = eglBase)
 
     private val _connectionState = MutableStateFlow(PeerConnection.PeerConnectionState.NEW)
-    val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState
+    val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState.asStateFlow()
 
     private val _lastCommandEvent = MutableStateFlow<CommandEvent?>(null)
-    val lastCommandEvent: StateFlow<CommandEvent?> = _lastCommandEvent
+    val lastCommandEvent: StateFlow<CommandEvent?> = _lastCommandEvent.asStateFlow()
 
     private val _commands = MutableStateFlow<List<String>>(emptyList())
-    val commands: StateFlow<List<String>> = _commands
+    val commands: StateFlow<List<String>> = _commands.asStateFlow()
+
+    // Service completion state
+    private val _isCompletingService = MutableStateFlow<Boolean>(false)
+    val isCompletingService: StateFlow<Boolean> = _isCompletingService.asStateFlow()
+
+    private val _completeServiceError = MutableStateFlow<String?>(null)
+    val completeServiceError: StateFlow<String?> = _completeServiceError.asStateFlow()
+
+    private val _serviceCompleted = MutableStateFlow<Boolean>(false)
+    val serviceCompleted: StateFlow<Boolean> = _serviceCompleted.asStateFlow()
 
     /**
      * Initializes hardware capture and connects to the signaling server using the defined peer ID.
@@ -186,6 +199,37 @@ class StreamingViewModel(application: Application) :
         // Rebuild PeerConnection to escape potentially corrupted stack states
         webRTCManager.setupNewPeerConnection()
         webRTCManager.createOffer()
+    }
+
+    /**
+     * Completes the service by calling the backend API.
+     * This should be called when the partner wants to end the streaming session.
+     */
+    fun completeService(serviceId: Long) {
+        if (_isCompletingService.value) return
+        
+        _isCompletingService.value = true
+        _completeServiceError.value = null
+        
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.completeService(serviceId)
+                if (response.isSuccessful) {
+                    _serviceCompleted.value = true
+                    Log.i(TAG, "Service $serviceId completed successfully")
+                } else {
+                    val errorMsg = "Failed to complete service: ${response.code()}"
+                    _completeServiceError.value = errorMsg
+                    Log.e(TAG, errorMsg)
+                }
+            } catch (e: Exception) {
+                val errorMsg = "Error completing service: ${e.message}"
+                _completeServiceError.value = errorMsg
+                Log.e(TAG, errorMsg, e)
+            } finally {
+                _isCompletingService.value = false
+            }
+        }
     }
 
     override fun onCleared() {

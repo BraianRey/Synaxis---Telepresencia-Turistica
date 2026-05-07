@@ -9,6 +9,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< Updated upstream
     <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/components/HikerIllustration.kt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/components/ProfilePictureUpload.kt" beforeDir="false" />
@@ -59,6 +60,9 @@
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/screens/StreamingViewModel.kt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/test/java/com/sismptm/partner/ui/screens/RegisterFormValidatorTest.kt" beforeDir="false" />
     </list>
+=======
+    <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="" />
+>>>>>>> Stashed changes
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
