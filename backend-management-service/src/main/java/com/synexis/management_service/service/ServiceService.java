@@ -36,6 +36,8 @@ public interface ServiceService {
 
     ServiceResponse completeService(Long serviceId, Long partnerId);
 
+    ServiceResponse completeServiceByClient(Long serviceId, Long clientId);
+
     ServiceResponse cancelService(Long serviceId, Long clientId);
 
     ServiceResponse cancelServiceByPartner(Long serviceId, Long partnerId);

@@ -16,24 +16,16 @@ data class CreateServiceRequest(
 data class ServiceResponse(
     val serviceId: Long,
     // Client information
-    val clientId: Long,
     val clientName: String? = null,
     val clientEmail: String? = null,
-    val clientPicDirectory: String? = null,
     // Partner information
-    val partnerId: Long?,
     val partnerName: String? = null,
     val partnerEmail: String? = null,
-    val partnerPicDirectory: String? = null,
     // Service details
-    val longitude: Double,
-    val latitude: Double,
     val startLocationDescription: String?,
-    val agreedHours: Int,
-    val hourlyRate: Double? = 15000.0,
+    val agreedHours: Int? = null,
+    val hourlyRate: Double? = null,
     val status: String,
-    val requestedAt: String?,
-    val acceptedAt: String?,
     val startedAt: String?,
     val endedAt: String?
 ) {
@@ -80,3 +72,13 @@ data class ServiceResponse(
         return String.format("$%,.0f COP", cost)
     }
 }
+
+data class PaymentSummaryResponse(
+    val serviceId: Long,
+    val actualDurationMin: Int,
+    val billedHours: Double,
+    val totalAmount: Double,
+    val hourlyRate: Double,
+    val calculatedAt: String,
+    val confirmed: Boolean
+)

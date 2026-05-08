@@ -258,6 +258,31 @@ public class ServiceController {
     }
 
     /**
+     * Complete endpoint for clients.
+     *
+     * <p>
+     * Flow: the owning client calls
+     * {@code POST /api/services/{id}/client-complete} to end an
+     * in-progress session. Only services in {@code STARTED} status
+     * can be completed this way. On success the service moves to
+     * {@code COMPLETED}, {@code endedAt} is set, partner is freed,
+     * and payment is calculated automatically.
+     * </p>
+     */
+    @PostMapping("/{serviceId}/client-complete")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('CLIENT')")
+    public ServiceResponse completeServiceByClient(
+            @PathVariable Long serviceId,
+            Authentication authentication) {
+        String keycloakId = extractKeycloakId(authentication);
+        Client client = clientRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Client not found for current user"));
+        return serviceService.completeServiceByClient(serviceId, client.getId());
+    }
+
+    /**
      * Cancel endpoint for clients.
      *
      * <p>

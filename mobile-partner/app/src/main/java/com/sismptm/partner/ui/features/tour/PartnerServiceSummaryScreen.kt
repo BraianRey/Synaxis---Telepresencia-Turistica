@@ -21,9 +21,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.core.network.RetrofitClient
+import com.sismptm.partner.data.remote.api.dto.PaymentSummaryResponse
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.ui.theme.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +46,9 @@ class PartnerServiceSummaryViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private val _payment = MutableStateFlow<PaymentSummaryResponse?>(null)
+    val payment = _payment.asStateFlow()
+
     fun loadService(serviceId: Long) {
         _isLoading.value = true
         _error.value = null
@@ -52,6 +57,15 @@ class PartnerServiceSummaryViewModel : ViewModel() {
                 val response = RetrofitClient.apiService.getServiceById(serviceId)
                 if (response.isSuccessful) {
                     _service.value = response.body()
+                    try {
+                        val paymentResponse = RetrofitClient.apiService.getPaymentSummary(serviceId)
+                        if (paymentResponse.isSuccessful) {
+                            _payment.value = paymentResponse.body()
+                        }
+                        // Payment load failure is silent — service data is still shown
+                    } catch (e: Exception) {
+                        // Silent — do not override existing _error state
+                    }
                 } else {
                     _error.value = "Failed to load service details"
                 }
@@ -96,17 +110,18 @@ fun PartnerServiceSummaryScreen(
     val serviceData by viewModel.service.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val payment by viewModel.payment.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = Background,
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Service Summary", 
-                        color = TextPrimary, 
-                        fontWeight = FontWeight.Bold 
-                    ) 
+                        "Service Summary",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackToHome) {
@@ -143,6 +158,7 @@ fun PartnerServiceSummaryScreen(
                 serviceData != null -> {
                     PartnerServiceSummaryContent(
                         service = serviceData!!,
+                        payment = payment,
                         onBackToHome = onBackToHome
                     )
                 }
@@ -190,6 +206,7 @@ private fun ErrorView(
 @Composable
 private fun PartnerServiceSummaryContent(
     service: ServiceResponse,
+    payment: PaymentSummaryResponse?,
     onBackToHome: () -> Unit
 ) {
     Column(
@@ -203,7 +220,7 @@ private fun PartnerServiceSummaryContent(
         PartnerSuccessHeaderCard()
 
         // Earnings Stats
-        PartnerEarningsCard(service)
+        PartnerEarningsCard(service, payment)
 
         // Client Information
         ClientInfoCard(service)
@@ -286,7 +303,7 @@ private fun PartnerSuccessHeaderCard() {
 }
 
 @Composable
-private fun PartnerEarningsCard(service: ServiceResponse) {
+private fun PartnerEarningsCard(service: ServiceResponse, payment: PaymentSummaryResponse?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -319,14 +336,20 @@ private fun PartnerEarningsCard(service: ServiceResponse) {
                 StatItem(
                     icon = Icons.Default.AttachMoney,
                     label = "You Earned",
-                    value = service.getFormattedCost(),
+                    value = payment?.let {
+                        String.format("$%,.0f COP", it.totalAmount)
+                    } ?: service.getFormattedCost(),
                     color = Color(0xFF4CAF50)
                 )
             }
 
             // Rate info
             Text(
-                text = "Rate: $15,000 COP/hour",
+                text = payment?.let {
+                    "Total: ${String.format("$%,.0f COP", it.totalAmount)} • ${it.actualDurationMin} min"
+                } ?: service.hourlyRate?.let {
+                    "Rate: ${String.format("$%,.0f COP/hour", it)}"
+                } ?: "Rate: N/A",
                 fontSize = 12.sp,
                 color = TextSecondary,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -467,7 +490,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
             DetailItem(
                 icon = Icons.Default.CalendarToday,
                 label = "Completed On",
-                value = service.endedAt?.let { 
+                value = service.endedAt?.let {
                     try {
                         val instant = java.time.Instant.parse(it)
                         val formatter = java.time.format.DateTimeFormatter
@@ -483,7 +506,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
             DetailItem(
                 icon = Icons.Default.Schedule,
                 label = "Agreed Hours",
-                value = "${service.agreedHours} hours"
+                value = "${service.agreedHours ?: "N/A"} hours"
             )
         }
     }

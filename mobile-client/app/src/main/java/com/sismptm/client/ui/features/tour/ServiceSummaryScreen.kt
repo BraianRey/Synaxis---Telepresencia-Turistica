@@ -1,5 +1,6 @@
 package com.sismptm.client.ui.features.tour
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,11 +22,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.core.network.RetrofitClient
+import com.sismptm.client.data.remote.api.dto.PaymentSummaryResponse
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.ui.theme.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +49,12 @@ class ServiceSummaryViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private val _payment = MutableStateFlow<PaymentSummaryResponse?>(null)
+    val payment = _payment.asStateFlow()
+    private val _paymentConfirmed = MutableStateFlow(false)
+    val paymentConfirmed = _paymentConfirmed.asStateFlow()
+    private var paymentPollingJob: Job? = null
+
     fun loadService(serviceId: Long) {
         _isLoading.value = true
         _error.value = null
@@ -52,6 +63,15 @@ class ServiceSummaryViewModel : ViewModel() {
                 val response = RetrofitClient.apiService.getServiceById(serviceId)
                 if (response.isSuccessful) {
                     _service.value = response.body()
+                    try {
+                        val paymentResponse = RetrofitClient.apiService.getPaymentSummary(serviceId)
+                        if (paymentResponse.isSuccessful) {
+                            _payment.value = paymentResponse.body()
+                        }
+                        // Payment load failure is silent — service data is still shown
+                    } catch (e: Exception) {
+                        // Silent — do not override existing _error state
+                    }
                 } else {
                     _error.value = "Failed to load service details"
                 }
@@ -65,6 +85,47 @@ class ServiceSummaryViewModel : ViewModel() {
 
     fun setService(serviceResponse: ServiceResponse) {
         _service.value = serviceResponse
+    }
+
+    fun confirmPayment(serviceId: Long) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.confirmPayment(serviceId)
+                if (response.isSuccessful) {
+                    _paymentConfirmed.value = true
+                    _payment.value = response.body()
+                    Log.i("ServiceSummaryViewModel", "Payment confirmed for service $serviceId")
+                }
+            } catch (e: Exception) {
+                Log.e("ServiceSummaryViewModel", "Error confirming payment: ${e.message}")
+            }
+        }
+    }
+
+    fun startPaymentPolling(serviceId: Long) {
+        if (paymentPollingJob?.isActive == true || _payment.value != null) return
+        paymentPollingJob = viewModelScope.launch {
+            while (_payment.value == null) {
+                try {
+                    val response = RetrofitClient.apiService.getPaymentSummary(serviceId)
+                    if (response.isSuccessful) {
+                        _payment.value = response.body()
+                        if (_payment.value != null) {
+                            Log.i("ServiceSummaryViewModel", "Payment detected for service $serviceId")
+                            break
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("ServiceSummaryViewModel", "Polling payment error: ${e.message}")
+                }
+                delay(5000)
+            }
+        }
+    }
+
+    fun stopPaymentPolling() {
+        paymentPollingJob?.cancel()
+        paymentPollingJob = null
     }
 }
 
@@ -92,10 +153,18 @@ fun ServiceSummaryScreen(
             viewModel.loadService(serviceId)
         }
     }
-
     val serviceData by viewModel.service.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val payment by viewModel.payment.collectAsStateWithLifecycle()
+    val paymentConfirmed by viewModel.paymentConfirmed.collectAsStateWithLifecycle()
+    LaunchedEffect(serviceId, payment) {
+        if (payment == null) {
+            viewModel.startPaymentPolling(serviceId)
+        } else {
+            viewModel.stopPaymentPolling()
+        }
+    }
 
     Scaffold(
         containerColor = Background,
@@ -143,6 +212,9 @@ fun ServiceSummaryScreen(
                 serviceData != null -> {
                     ServiceSummaryContent(
                         service = serviceData!!,
+                        payment = payment,
+                        paymentConfirmed = paymentConfirmed,
+                        onConfirmPayment = { viewModel.confirmPayment(serviceId) },
                         onBackToHome = onBackToHome
                     )
                 }
@@ -190,6 +262,9 @@ private fun ErrorView(
 @Composable
 private fun ServiceSummaryContent(
     service: ServiceResponse,
+    payment: PaymentSummaryResponse?,
+    paymentConfirmed: Boolean,
+    onConfirmPayment: () -> Unit,
     onBackToHome: () -> Unit
 ) {
     Column(
@@ -202,8 +277,57 @@ private fun ServiceSummaryContent(
         // Success Header
         SuccessHeaderCard()
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (payment != null && !paymentConfirmed) {
+            Button(
+                onClick = onConfirmPayment,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50)
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AttachMoney,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Confirm Payment",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        } else if (paymentConfirmed) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Payment Confirmed",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4CAF50)
+                )
+            }
+        }
+
         // Service Stats (Duration & Cost)
-        ServiceStatsCard(service)
+        ServiceStatsCard(service, payment)
 
         // Partner Information
         PartnerInfoCard(service)
@@ -286,7 +410,7 @@ private fun SuccessHeaderCard() {
 }
 
 @Composable
-private fun ServiceStatsCard(service: ServiceResponse) {
+private fun ServiceStatsCard(service: ServiceResponse, payment: PaymentSummaryResponse?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -319,7 +443,9 @@ private fun ServiceStatsCard(service: ServiceResponse) {
                 StatItem(
                     icon = Icons.Default.AttachMoney,
                     label = "Total Cost",
-                    value = service.getFormattedCost(),
+                    value = payment?.let { 
+                        "$ %.2f".format(it.totalAmount) 
+                    } ?: service.getFormattedCost(),
                     color = Color(0xFF4CAF50)
                 )
             }

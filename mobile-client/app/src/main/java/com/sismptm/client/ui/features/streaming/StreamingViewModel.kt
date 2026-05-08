@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.data.remote.signaling.SignalingClient
 import com.sismptm.client.data.remote.signaling.SignalingClientListener
 import com.sismptm.client.manager.webrtc.WebRTCManager
@@ -11,6 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.webrtc.*
 import kotlin.random.Random
@@ -26,6 +28,7 @@ class StreamingViewModel(application: Application) :
     private var signalingClient: SignalingClient? = null
     private var webRTCManager: WebRTCManager? = null
     private var partnerId: String = ""
+    private var serviceId: Long = 0L
     private var connectionTimeout: Job? = null
 
     private var reconnectionAttempts = 0
@@ -36,6 +39,9 @@ class StreamingViewModel(application: Application) :
 
     private val _connectionState = MutableStateFlow(PeerConnection.PeerConnectionState.NEW)
     val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState
+
+    private val _sessionEnded = MutableStateFlow(false)
+    val sessionEnded: StateFlow<Boolean> = _sessionEnded.asStateFlow()
 
     // Quality metrics for degradation detection
     private var lastFramesDecoded = 0L
@@ -52,6 +58,7 @@ class StreamingViewModel(application: Application) :
         signalingClient?.close()
         
         this.partnerId = serviceId
+        this.serviceId = serviceId.toLongOrNull() ?: 0L
         val myClientId = "CLIENT_$serviceId"
 
         signalingClient = SignalingClient(this, myClientId)
@@ -159,6 +166,7 @@ class StreamingViewModel(application: Application) :
         if (reconnectionJob?.isActive == true) return
         if (reconnectionAttempts >= maxReconnectionAttempts) {
             Log.e(TAG, "Max reconnection attempts reached")
+            checkServiceStatus()
             return
         }
 
@@ -168,7 +176,75 @@ class StreamingViewModel(application: Application) :
         reconnectionJob = viewModelScope.launch {
             delay(delayMs)
             if (_connectionState.value != PeerConnection.PeerConnectionState.CONNECTED) {
+                if (isServiceCompleted()) {
+                    Log.i(TAG, "Service completed detected before reconnect attempt. Navigating to summary.")
+                    _sessionEnded.value = true
+                    return@launch
+                }
                 attemptRejoin()
+            }
+        }
+    }
+
+    private fun checkServiceStatus() {
+        if (serviceId == 0L) return
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getServiceById(serviceId)
+                if (response.isSuccessful) {
+                    val status = response.body()?.status
+                    Log.i(TAG, "Service $serviceId status after give-up: $status")
+                    if (status == "COMPLETED") {
+                        _sessionEnded.value = true
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error checking service status: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun isServiceCompleted(): Boolean {
+        if (serviceId == 0L) return false
+        return try {
+            val response = RetrofitClient.apiService.getServiceById(serviceId)
+            if (response.isSuccessful) {
+                val status = response.body()?.status
+                Log.i(TAG, "Pre-reconnect status check: service $serviceId is $status")
+                status == "COMPLETED"
+            } else false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in pre-reconnect status check: ${e.message}")
+            false
+        }
+    }
+
+    fun endSessionAndNavigate() {
+        // Cancel all reconnection jobs
+        reconnectionJob?.cancel()
+        connectionTimeout?.cancel()
+
+        // Stop WebRTC and signaling AFTER backend call
+        viewModelScope.launch {
+            try {
+                // Notify backend that client is ending the session
+                // This triggers payment calculation and sets status = COMPLETED
+                val completeResponse = RetrofitClient.apiService
+                    .completeServiceByClient(serviceId)
+                if (completeResponse.isSuccessful) {
+                    Log.i(TAG, "Service $serviceId completed by client successfully")
+                } else {
+                    Log.e(TAG, "Failed to complete service by client: " +
+                        "${completeResponse.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error calling client-complete: ${e.message}")
+            } finally {
+                // Close WebRTC and signaling after backend call attempt
+                signalingClient?.close()
+                webRTCManager?.close()
+                // Navigate regardless — ServiceSummaryScreen handles missing payment
+                _sessionEnded.value = true
             }
         }
     }

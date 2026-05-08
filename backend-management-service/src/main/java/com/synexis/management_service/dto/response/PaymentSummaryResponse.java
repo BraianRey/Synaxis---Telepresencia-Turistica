@@ -1,7 +1,7 @@
 package com.synexis.management_service.dto.response;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record PaymentSummaryResponse(
         Long serviceId,
@@ -9,6 +9,6 @@ public record PaymentSummaryResponse(
         BigDecimal billedHours,
         BigDecimal totalAmount,
         BigDecimal hourlyRate,
-        LocalDateTime calculatedAt,
+        Instant calculatedAt,
         Boolean confirmed) {
 }

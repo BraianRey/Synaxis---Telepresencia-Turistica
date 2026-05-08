@@ -195,7 +195,7 @@ public class ServiceServiceImpl implements ServiceService {
                 payment.getBilledHours(),
                 payment.getTotalAmount(),
                 payment.getHourlyRate(),
-                payment.getCalculatedAt(),
+                payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 payment.getConfirmed());
     }
 
@@ -217,7 +217,7 @@ public class ServiceServiceImpl implements ServiceService {
                 payment.getBilledHours(),
                 payment.getTotalAmount(),
                 payment.getHourlyRate(),
-                payment.getCalculatedAt(),
+                payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 payment.getConfirmed());
     }
 
@@ -366,6 +366,47 @@ public class ServiceServiceImpl implements ServiceService {
                 "PARTNER",
                 partnerId,
                 "Service completed",
+                Instant.now());
+
+        return serviceMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResponse completeServiceByClient(Long serviceId, Long clientId) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
+
+        if (service.getStatus() != ServiceStatus.STARTED) {
+            throw new BusinessRuleViolationException(
+                    "Only STARTED services can be completed");
+        }
+
+        Client client = service.getClient();
+        if (client == null || !client.getId().equals(clientId)) {
+            throw new ForbiddenAccessException(
+                    "Client is not the owner of this service");
+        }
+
+        service.setStatus(ServiceStatus.COMPLETED);
+        service.setEndedAt(LocalDateTime.now());
+
+        Partner assignedPartner = service.getPartner();
+        if (assignedPartner != null &&
+                assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
+            assignedPartner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
+            partnerRepository.save(assignedPartner);
+        }
+
+        ServiceEntity saved = serviceRepository.save(service);
+        ((NoopPaymentService) paymentService).calculateAndPersist(saved);
+
+        serviceHistoryService.recordEvent(
+                saved,
+                "CLIENT",
+                clientId,
+                "Service completed by client",
                 Instant.now());
 
         return serviceMapper.toResponse(saved);

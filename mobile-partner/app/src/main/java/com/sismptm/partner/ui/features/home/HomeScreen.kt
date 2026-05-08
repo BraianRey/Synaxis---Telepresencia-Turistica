@@ -213,9 +213,9 @@ private fun RequestsTabContent(
                     } else {
                         items(requestsState.requests, key = { it.serviceId }) { service ->
                             val location = service.startLocationDescription?.ifBlank { "Unspecified" } ?: "Unspecified"
-                            val duration = "${service.agreedHours}h"
-                            val price = "${"%.0f".format(service.hourlyRate)} COP/h"
-                            val clientName = service.clientName?.ifBlank { "Client #${service.clientId}" } ?: "Client #${service.clientId}"
+                            val duration = service.agreedHours?.let { "${it}h" } ?: "N/A"
+                            val price = service.hourlyRate?.let { "${"%.0f".format(it)} COP/h" } ?: "N/A"
+                            val clientName = service.clientName?.ifBlank { "Unknown Client" } ?: "Unknown Client"
 
                             RequestCard(
                                 clientName = clientName,
@@ -281,8 +281,8 @@ private fun ServiceHistoryCard(service: ServiceResponse) {
                 Text("Service #${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold)
                 ServiceStatusBadge(service.status)
             }
-            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { "Client #${service.clientId}" } ?: "Client #${service.clientId}"}", color = TextTertiary)
-            Text("${stringResource(R.string.label_rate)}: ${"%.0f".format(service.hourlyRate)} COP/h", color = TextTertiary)
+            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { "Unknown Client" } ?: "Unknown Client"}", color = TextTertiary)
+            Text("${stringResource(R.string.label_rate)}: ${service.hourlyRate?.let { "${"%.0f".format(it)} COP/h" } ?: "N/A"}", color = TextTertiary)
         }
     }
 }

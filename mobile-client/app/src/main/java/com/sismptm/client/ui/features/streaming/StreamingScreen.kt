@@ -43,10 +43,18 @@ import org.webrtc.SurfaceViewRenderer
 fun StreamingScreen(
     serviceId: Long,
     onBack: () -> Unit,
+    onNavigateToSummary: (Long) -> Unit = {},
     viewModel: StreamingViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val connectionState by viewModel.connectionState.collectAsStateWithLifecycle()
+    val sessionEnded by viewModel.sessionEnded.collectAsStateWithLifecycle()
+
+    LaunchedEffect(sessionEnded) {
+        if (sessionEnded) {
+            onNavigateToSummary(serviceId)
+        }
+    }
 
     val remoteRenderer = remember(serviceId) {
         SurfaceViewRenderer(context).apply {
@@ -105,7 +113,7 @@ fun StreamingScreen(
             DirectionalControls { direction -> viewModel.sendCommand(direction) }
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = onBack,
+                onClick = { viewModel.endSessionAndNavigate() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f)),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.padding(horizontal = 32.dp).width(200.dp)

@@ -206,9 +206,9 @@ fun ServiceWaitingScreen(
         viewModel.load(serviceId)
     }
 
-    // Auto-navigate to streaming when status is READY
+    // Auto-navigate to streaming when status is STARTED
     LaunchedEffect(status) {
-        if (status == "READY") {
+        if (status == "STARTED") {
             onNavigateToStreaming(serviceId)
         }
     }
@@ -282,8 +282,8 @@ fun ServiceWaitingScreen(
                             text = when (status) {
                                 "REQUESTED" -> "Waiting for a partner to accept your request."
                                 "ACCEPTED" -> "A partner accepted your request. Waiting for tour start."
-                                "READY" -> "Partner is ready! Starting streaming..."
-                                "STARTED" -> "Tour is in progress."
+                                "READY" -> "Waiting for the partner..."
+                                "STARTED" -> "Partner is ready! Starting streaming..."
                                 "COMPLETED" -> "Tour finished successfully."
                                 "CANCELLED" -> "Tour was cancelled."
                                 else -> "Checking latest status..."

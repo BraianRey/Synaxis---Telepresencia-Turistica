@@ -32,6 +32,6 @@ class PartnerRepositoryImpl : PartnerRepository {
     override suspend fun acceptService(serviceId: Long): Response<ServiceResponse> = 
         api.acceptService(serviceId)
 
-    override suspend fun markServiceReady(serviceId: Long): Response<Unit> = 
-        api.markServiceAsReady(serviceId)
+    override suspend fun startService(serviceId: Long): Response<ServiceResponse> =
+        api.startService(serviceId)
 }
