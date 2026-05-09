@@ -131,4 +131,57 @@
     <string name="instruction_left">← Turn left</string>
     <string name="instruction_right">→ Turn right</string>
 
+    <!-- Additional UI strings -->
+    <string name="grant_access">Grant Access</string>
+    <string name="end_session">End Session</string>
+    <string name="verify_server_connection">Verify server connection</string>
+    <string name="accept_request_failed">Accept Request Failed</string>
+
+    <!-- PartnerServiceSummaryScreen -->
+    <string name="service_summary">Service Summary</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="back_to_home">Back to Home</string>
+    <string name="back_to_dashboard">Back to Dashboard</string>
+    <string name="service_completed">Service Completed!</string>
+    <string name="service_completed_msg">Great job! You\'ve successfully completed the service.</string>
+    <string name="your_earnings">Your Earnings</string>
+    <string name="duration">Duration</string>
+    <string name="you_earned">You Earned</string>
+    <string name="rate_na">Rate: N/A</string>
+    <string name="client_info_title">Client Information</string>
+    <string name="service_details">Service Details</string>
+    <string name="location_label">Location</string>
+    <string name="completed_on">Completed On</string>
+    <string name="agreed_hours_label">Agreed Hours</string>
+    <string name="hours_unit"> hours</string>
+    <string name="currency_format">$%1$s COP</string>
+
+    <!-- ServiceReadyScreen -->
+    <string name="ready_to_start">Ready to Start?</string>
+    <string name="service_ref_prefix">Service Reference: #</string>
+    <string name="ready_start_instruction">The client has been notified and is waiting for you to start the transmission.</string>
+    <string name="btn_start_transmission">START TRANSMISSION</string>
+    <string name="btn_go_back_dashboard">Go back to dashboard</string>
+
+    <!-- HomeScreen -->
+    <string name="not_specified">Unspecified</string>
+    <string name="unknown_client">Unknown Client</string>
+    <string name="status_new">New</string>
+    <string name="service_prefix">#</string>
+    <string name="rate_unit_suffix"> COP/h</string>
+
+    <!-- RequestDetailScreen -->
+    <string name="incoming_request_title">Incoming Tour Request</string>
+
+    <!-- ServiceDetailScreen -->
+    <string name="service_in_progress">Service in Progress</string>
+    <string name="btn_complete_service">Complete Service</string>
+    <string name="error_load_service_details">Failed to load service details</string>
+    <string name="label_total_prefix">Total: </string>
+    <string name="minutes_unit_short"> min</string>
+    <string name="label_rate_prefix">Rate: </string>
+    <string name="per_hour_suffix">/hour</string>
+    <string name="you_earned_label">You Earned</string>
+    <string name="duration_label">Duration</string>
+
 </resources>

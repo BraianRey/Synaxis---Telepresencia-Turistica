@@ -94,7 +94,7 @@ fun StreamingScreen(
                 onClick = onBack,
                 colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.3f))
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -128,10 +128,10 @@ fun StreamingScreen(
 fun ConnectionStatusChip(isConnected: Boolean, state: PeerConnection.PeerConnectionState) {
     val statusText = when (state) {
         PeerConnection.PeerConnectionState.CONNECTED -> stringResource(R.string.connection_status_good)
-        PeerConnection.PeerConnectionState.CONNECTING -> "Connecting..."
+        PeerConnection.PeerConnectionState.CONNECTING -> stringResource(R.string.connection_status_connecting)
         PeerConnection.PeerConnectionState.DISCONNECTED, PeerConnection.PeerConnectionState.FAILED -> stringResource(R.string.connection_status_poor)
-        PeerConnection.PeerConnectionState.CLOSED -> "Closed"
-        else -> "Disconnected"
+        PeerConnection.PeerConnectionState.CLOSED -> stringResource(R.string.connection_status_closed)
+        else -> stringResource(R.string.connection_status_disconnected)
     }
 
     Surface(color = Color.Black.copy(alpha = 0.3f), shape = RoundedCornerShape(20.dp)) {

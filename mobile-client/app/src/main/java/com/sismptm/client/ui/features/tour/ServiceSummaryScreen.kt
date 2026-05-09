@@ -19,8 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sismptm.client.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -73,7 +75,7 @@ class ServiceSummaryViewModel : ViewModel() {
                         // Silent — do not override existing _error state
                     }
                 } else {
-                    _error.value = "Failed to load service details"
+                    _error.value = "Failed to load service details "
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "Unknown error"
@@ -170,18 +172,18 @@ fun ServiceSummaryScreen(
         containerColor = Background,
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Service Summary", 
-                        color = TextPrimary, 
-                        fontWeight = FontWeight.Bold 
-                    ) 
+                        stringResource(R.string.service_summary),
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackToHome) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = TextPrimary
                         )
                     }
@@ -250,11 +252,11 @@ private fun ErrorView(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onRetry) {
-            Text("Retry")
+            Text(stringResource(R.string.retry))
         }
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedButton(onClick = onBack) {
-            Text("Back to Home")
+            Text(stringResource(R.string.back_to_home))
         }
     }
 }
@@ -298,7 +300,7 @@ private fun ServiceSummaryContent(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Confirm Payment",
+                    stringResource(R.string.confirm_payment),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -318,7 +320,7 @@ private fun ServiceSummaryContent(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Payment Confirmed",
+                    stringResource(R.string.payment_confirmed),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF4CAF50)
@@ -353,7 +355,7 @@ private fun ServiceSummaryContent(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "Back to Home",
+                stringResource(R.string.back_to_home),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -391,7 +393,7 @@ private fun SuccessHeaderCard() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Service Completed!",
+                text = stringResource(R.string.service_completed),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -400,7 +402,7 @@ private fun SuccessHeaderCard() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Thank you for using Synexis. We hope you enjoyed your virtual tour!",
+                text = stringResource(R.string.thank_you_synexis),
                 fontSize = 14.sp,
                 color = Color(0xFFA5D6A7),
                 textAlign = TextAlign.Center
@@ -421,7 +423,7 @@ private fun ServiceStatsCard(service: ServiceResponse, payment: PaymentSummaryRe
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Service Stats",
+                text = stringResource(R.string.service_stats),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -434,7 +436,7 @@ private fun ServiceStatsCard(service: ServiceResponse, payment: PaymentSummaryRe
                 // Duration Stat
                 StatItem(
                     icon = Icons.Default.Timer,
-                    label = "Duration",
+                    label = stringResource(R.string.duration),
                     value = service.getFormattedDuration(),
                     color = PrimaryAccent
                 )
@@ -442,9 +444,9 @@ private fun ServiceStatsCard(service: ServiceResponse, payment: PaymentSummaryRe
                 // Cost Stat
                 StatItem(
                     icon = Icons.Default.AttachMoney,
-                    label = "Total Cost",
-                    value = payment?.let { 
-                        "$ %.2f".format(it.totalAmount) 
+                    label = stringResource(R.string.total_cost),
+                    value = payment?.let {
+                        stringResource(R.string.currency_format, "%.2f".format(it.totalAmount))
                     } ?: service.getFormattedCost(),
                     color = Color(0xFF4CAF50)
                 )
@@ -506,7 +508,7 @@ private fun PartnerInfoCard(service: ServiceResponse) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Your Guide",
+                text = stringResource(R.string.your_guide),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -536,7 +538,7 @@ private fun PartnerInfoCard(service: ServiceResponse) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = service.partnerName ?: "Unknown Guide",
+                        text = service.partnerName ?: stringResource(R.string.unknown_guide),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
@@ -585,7 +587,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Service Details",
+                text = stringResource(R.string.service_details),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -593,20 +595,20 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
 
             DetailItem(
                 icon = Icons.Default.LocationOn,
-                label = "Location",
-                value = service.startLocationDescription ?: "Not specified"
+                label = stringResource(R.string.label_location),
+                value = service.startLocationDescription ?: stringResource(R.string.not_specified)
             )
 
             DetailItem(
                 icon = Icons.Default.AccessTime,
-                label = "Service ID",
-                value = "#${service.serviceId}"
+                label = stringResource(R.string.service_id_label),
+                value = stringResource(R.string.service_prefix) + service.serviceId
             )
 
             DetailItem(
                 icon = Icons.Default.CalendarToday,
-                label = "Completed On",
-                value = service.endedAt?.let { 
+                label = stringResource(R.string.completed_on),
+                value = service.endedAt?.let {
                     try {
                         val instant = java.time.Instant.parse(it)
                         val formatter = java.time.format.DateTimeFormatter
@@ -616,7 +618,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                     } catch (e: Exception) {
                         it
                     }
-                } ?: "N/A"
+                } ?: stringResource(R.string.not_available)
             )
         }
     }

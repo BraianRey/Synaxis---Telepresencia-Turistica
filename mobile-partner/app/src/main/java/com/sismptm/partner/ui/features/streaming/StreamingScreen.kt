@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -92,8 +93,8 @@ fun StreamingScreen(
 private fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF12151B)).padding(24.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Camera & Microphone Required", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Button(onClick = onRetry) { Text("Grant Access") }
+            Text(stringResource(R.string.camera_mic_permission_required), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Button(onClick = onRetry) { Text(stringResource(R.string.grant_access)) }
         }
     }
 }
@@ -193,7 +194,7 @@ private fun StreamingContent(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("End Session", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.end_session), fontWeight = FontWeight.Bold)
                 }
             }
         }

@@ -75,7 +75,7 @@ fun LoginScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = pingState ?: "Verify server connection",
+                text = pingState ?: stringResource(R.string.verify_server_connection),
                 fontSize = 12.sp,
                 color = if (pingState?.contains("Online") == true) Success else TextTertiary,
                 modifier = Modifier.weight(1f)

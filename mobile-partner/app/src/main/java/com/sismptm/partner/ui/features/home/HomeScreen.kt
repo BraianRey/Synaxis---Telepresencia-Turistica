@@ -132,7 +132,7 @@ private fun HomeContent(
     if (acceptErrorMessage != null) {
         AlertDialog(
             onDismissRequest = { homeViewModel.clearAcceptError() },
-            title = { Text("Accept Request Failed") },
+            title = { Text(stringResource(R.string.accept_request_failed)) },
             text = { Text(acceptErrorMessage!!) },
             confirmButton = {
                 TextButton(onClick = { homeViewModel.clearAcceptError() }) {
@@ -182,7 +182,7 @@ private fun RequestsTabContent(
     onAccept: (ServiceResponse) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { "Partner" }) }
+        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) }) }
         item { AvailabilityCard(isOnline = isOnline, onToggleOnline = onToggleOnline) }
         item {
             OutlinedButton(
@@ -212,15 +212,15 @@ private fun RequestsTabContent(
                         item { Text(stringResource(R.string.no_requests_yet), color = TextTertiary) }
                     } else {
                         items(requestsState.requests, key = { it.serviceId }) { service ->
-                            val location = service.startLocationDescription?.ifBlank { "Unspecified" } ?: "Unspecified"
-                            val duration = service.agreedHours?.let { "${it}h" } ?: "N/A"
-                            val price = service.hourlyRate?.let { "${"%.0f".format(it)} COP/h" } ?: "N/A"
-                            val clientName = service.clientName?.ifBlank { "Unknown Client" } ?: "Unknown Client"
+                            val location = service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified)
+                            val duration = service.agreedHours?.let { "${it}${stringResource(R.string.hours_unit).first()}" } ?: stringResource(R.string.rate_na)
+                            val price = service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)
+                            val clientName = service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)
 
                             RequestCard(
                                 clientName = clientName,
                                 location = location,
-                                elapsedTime = "New",
+                                elapsedTime = stringResource(R.string.status_new),
                                 duration = duration,
                                 price = price,
                                 onDecline = {},
@@ -278,11 +278,11 @@ private fun ServiceHistoryCard(service: ServiceResponse) {
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Service #${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold)
+                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold)
                 ServiceStatusBadge(service.status)
             }
-            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { "Unknown Client" } ?: "Unknown Client"}", color = TextTertiary)
-            Text("${stringResource(R.string.label_rate)}: ${service.hourlyRate?.let { "${"%.0f".format(it)} COP/h" } ?: "N/A"}", color = TextTertiary)
+            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}", color = TextTertiary)
+            Text("${stringResource(R.string.label_rate)}: ${service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)}", color = TextTertiary)
         }
     }
 }

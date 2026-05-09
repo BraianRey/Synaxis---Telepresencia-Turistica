@@ -1,5 +1,8 @@
 package com.sismptm.partner.ui.features.tour
 
+import androidx.compose.ui.res.stringResource
+import com.sismptm.partner.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +27,7 @@ fun ServiceDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Service Details", color = TextPrimary) },
+                title = { Text(stringResource(R.string.service_details), color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -55,7 +58,7 @@ fun ServiceDetailScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Service in Progress",
+                    text = stringResource(R.string.service_in_progress),
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimary
                 )
@@ -71,12 +74,12 @@ fun ServiceDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Client: María García",
+                            text = "${stringResource(R.string.label_client)}: María García",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary
                         )
                         Text(
-                            text = "Status: ACTIVE",
+                            text = stringResource(R.string.tour_detail_status, "ACTIVE"),
                             color = Success,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
@@ -96,7 +99,7 @@ fun ServiceDetailScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        "Complete Service",
+                        stringResource(R.string.btn_complete_service),
                         color = TextPrimary,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                     )
