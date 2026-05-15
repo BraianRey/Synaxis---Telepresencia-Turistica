@@ -4,6 +4,7 @@ import com.sismptm.client.data.remote.api.dto.*
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -43,4 +44,22 @@ interface ApiService {
     /** Cancels an existing service request */
     @POST("api/services/{serviceId}/cancel")
     suspend fun cancelService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    /** Retrieves the payment summary for a completed service */
+    @GET("api/services/{serviceId}/payment")
+    suspend fun getPaymentSummary(
+        @Path("serviceId") serviceId: Long
+    ): Response<PaymentSummaryResponse>
+
+    /** Confirms the simulated payment for a completed service */
+    @PATCH("api/services/{serviceId}/payment/confirm")
+    suspend fun confirmPayment(
+        @Path("serviceId") serviceId: Long
+    ): Response<PaymentSummaryResponse>
+
+    /** Completes an in-progress service session initiated by the client */
+    @POST("api/services/{serviceId}/client-complete")
+    suspend fun completeServiceByClient(
+        @Path("serviceId") serviceId: Long
+    ): Response<ServiceResponse>
 }

@@ -20,9 +20,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.sismptm.client.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -206,9 +208,9 @@ fun ServiceWaitingScreen(
         viewModel.load(serviceId)
     }
 
-    // Auto-navigate to streaming when status is READY
+    // Auto-navigate to streaming when status is STARTED
     LaunchedEffect(status) {
-        if (status == "READY") {
+        if (status == "STARTED") {
             onNavigateToStreaming(serviceId)
         }
     }
@@ -224,7 +226,7 @@ fun ServiceWaitingScreen(
         containerColor = Background,
         topBar = {
             TopAppBar(
-                title = { Text("Service status", color = TextPrimary, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.service_status), color = TextPrimary, fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
             )
         }
@@ -238,7 +240,7 @@ fun ServiceWaitingScreen(
         ) {
             if (uiState.isLoading) {
                 CircularProgressIndicator(color = PrimaryAccent)
-                Text("Loading your active request...", color = TextSecondary)
+                Text(stringResource(R.string.loading_active_request), color = TextSecondary)
             }
 
             uiState.error?.let { message ->
@@ -277,20 +279,20 @@ fun ServiceWaitingScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         StatusBadge(status = service.status)
-                        Text("Status: ${service.status}", color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                        Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.SemiBold)
                         Text(
                             text = when (status) {
-                                "REQUESTED" -> "Waiting for a partner to accept your request."
-                                "ACCEPTED" -> "A partner accepted your request. Waiting for tour start."
-                                "READY" -> "Partner is ready! Starting streaming..."
-                                "STARTED" -> "Tour is in progress."
-                                "COMPLETED" -> "Tour finished successfully."
-                                "CANCELLED" -> "Tour was cancelled."
-                                else -> "Checking latest status..."
+                                "REQUESTED" -> stringResource(R.string.waiting_for_partner_accept)
+                                "ACCEPTED" -> stringResource(R.string.partner_accepted_waiting_start)
+                                "READY" -> stringResource(R.string.ready_for_tour_start)
+                                "STARTED" -> stringResource(R.string.partner_ready_streaming)
+                                "COMPLETED" -> stringResource(R.string.tour_finished_successfully)
+                                "CANCELLED" -> stringResource(R.string.tour_cancelled)
+                                else -> stringResource(R.string.checking_latest_status)
                             },
                             color = TextSecondary
                         )
-                        Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = TextSecondary)
+                        Text("${stringResource(R.string.location_prefix)}${service.startLocationDescription ?: stringResource(R.string.not_specified)}", color = TextSecondary)
                     }
                 }
             }
@@ -304,7 +306,7 @@ fun ServiceWaitingScreen(
                     if (uiState.isCancelling) {
                         CircularProgressIndicator(color = Color(0xFFC62828))
                     } else {
-                        Text("Cancel tour", color = Color(0xFFC62828))
+                        Text(stringResource(R.string.cancel_tour), color = Color(0xFFC62828))
                     }
                 }
             }
@@ -314,14 +316,14 @@ fun ServiceWaitingScreen(
                 enabled = !uiState.isRefreshing && !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (uiState.isRefreshing) "Refreshing..." else "Refresh status")
+                Text(if (uiState.isRefreshing) stringResource(R.string.refreshing) else stringResource(R.string.refresh_status))
             }
 
             Button(
                 onClick = onBackHome,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Back to home")
+                Text(stringResource(R.string.back_to_home))
             }
         }
     }

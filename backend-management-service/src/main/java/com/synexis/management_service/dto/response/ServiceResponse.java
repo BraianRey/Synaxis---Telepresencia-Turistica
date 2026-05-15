@@ -1,6 +1,6 @@
 package com.synexis.management_service.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Service response DTO with comprehensive information about the service,
@@ -10,19 +10,11 @@ public record ServiceResponse(
 
         Long serviceId,
 
-        Long clientId,
         String clientName,
         String clientEmail,
-        String clientPicDirectory,
 
-        Long partnerId,
         String partnerName,
         String partnerEmail,
-        String partnerPicDirectory,
-
-        Double longitude,
-
-        Double latitude,
 
         String startLocationDescription,
 
@@ -32,41 +24,11 @@ public record ServiceResponse(
 
         String status,
 
-        LocalDateTime requestedAt,
+        Instant startedAt,
 
-        LocalDateTime acceptedAt,
-
-        LocalDateTime startedAt,
-
-        LocalDateTime endedAt
+        Instant endedAt
 
 ) {
-    public ServiceResponse(Long serviceId, Long clientId, String clientName, String clientEmail, String clientPicDirectory,
-            Long partnerId, String partnerName, String partnerEmail, String partnerPicDirectory,
-            Double longitude, Double latitude, String startLocationDescription, Integer agreedHours,
-            Double hourlyRate, String status, LocalDateTime requestedAt, LocalDateTime acceptedAt,
-            LocalDateTime startedAt, LocalDateTime endedAt) {
-        this.serviceId = serviceId;
-        this.clientId = clientId;
-        this.clientName = clientName;
-        this.clientEmail = clientEmail;
-        this.clientPicDirectory = clientPicDirectory;
-        this.partnerId = partnerId;
-        this.partnerName = partnerName;
-        this.partnerEmail = partnerEmail;
-        this.partnerPicDirectory = partnerPicDirectory;
-        this.longitude = longitude;
-        this.latitude = latitude;
-        this.startLocationDescription = startLocationDescription;
-        this.agreedHours = agreedHours;
-        this.hourlyRate = hourlyRate;
-        this.status = status;
-        this.requestedAt = requestedAt;
-        this.acceptedAt = acceptedAt;
-        this.startedAt = startedAt;
-        this.endedAt = endedAt;
-    }
-
     /**
      * Calculates the service duration in minutes.
      * Returns null if the service hasn't started or ended.
@@ -87,9 +49,12 @@ public record ServiceResponse(
         if (durationMinutes == null || hourlyRate == null) {
             return null;
         }
-        // Convert minutes to hours and multiply by rate
-        double hours = durationMinutes / 60.0;
-        return Math.round(hours * hourlyRate * 100.0) / 100.0; // Round to 2 decimal places
+        if (durationMinutes <= 60) {
+            return hourlyRate;
+        }
+        long excessMinutes = durationMinutes - 60;
+        double excessCost = (excessMinutes / 60.0) * hourlyRate;
+        return Math.round((hourlyRate + excessCost) * 100.0) / 100.0;
     }
 
     /**

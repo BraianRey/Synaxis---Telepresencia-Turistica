@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
  * ViewModel for the Service Ready screen, handling the transition from acceptance to streaming.
  */
 class ServiceReadyViewModel(
-    private val markServiceReadyUseCase: MarkServiceReadyUseCase = MarkServiceReadyUseCase(PartnerRepositoryImpl())
+    private val startServiceUseCase: MarkServiceReadyUseCase = MarkServiceReadyUseCase(PartnerRepositoryImpl())
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow<ReadyUiState>(ReadyUiState.Idle)
@@ -29,7 +29,7 @@ class ServiceReadyViewModel(
         viewModelScope.launch {
             _uiState.value = ReadyUiState.Loading
             try {
-                val response = markServiceReadyUseCase(serviceId)
+                val response = startServiceUseCase(serviceId)
                 if (response.isSuccessful) {
                     _uiState.value = ReadyUiState.Success
                 } else {

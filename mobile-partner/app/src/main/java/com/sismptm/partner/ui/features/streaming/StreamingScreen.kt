@@ -25,10 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import com.sismptm.partner.core.session.SessionManager
@@ -39,7 +41,7 @@ import java.util.Locale
 private var activeMediaPlayer: MediaPlayer? = null
 
 /**
- * Interface for live streaming, displaying incoming directional commands and providing 
+ * Interface for live streaming, displaying incoming directional commands and providing
  * audio feedback to the partner.
  */
 @Composable
@@ -77,7 +79,12 @@ fun StreamingScreen(
                 launcher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
             }
         } else {
-            StreamingContent(onBack = onBack, viewModel = viewModel, partnerId = partnerId)
+            StreamingContent(
+        onBack = onBack,
+        viewModel = viewModel,
+        partnerId = partnerId,
+        serviceId = serviceId
+    )
         }
     }
 }
@@ -86,8 +93,8 @@ fun StreamingScreen(
 private fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF12151B)).padding(24.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Camera & Microphone Required", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Button(onClick = onRetry) { Text("Grant Access") }
+            Text(stringResource(R.string.camera_mic_permission_required), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Button(onClick = onRetry) { Text(stringResource(R.string.grant_access)) }
         }
     }
 }
@@ -96,12 +103,22 @@ private fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
 private fun StreamingContent(
     onBack: () -> Unit,
     viewModel: StreamingViewModel,
-    partnerId: String
+    partnerId: String,
+    serviceId: Long
 ) {
     val context = LocalContext.current
     val connectionState by viewModel.connectionState.collectAsState()
     val commands by viewModel.commands.collectAsState()
     val lastCommandEvent by viewModel.lastCommandEvent.collectAsState()
+    val serviceCompleted by viewModel.serviceCompleted.collectAsStateWithLifecycle()
+    val isCompletingService by viewModel.isCompletingService.collectAsStateWithLifecycle()
+    val completeServiceError by viewModel.completeServiceError.collectAsStateWithLifecycle()
+
+    LaunchedEffect(serviceCompleted) {
+        if (serviceCompleted) {
+            onBack()
+        }
+    }
 
     // Persistent renderer to avoid recreation during recompositions
     val surfaceViewRenderer = remember {
@@ -154,18 +171,37 @@ private fun StreamingContent(
         ) {
             // End session button (red)
             Button(
-                onClick = onBack,
+                onClick = {
+                    if (!isCompletingService) {
+                        viewModel.completeService(serviceId)
+                    }
+                },
+                enabled = !isCompletingService,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935)),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.height(48.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("End Session", fontWeight = FontWeight.Bold)
+                if (isCompletingService) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.end_session), fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        completeServiceError?.let { error ->
+            LaunchedEffect(error) {
+                Log.e("StreamingScreen", "Complete service error: $error")
             }
         }
     }
@@ -208,7 +244,7 @@ private fun InstructionItem(instruction: String, alphaValue: Float) {
     val context = LocalContext.current
     val currentConfig = LocalConfiguration.current
     val lang = SessionManager.language
-    
+
     val displayId = when (instruction.lowercase().trim()) {
         "up" -> R.string.instruction_up
         "down" -> R.string.instruction_down
@@ -239,11 +275,11 @@ private fun InstructionItem(instruction: String, alphaValue: Float) {
 private fun playInstructionAudio(context: Context, instruction: String) {
     val lang = SessionManager.language
     val audioName = instruction.lowercase().trim()
-    
+
     val config = Configuration(context.resources.configuration)
     config.setLocale(Locale.forLanguageTag(lang))
     val localizedContext = context.createConfigurationContext(config)
-    
+
     val audioResId = localizedContext.resources.getIdentifier(audioName, "raw", context.packageName)
 
     if (audioResId == 0) return

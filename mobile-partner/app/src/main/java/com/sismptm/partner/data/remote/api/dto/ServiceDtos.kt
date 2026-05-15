@@ -8,24 +8,16 @@ import com.google.gson.annotations.SerializedName
 data class ServiceResponse(
     @SerializedName("serviceId") val serviceId: Long,
     // Client information
-    @SerializedName("clientId") val clientId: Long,
     @SerializedName("clientName") val clientName: String? = null,
     @SerializedName("clientEmail") val clientEmail: String? = null,
-    @SerializedName("clientPicDirectory") val clientPicDirectory: String? = null,
     // Partner information
-    @SerializedName("partnerId") val partnerId: Long?,
     @SerializedName("partnerName") val partnerName: String? = null,
     @SerializedName("partnerEmail") val partnerEmail: String? = null,
-    @SerializedName("partnerPicDirectory") val partnerPicDirectory: String? = null,
     // Service details
-    @SerializedName("longitude") val longitude: Double,
-    @SerializedName("latitude") val latitude: Double,
     @SerializedName("startLocationDescription") val startLocationDescription: String?,
-    @SerializedName("agreedHours") val agreedHours: Int,
-    @SerializedName("hourlyRate") val hourlyRate: Double? = 15000.0,
+    @SerializedName("agreedHours") val agreedHours: Int? = null,
+    @SerializedName("hourlyRate") val hourlyRate: Double? = null,
     @SerializedName("status") val status: String,
-    @SerializedName("requestedAt") val requestedAt: String?,
-    @SerializedName("acceptedAt") val acceptedAt: String?,
     @SerializedName("startedAt") val startedAt: String?,
     @SerializedName("endedAt") val endedAt: String?
 ) {
@@ -72,6 +64,16 @@ data class ServiceResponse(
         return String.format("$%,.0f COP", cost)
     }
 }
+
+data class PaymentSummaryResponse(
+    val serviceId: Long,
+    val actualDurationMin: Int,
+    val billedHours: Double,
+    val totalAmount: Double,
+    val hourlyRate: Double,
+    val calculatedAt: String,
+    val confirmed: Boolean
+)
 
 data class LocationUpdateRequest(
     @SerializedName("latitude") val latitude: Double,

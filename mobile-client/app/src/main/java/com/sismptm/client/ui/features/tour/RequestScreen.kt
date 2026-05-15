@@ -47,7 +47,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.sismptm.client.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
@@ -126,7 +128,7 @@ fun RequestScreen(
     if (successState != null) {
         RequestCreatedDialog(
             service = successState.service,
-            areaName = successState.service.startLocationDescription ?: "Location not specified",
+            areaName = successState.service.startLocationDescription ?: stringResource(R.string.not_specified),
             onDismiss = { viewModel.resetState() },
             onConfirm = {
                 viewModel.resetState()
@@ -153,7 +155,7 @@ fun RequestScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Create service request",
+                        text = stringResource(R.string.create_service_request),
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold
                     )
@@ -162,7 +164,7 @@ fun RequestScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = TextPrimary
                         )
                     }
@@ -191,13 +193,13 @@ fun RequestScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = "Tell us what service you need",
+                        text = stringResource(R.string.service_need_description),
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Create a tour request and available partners in the selected area will be able to accept it.",
+                        text = stringResource(R.string.tour_request_explanation),
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )
@@ -210,8 +212,8 @@ fun RequestScreen(
                             value = selectedArea?.label.orEmpty(),
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Destination area") },
-                            placeholder = { Text("Select a city") },
+                            label = { Text(stringResource(R.string.destination_area)) },
+                            placeholder = { Text(stringResource(R.string.select_city)) },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
                             },
@@ -241,8 +243,8 @@ fun RequestScreen(
                     OutlinedTextField(
                         value = meetingPointText,
                         onValueChange = { meetingPointText = it.take(255) },
-                        label = { Text("Meeting point / notes") },
-                        placeholder = { Text("Optional: Historic center, plaza, museum entrance...") },
+                        label = { Text(stringResource(R.string.meeting_point_notes)) },
+                        placeholder = { Text(stringResource(R.string.meeting_point_placeholder)) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         shape = RoundedCornerShape(12.dp),
@@ -266,8 +268,8 @@ fun RequestScreen(
             }
 
             RequestSummaryCard(
-                areaName = selectedArea?.label ?: "Not selected",
-                meetingPoint = meetingPointText.ifBlank { "No additional notes" }
+                areaName = selectedArea?.label ?: stringResource(R.string.not_selected),
+                meetingPoint = meetingPointText.ifBlank { stringResource(R.string.no_additional_notes) }
             )
 
             Button(
@@ -292,7 +294,7 @@ fun RequestScreen(
                     )
                 } else {
                     Text(
-                        text = "Create service",
+                        text = stringResource(R.string.create_service),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -320,13 +322,13 @@ private fun RequestSummaryCard(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
-                text = "Request summary",
+                text = stringResource(R.string.request_summary),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary
             )
-            SummaryRow(label = "Area", value = areaName)
-            SummaryRow(label = "Notes", value = meetingPoint)
+            SummaryRow(label = stringResource(R.string.area), value = areaName)
+            SummaryRow(label = stringResource(R.string.notes), value = meetingPoint)
         }
     }
 }
@@ -357,23 +359,23 @@ private fun RequestCreatedDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Service created successfully") },
+        title = { Text(stringResource(R.string.service_created_successfully)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Your request is now visible to available partners.")
-                Text("Service ID: ${service.serviceId}")
-                Text("Area: $areaName")
-                Text("Status: ${service.status}")
+                Text(stringResource(R.string.request_visible_to_partners))
+                Text("${stringResource(R.string.service_id_prefix)}${service.serviceId}")
+                Text("${stringResource(R.string.area_prefix)}$areaName")
+                Text("${stringResource(R.string.status_prefix)}${service.status}")
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Done")
+                Text(stringResource(R.string.done_button))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Stay here")
+                Text(stringResource(R.string.stay_here))
             }
         }
     )
@@ -388,23 +390,23 @@ private fun ActiveServiceDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("You already have an active request") },
+        title = { Text(stringResource(R.string.active_request_exists)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(message)
-                Text("Service ID: ${service.serviceId}")
-                Text("Status: ${service.status}")
-                Text("Open the waiting screen to track or cancel this request.")
+                Text("${stringResource(R.string.service_id_prefix)}${service.serviceId}")
+                Text("${stringResource(R.string.status_prefix)}${service.status}")
+                Text(stringResource(R.string.open_waiting_screen_message))
             }
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Go to waiting screen")
+                Text(stringResource(R.string.done_button))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Stay here")
+                Text(stringResource(R.string.stay_here_button))
             }
         }
     )
