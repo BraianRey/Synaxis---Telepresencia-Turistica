@@ -97,6 +97,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

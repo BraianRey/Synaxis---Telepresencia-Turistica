@@ -55,6 +55,9 @@ public class ServiceEntity {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
+    @Column(name = "location_reference_image_url", length = 500)
+    private String locationReferenceImageUrl;
+
     @OneToOne(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
     private ServicePayment payment;
 

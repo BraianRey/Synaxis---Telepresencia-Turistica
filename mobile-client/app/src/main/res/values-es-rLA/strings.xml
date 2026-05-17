@@ -195,4 +195,12 @@
     <string name="currency_suffix">COP</string>
     <string name="price_format">%1$s COP</string>
     <string name="currency_format">$%1$s COP</string>
+    <string name="search_placeholder_example">Bogotá, Colombia</string>
+    <string name="location_placeholder_example">Ej.: Cafetería cerca del parque...</string>
+    <string name="describe_location_title">Describe la ubicación</string>
+    <string name="confirm_location">Confirmar ubicación</string>
+    <string name="close">Cerrar</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_messages">Mensajes</string>
+    <string name="nav_account">Cuenta</string>
 </resources>

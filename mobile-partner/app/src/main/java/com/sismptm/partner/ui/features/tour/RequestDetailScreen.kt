@@ -33,7 +33,7 @@ fun RequestDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back",
+                            contentDescription = stringResource(R.string.navigate_back),
                             tint = TextPrimary
                         )
                     }
@@ -75,17 +75,17 @@ fun RequestDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "${stringResource(R.string.label_client)}: María García",
+                            text = stringResource(R.string.label_client) + ": " + stringResource(R.string.sample_client_name),
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary
                         )
                         Text(
-                            text = "${stringResource(R.string.label_location)}: Puracé National Natural Park",
+                            text = stringResource(R.string.label_location) + ": " + stringResource(R.string.sample_location_name),
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextSecondary
                         )
                         Text(
-                            text = "Description: 4-hour guided tour",
+                            text = stringResource(R.string.request_description_tour),
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextSecondary
                         )
