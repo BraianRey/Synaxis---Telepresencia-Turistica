@@ -80,7 +80,9 @@
 
     <!-- Shared service/request screens -->
     <string name="gps_permission_required">Permiso de GPS requerido</string>
-    <string name="gps_permission_explanation">Esta aplicación requiere acceso al GPS para actualizar tu ubicación y recibir solicitudes de tours. Por favor, habilita los permisos para continuar.</string>
+    <string name="gps_permission_explanation">Esta aplicación requiere acceso al GPS para actualizar
+        tu ubicación y recibir solicitudes de tours. Por favor, habilita los permisos para
+        continuar.</string>
     <string name="grant_permissions">Conceder permisos</string>
     <string name="error_accept_request">No se pudo aceptar la solicitud</string>
     <string name="ok">Aceptar</string>
@@ -89,7 +91,8 @@
     <string name="send_location">Enviar ubicación actual</string>
     <string name="status_offline_title">Estás desconectado</string>
     <string name="status_offline_explanation">Conéctate para recibir solicitudes de tours.</string>
-    <string name="no_requests_yet">Aún no tienes solicitudes. ¡Asegúrate de estar conectado para recibir nuevas!</string>
+    <string name="no_requests_yet">Aún no tienes solicitudes. ¡Asegúrate de estar conectado para
+        recibir nuevas!</string>
     <string name="retry">Reintentar</string>
     <string name="waiting_for_requests">Esperando solicitudes...</string>
     <string name="services_active">Servicios activos</string>
@@ -109,4 +112,98 @@
     <string name="your_rating">Tu calificación</string>
     <string name="incoming_requests">Solicitudes entrantes</string>
     <string name="new_requests_count">%1$d nuevas</string>
+
+    <!-- ServiceSummaryScreen -->
+    <string name="service_summary">Resumen del servicio</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="failed_load_service_details">Error al cargar los detalles del servicio</string>
+    <string name="back_to_home">Volver al inicio</string>
+    <string name="confirm_payment">Confirmar pago</string>
+    <string name="payment_confirmed">Pago confirmado</string>
+    <string name="service_completed">¡Servicio completado!</string>
+    <string name="thank_you_synexis">Gracias por usar Synexis. ¡Esperamos que hayas disfrutado de tu
+        tour virtual!</string>
+    <string name="service_stats">Estadísticas del servicio</string>
+    <string name="duration">Duración</string>
+    <string name="total_cost">Costo total</string>
+    <string name="your_guide">Tu guía</string>
+    <string name="unknown_guide">Guía desconocido</string>
+    <string name="service_details">Detalles del servicio</string>
+    <string name="service_id_label">ID del servicio</string>
+    <string name="completed_on">Completado el</string>
+    <string name="not_available">No disponible</string>
+
+    <!-- ServiceWaitingScreen -->
+    <string name="service_status">Estado del servicio</string>
+    <string name="loading_active_request">Cargando tu solicitud activa…</string>
+    <string name="no_service_requests_yet">Aún no hay solicitudes de servicio.</string>
+    <string name="service_prefix">Servicio #</string>
+    <string name="status_prefix">Estado: </string>
+    <string name="location_prefix">Ubicación: </string>
+    <string name="not_specified">No especificado</string>
+    <string name="hours_prefix">Horas: </string>
+    <string name="hourly_rate_prefix">Tarifa por hora: </string>
+    <string name="open_waiting_screen">Abrir pantalla de espera</string>
+    <string name="cancel_tour">Cancelar tour</string>
+    <string name="refresh_status">Actualizar estado</string>
+    <string name="waiting_for_partner_accept">Esperando a que un socio acepte tu solicitud.</string>
+    <string name="partner_accepted_waiting_start">Un socio aceptó tu solicitud. Esperando el inicio
+        del tour.</string>
+    <string name="ready_for_tour_start">Esperando al socio...</string>
+    <string name="partner_ready_streaming">¡El socio está listo! Iniciando transmisión…</string>
+    <string name="tour_finished_successfully">Tour finalizado exitosamente.</string>
+    <string name="tour_cancelled">El tour fue cancelado.</string>
+    <string name="checking_latest_status">Verificando el último estado…</string>
+    <string name="connection_error_cancelling">Error de conexión al cancelar</string>
+    <string name="connection_error_loading_service">Error de conexión al cargar el servicio</string>
+
+    <!-- StreamingScreen -->
+    <string name="connection_status_connecting">Conectando…</string>
+    <string name="connection_status_closed">Cerrado</string>
+    <string name="connection_status_disconnected">Desconectado</string>
+
+    <!-- RequestScreen -->
+    <string name="create_service_request">Crear solicitud de servicio</string>
+    <string name="service_need_description">Dinos qué servicio necesitas</string>
+    <string name="tour_request_explanation">Crea una solicitud de tour y los socios disponibles en
+        el área seleccionada podrán aceptarla.</string>
+    <string name="destination_area">Área de destino</string>
+    <string name="select_city">Seleccionar una ciudad</string>
+    <string name="meeting_point_notes">Punto de encuentro / notas</string>
+    <string name="meeting_point_placeholder">Opcional: Centro histórico, plaza, entrada al museo…</string>
+    <string name="request_summary">Resumen de la solicitud</string>
+    <string name="area">Área</string>
+    <string name="notes">Notas</string>
+    <string name="create_service">Crear servicio</string>
+    <string name="service_created_successfully">Servicio creado exitosamente</string>
+    <string name="request_visible_to_partners">Tu solicitud ahora es visible para los socios
+        disponibles.</string>
+    <string name="service_id_prefix">ID del servicio: </string>
+    <string name="area_prefix">Área: </string>
+    <string name="active_request_exists">Ya tienes una solicitud activa</string>
+    <string name="open_waiting_screen_message">Abre la pantalla de espera para rastrear o cancelar
+        esta solicitud.</string>
+    <string name="done_button">Listo</string>
+    <string name="stay_here_button">Quedarme aquí</string>
+    <string name="go_to_waiting_screen">Ir a pantalla de espera</string>
+
+    <!-- HomeScreen -->
+    <string name="request_service">Solicitar servicio</string>
+    <string name="my_services">Mis servicios</string>
+    <string name="refresh">Actualizar</string>
+    <string name="tours">Tours</string>
+    <string name="refreshing">Actualizando...</string>
+    <string name="loading_services">Cargando servicios...</string>
+    <string name="back">Atrás</string>
+    <string name="tour_cancelled_successfully">Tour cancelado exitosamente.</string>
+    <string name="server_empty_response">El servidor devolvió una respuesta vacía.</string>
+    <string name="not_selected">No seleccionado</string>
+    <string name="no_additional_notes">Sin notas adicionales</string>
+    <string name="stay_here">Permanecer aquí</string>
+    <string name="nav_explore">Explorar</string>
+    <string name="nav_tours">Tours</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="currency_suffix">COP</string>
+    <string name="price_format">%1$s COP</string>
+    <string name="currency_format">$%1$s COP</string>
 </resources>

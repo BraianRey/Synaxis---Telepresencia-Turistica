@@ -14,5 +14,5 @@ interface PartnerRepository {
     suspend fun getAvailableServices(): Response<List<ServiceResponse>>
     suspend fun getPartnerServices(partnerId: Long): Response<List<ServiceResponse>>
     suspend fun acceptService(serviceId: Long): Response<ServiceResponse>
-    suspend fun markServiceReady(serviceId: Long): Response<Unit>
+    suspend fun startService(serviceId: Long): Response<ServiceResponse>
 }

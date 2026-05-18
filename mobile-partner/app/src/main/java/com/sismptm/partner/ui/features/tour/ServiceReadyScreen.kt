@@ -1,5 +1,7 @@
 package com.sismptm.partner.ui.features.tour
 
+import androidx.compose.ui.res.stringResource
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -63,13 +65,13 @@ fun ServiceReadyScreen(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Ready to Start?",
+                    text = stringResource(R.string.ready_to_start),
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Service Reference: #$serviceId",
+                    text = stringResource(R.string.service_ref_prefix) + serviceId,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF9DA5B3)
                 )
@@ -86,7 +88,7 @@ fun ServiceReadyScreen(
                 ) {
                     Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFF2563EB))
                     Text(
-                        text = "The client has been notified. Please confirm your readiness to begin the live broadcast.",
+                        text = stringResource(R.string.ready_start_instruction),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFFB9C0CB)
                     )
@@ -112,7 +114,7 @@ fun ServiceReadyScreen(
                 if (uiState is ServiceReadyViewModel.ReadyUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
                 } else {
-                    Text("START TRANSMISSION", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(stringResource(R.string.btn_start_transmission), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
@@ -121,7 +123,7 @@ fun ServiceReadyScreen(
             onClick = onBack,
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
-            Text("Go back to dashboard", color = Color(0xFF9DA5B3))
+            Text(stringResource(R.string.btn_go_back_dashboard), color = Color(0xFF9DA5B3))
         }
     }
 }

@@ -8,6 +8,8 @@ import com.synexis.management_service.entity.ServiceEntity;
 
 import org.springframework.stereotype.Component;
 
+import java.math.RoundingMode;
+
 @Component
 public class ServiceMapper {
 
@@ -33,25 +35,23 @@ public class ServiceMapper {
         return new ServiceResponse(
                 service.getIdService(),
                 // Client info
-                service.getClient().getId(),
                 service.getClient().getName(),
                 service.getClient().getEmail(),
-                service.getClient().getPicDirectory(),
                 // Partner info
-                partner != null ? partner.getId() : null,
                 partner != null ? partner.getName() : null,
                 partner != null ? partner.getEmail() : null,
-                partner != null ? partner.getPicDirectory() : null,
                 // Service details
-                service.getLongitude(),
-                service.getLatitude(),
                 service.getStartLocationDescription(),
-                service.getAgreedHours(),
-                DEFAULT_HOURLY_RATE,
+                service.getPayment() != null
+                        ? Integer.valueOf(
+                                service.getPayment().getBilledHours().setScale(0, RoundingMode.HALF_UP).intValue())
+                        : service.getAgreedHours(),
+                Double.valueOf(DEFAULT_HOURLY_RATE),
                 service.getStatus().name(),
-                service.getRequestedAt(),
-                service.getAcceptedAt(),
-                service.getStartedAt(),
-                service.getEndedAt());
+                service.getStartedAt() != null
+                        ? service.getStartedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()
+                        : null,
+                service.getEndedAt() != null ? service.getEndedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()
+                        : null);
     }
 }

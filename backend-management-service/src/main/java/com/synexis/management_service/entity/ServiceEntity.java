@@ -55,4 +55,11 @@ public class ServiceEntity {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
+    @OneToOne(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
+    private ServicePayment payment;
+
+    public ServicePayment getPayment() {
+        return payment;
+    }
+
 }

@@ -68,7 +68,8 @@
     <string name="end_session">End Session</string>
 
     <string name="gps_permission_required">GPS Permission Required</string>
-    <string name="gps_permission_explanation">This app requires GPS access to update your location and receive tour requests. Please enable permissions to continue.</string>
+    <string name="gps_permission_explanation">This app requires GPS access to update your location
+        and receive tour requests. Please enable permissions to continue.</string>
     <string name="grant_permissions">Grant Permissions</string>
     <string name="error_accept_request">Could not accept request</string>
     <string name="ok">OK</string>
@@ -77,7 +78,8 @@
     <string name="send_location">Send Current Location</string>
     <string name="status_offline_title">You are offline</string>
     <string name="status_offline_explanation">Go online to receive incoming tour requests.</string>
-    <string name="no_requests_yet">You don\'t have any requests yet. Make sure you\'re online to receive new ones!</string>
+    <string name="no_requests_yet">You don\'t have any requests yet. Make sure you\'re online to
+        receive new ones!</string>
     <string name="retry">Retry</string>
     <string name="waiting_for_requests">Waiting for requests...</string>
     <string name="services_active">Active services</string>
@@ -97,5 +99,97 @@
     <string name="your_rating">Your rating</string>
     <string name="incoming_requests">Incoming Requests</string>
     <string name="new_requests_count">%1$d new</string>
-</resources>
 
+    <!-- ServiceSummaryScreen -->
+    <string name="service_summary">Service Summary</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="failed_load_service_details">Failed to load service details</string>
+    <string name="back_to_home">Back to Home</string>
+    <string name="confirm_payment">Confirm Payment</string>
+    <string name="payment_confirmed">Payment Confirmed</string>
+    <string name="service_completed">Service Completed!</string>
+    <string name="thank_you_synexis">Thank you for using Synexis. We hope you enjoyed your virtual
+        tour!</string>
+    <string name="service_stats">Service Stats</string>
+    <string name="duration">Duration</string>
+    <string name="total_cost">Total Cost</string>
+    <string name="your_guide">Your Guide</string>
+    <string name="unknown_guide">Unknown Guide</string>
+    <string name="service_details">Service Details</string>
+    <string name="service_id_label">Service ID</string>
+    <string name="completed_on">Completed On</string>
+    <string name="not_available">N/A</string>
+
+    <!-- ServiceWaitingScreen -->
+    <string name="service_status">Service status</string>
+    <string name="loading_active_request">Loading your active request…</string>
+    <string name="no_service_requests_yet">No service requests yet.</string>
+    <string name="service_prefix">Service #</string>
+    <string name="status_prefix">Status: </string>
+    <string name="location_prefix">Location: </string>
+    <string name="not_specified">Not specified</string>
+    <string name="hours_prefix">Hours: </string>
+    <string name="hourly_rate_prefix">Hourly rate: </string>
+    <string name="open_waiting_screen">Open waiting screen</string>
+    <string name="cancel_tour">Cancel tour</string>
+    <string name="refresh_status">Refresh status</string>
+    <string name="waiting_for_partner_accept">Waiting for a partner to accept your request.</string>
+    <string name="partner_accepted_waiting_start">A partner accepted your request. Waiting for tour
+        start.</string>
+    <string name="ready_for_tour_start">Waiting for the partner...</string>
+    <string name="partner_ready_streaming">Partner is ready! Starting streaming…</string>
+    <string name="tour_finished_successfully">Tour finished successfully.</string>
+    <string name="tour_cancelled">Tour was cancelled.</string>
+    <string name="checking_latest_status">Checking latest status…</string>
+    <string name="connection_error_cancelling">Connection error while cancelling</string>
+    <string name="connection_error_loading_service">Connection error while loading service</string>
+
+    <!-- StreamingScreen -->
+    <string name="connection_status_connecting">Connecting…</string>
+    <string name="connection_status_closed">Closed</string>
+    <string name="connection_status_disconnected">Disconnected</string>
+
+    <!-- RequestScreen -->
+    <string name="create_service_request">Create service request</string>
+    <string name="service_need_description">Tell us what service you need</string>
+    <string name="tour_request_explanation">Create a tour request and available partners in the
+        selected area will be able to accept it.</string>
+    <string name="destination_area">Destination area</string>
+    <string name="select_city">Select a city</string>
+    <string name="meeting_point_notes">Meeting point / notes</string>
+    <string name="meeting_point_placeholder">Optional: Historic center, plaza, museum entrance…</string>
+    <string name="request_summary">Request summary</string>
+    <string name="area">Area</string>
+    <string name="notes">Notes</string>
+    <string name="create_service">Create service</string>
+    <string name="service_created_successfully">Service created successfully</string>
+    <string name="request_visible_to_partners">Your request is now visible to available partners.</string>
+    <string name="service_id_prefix">Service ID: </string>
+    <string name="area_prefix">Area: </string>
+    <string name="active_request_exists">You already have an active request</string>
+    <string name="open_waiting_screen_message">Open the waiting screen to track or cancel this
+        request.</string>
+    <string name="done_button">Done</string>
+    <string name="stay_here_button">Stay here</string>
+    <string name="go_to_waiting_screen">Go to waiting screen</string>
+
+    <!-- HomeScreen -->
+    <string name="request_service">Request service</string>
+    <string name="my_services">My services</string>
+    <string name="refresh">Refresh</string>
+    <string name="tours">Tours</string>
+    <string name="refreshing">Refreshing...</string>
+    <string name="loading_services">Loading services...</string>
+    <string name="back">Back</string>
+    <string name="tour_cancelled_successfully">Tour cancelled successfully.</string>
+    <string name="server_empty_response">Server returned an empty response.</string>
+    <string name="not_selected">Not selected</string>
+    <string name="no_additional_notes">No additional notes</string>
+    <string name="stay_here">Stay here</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_tours">Tours</string>
+    <string name="nav_profile">Profile</string>
+    <string name="currency_suffix">COP</string>
+    <string name="price_format">%1$s COP</string>
+    <string name="currency_format">$%1$s COP</string>
+</resources>

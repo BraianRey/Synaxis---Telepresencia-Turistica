@@ -110,7 +110,7 @@ private fun ExploreTabContent(
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
-                text = "Request service",
+                text = stringResource(R.string.request_service),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = PrimaryAccent
@@ -355,27 +355,27 @@ private fun ToursTabContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "My services",
+                text = stringResource(R.string.my_services),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
             OutlinedButton(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
-                Text("Refresh", color = Color.White)
+                Text(stringResource(R.string.refresh), color = Color.White)
             }
 
             when (servicesState) {
                 HomeViewModel.ClientServicesUiState.Idle,
                 HomeViewModel.ClientServicesUiState.Loading -> {
                     CircularProgressIndicator(color = PrimaryAccent)
-                    Text("Loading services...", color = TextSecondary)
+                    Text(stringResource(R.string.loading_services), color = TextSecondary)
                 }
                 is HomeViewModel.ClientServicesUiState.Error -> {
                     Text(text = servicesState.message, color = Color(0xFFFF8A80))
                 }
                 is HomeViewModel.ClientServicesUiState.Success -> {
                     if (servicesState.services.isEmpty()) {
-                        Text(text = "No service requests yet.", color = TextSecondary)
+                        Text(text = stringResource(R.string.no_service_requests_yet), color = TextSecondary)
                     } else {
                         val activeStatuses = setOf("REQUESTED", "ACCEPTED", "STARTED")
                         val activeServices = servicesState.services.filter { it.status.uppercase() in activeStatuses }
@@ -434,18 +434,18 @@ private fun ClientServiceCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("Service #${service.serviceId}", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
-            Text("Location: ${service.startLocationDescription ?: "Not specified"}", color = TextTertiary)
-            Text("Hours: ${service.agreedHours}", color = TextTertiary)
-            Text("Hourly rate: ${service.hourlyRate} COP", color = TextTertiary)
+            Text("${stringResource(R.string.location_prefix)}${service.startLocationDescription ?: stringResource(R.string.not_specified)}", color = TextTertiary)
+            Text(stringResource(R.string.hours_prefix) + service.agreedHours, color = TextTertiary)
+            Text(stringResource(R.string.hourly_rate_prefix) + stringResource(R.string.currency_format, service.hourlyRate ?: 0.0), color = TextTertiary)
             if (isActive) {
                 Button(
                     onClick = { onOpenWaiting(service.serviceId) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
                 ) {
-                    Text("Open waiting screen")
+                    Text(stringResource(R.string.open_waiting_screen))
                 }
             }
         }
@@ -546,10 +546,10 @@ private fun BottomNavigationBar(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == 0) Icons.Filled.Explore else Icons.Outlined.Explore,
-                    contentDescription = "Explore"
+                    contentDescription = stringResource(R.string.nav_explore)
                 )
             },
-            label = { Text("Explore") },
+            label = { Text(stringResource(R.string.nav_explore)) },
             selected = selectedTab == 0,
             onClick = { onTabSelected(0) },
             colors = NavigationBarItemDefaults.colors(
@@ -560,15 +560,15 @@ private fun BottomNavigationBar(
                 indicatorColor = Color.Transparent
             )
         )
-        
+
         NavigationBarItem(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == 1) Icons.Filled.ViewList else Icons.Outlined.ViewList,
-                    contentDescription = "Tours"
+                    contentDescription = stringResource(R.string.nav_tours)
                 )
             },
-            label = { Text("Tours") },
+            label = { Text(stringResource(R.string.nav_tours)) },
             selected = selectedTab == 1,
             onClick = { onTabSelected(1) },
             colors = NavigationBarItemDefaults.colors(
@@ -579,15 +579,15 @@ private fun BottomNavigationBar(
                 indicatorColor = Color.Transparent
             )
         )
-        
+
         NavigationBarItem(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == 2) Icons.Filled.Person else Icons.Outlined.Person,
-                    contentDescription = "Profile"
+                    contentDescription = stringResource(R.string.nav_profile)
                 )
             },
-            label = { Text("Profile") },
+            label = { Text(stringResource(R.string.nav_profile)) },
             selected = selectedTab == 2,
             onClick = { onTabSelected(2) },
             colors = NavigationBarItemDefaults.colors(

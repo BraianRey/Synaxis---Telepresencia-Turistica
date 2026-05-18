@@ -19,11 +19,10 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request,
-                                   ServerHttpResponse response,
-                                   WebSocketHandler wsHandler,
-                                   Map<String, Object> attributes) {
-        // TODO: Restaurar validación JWT cuando mobile-partner esté listo
-        /*
+            ServerHttpResponse response,
+            WebSocketHandler wsHandler,
+            Map<String, Object> attributes) {
+
         String query = request.getURI().getQuery();
         if (query == null || !query.contains("token=")) {
             return false;
@@ -32,7 +31,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         try {
             String peerId = Jwts.parserBuilder()
                     .setSigningKey(Keys.hmacShaKeyFor(
-                        jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                            jwtSecret.getBytes(StandardCharsets.UTF_8)))
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
@@ -42,15 +41,14 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         } catch (Exception e) {
             return false;
         }
-        */
-        return true;
     }
 
     @Override
     public void afterHandshake(ServerHttpRequest request,
-                               ServerHttpResponse response,
-                               WebSocketHandler wsHandler,
-                               Exception exception) {}
+            ServerHttpResponse response,
+            WebSocketHandler wsHandler,
+            Exception exception) {
+    }
 
     private String extractToken(String query) {
         for (String param : query.split("&")) {

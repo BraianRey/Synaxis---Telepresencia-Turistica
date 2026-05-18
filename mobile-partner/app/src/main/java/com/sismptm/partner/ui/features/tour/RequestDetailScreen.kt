@@ -1,5 +1,8 @@
 package com.sismptm.partner.ui.features.tour
 
+import androidx.compose.ui.res.stringResource
+import com.sismptm.partner.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,7 +28,7 @@ fun RequestDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Request Details", color = TextPrimary) },
+                title = { Text(stringResource(R.string.service_summary), color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -56,7 +59,7 @@ fun RequestDetailScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Incoming Tour Request",
+                    text = stringResource(R.string.incoming_request_title),
                     style = MaterialTheme.typography.headlineMedium,
                     color = TextPrimary
                 )
@@ -72,12 +75,12 @@ fun RequestDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Client: María García",
+                            text = "${stringResource(R.string.label_client)}: María García",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary
                         )
                         Text(
-                            text = "Location: Puracé National Natural Park",
+                            text = "${stringResource(R.string.label_location)}: Puracé National Natural Park",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextSecondary
                         )
@@ -87,7 +90,7 @@ fun RequestDetailScreen(
                             color = TextSecondary
                         )
                         Text(
-                            text = "Offered Price: $150,000 COP",
+                            text = "${stringResource(R.string.label_rate)}: ${stringResource(R.string.currency_format, "150,000")}",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Success,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
@@ -109,7 +112,7 @@ fun RequestDetailScreen(
                         border = androidx.compose.foundation.BorderStroke(1.dp, Error)
                     ) {
                         Text(
-                            "Reject",
+                            stringResource(R.string.reject),
                             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                         )
                     }
@@ -120,7 +123,7 @@ fun RequestDetailScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = Success)
                     ) {
                         Text(
-                            "Accept",
+                            stringResource(R.string.accept),
                             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                             color = TextPrimary
                         )

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.synexis.management_service.dto.mapper.ServiceMapper;
 import com.synexis.management_service.dto.request.RegisterServiceRequest;
+import com.synexis.management_service.dto.response.PaymentSummaryResponse;
 import com.synexis.management_service.dto.response.ServiceResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.Partner;
@@ -27,6 +28,7 @@ import com.synexis.management_service.exception.ResourceNotFoundException;
 import com.synexis.management_service.repository.ClientRepository;
 import com.synexis.management_service.repository.PartnerRepository;
 import com.synexis.management_service.repository.ServiceIdempotencyKeyRepository;
+import com.synexis.management_service.repository.ServicePaymentRepository;
 import com.synexis.management_service.repository.ServiceRepository;
 import com.synexis.management_service.service.NotificationService;
 
@@ -48,6 +50,7 @@ public class ServiceServiceImpl implements ServiceService {
     private final PartnerRepository partnerRepository;
     private final ClientRepository clientRepository;
     private final PaymentService paymentService;
+    private final ServicePaymentRepository servicePaymentRepository;
     private final ServiceHistoryService serviceHistoryService;
     private final NotificationService notificationService;
     private final ServiceIdempotencyKeyRepository serviceIdempotencyKeyRepository;
@@ -58,6 +61,7 @@ public class ServiceServiceImpl implements ServiceService {
             PartnerRepository partnerRepository,
             ClientRepository clientRepository,
             PaymentService paymentService,
+            ServicePaymentRepository servicePaymentRepository,
             ServiceHistoryService serviceHistoryService,
             NotificationService notificationService,
             ServiceIdempotencyKeyRepository serviceIdempotencyKeyRepository) {
@@ -66,6 +70,7 @@ public class ServiceServiceImpl implements ServiceService {
         this.partnerRepository = partnerRepository;
         this.clientRepository = clientRepository;
         this.paymentService = paymentService;
+        this.servicePaymentRepository = servicePaymentRepository;
         this.serviceHistoryService = serviceHistoryService;
         this.notificationService = notificationService;
         this.serviceIdempotencyKeyRepository = serviceIdempotencyKeyRepository;
@@ -175,6 +180,45 @@ public class ServiceServiceImpl implements ServiceService {
         }
 
         throw new ForbiddenAccessException("You are not allowed to access this service");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaymentSummaryResponse getPaymentSummary(Long serviceId) {
+        com.synexis.management_service.entity.ServicePayment payment = servicePaymentRepository
+                .findByService_IdService(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for service: " + serviceId));
+
+        return new PaymentSummaryResponse(
+                payment.getService().getIdService(),
+                payment.getActualDurationMin(),
+                payment.getBilledHours(),
+                payment.getTotalAmount(),
+                payment.getHourlyRate(),
+                payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                payment.getConfirmed());
+    }
+
+    @Override
+    @Transactional
+    public PaymentSummaryResponse confirmPayment(Long serviceId) {
+        com.synexis.management_service.entity.ServicePayment payment = servicePaymentRepository
+                .findByService_IdService(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for service: " + serviceId));
+
+        if (!Boolean.TRUE.equals(payment.getConfirmed())) {
+            payment.setConfirmed(true);
+            payment = servicePaymentRepository.save(payment);
+        }
+
+        return new PaymentSummaryResponse(
+                payment.getService().getIdService(),
+                payment.getActualDurationMin(),
+                payment.getBilledHours(),
+                payment.getTotalAmount(),
+                payment.getHourlyRate(),
+                payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
+                payment.getConfirmed());
     }
 
     @Override
@@ -315,12 +359,54 @@ public class ServiceServiceImpl implements ServiceService {
         }
 
         ServiceEntity saved = serviceRepository.save(service);
+        ((NoopPaymentService) paymentService).calculateAndPersist(saved);
 
         serviceHistoryService.recordEvent(
                 saved,
                 "PARTNER",
                 partnerId,
                 "Service completed",
+                Instant.now());
+
+        return serviceMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public ServiceResponse completeServiceByClient(Long serviceId, Long clientId) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
+
+        if (service.getStatus() != ServiceStatus.STARTED) {
+            throw new BusinessRuleViolationException(
+                    "Only STARTED services can be completed");
+        }
+
+        Client client = service.getClient();
+        if (client == null || !client.getId().equals(clientId)) {
+            throw new ForbiddenAccessException(
+                    "Client is not the owner of this service");
+        }
+
+        service.setStatus(ServiceStatus.COMPLETED);
+        service.setEndedAt(LocalDateTime.now());
+
+        Partner assignedPartner = service.getPartner();
+        if (assignedPartner != null &&
+                assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
+            assignedPartner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
+            partnerRepository.save(assignedPartner);
+        }
+
+        ServiceEntity saved = serviceRepository.save(service);
+        ((NoopPaymentService) paymentService).calculateAndPersist(saved);
+
+        serviceHistoryService.recordEvent(
+                saved,
+                "CLIENT",
+                clientId,
+                "Service completed by client",
                 Instant.now());
 
         return serviceMapper.toResponse(saved);

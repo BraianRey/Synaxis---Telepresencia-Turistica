@@ -202,7 +202,12 @@ fun NavGraph() {
             val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
             StreamingScreen(
                 serviceId = serviceId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToSummary = { sid ->
+                    navController.navigate(Screen.ServiceSummary.createRoute(sid)) {
+                        popUpTo(Screen.Streaming.route) { inclusive = true }
+                    }
+                }
             )
         }
 

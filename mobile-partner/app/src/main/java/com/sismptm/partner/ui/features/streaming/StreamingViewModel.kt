@@ -36,6 +36,7 @@ class StreamingViewModel(application: Application) :
 
     private var targetClientId: String? = null
     private var partnerId = ""
+    private var serviceId: Long = 0L
     private var signalingClient: SignalingClient? = null
     private var connectionTimeout: Job? = null
 
@@ -76,6 +77,7 @@ class StreamingViewModel(application: Application) :
         webRTCManager.stopLocalCapture()
         
         this.partnerId = customId
+        this.serviceId = customId.toLongOrNull() ?: 0L
         webRTCManager.startLocalCapture(surfaceViewRenderer)
 
         val baseUrl = BuildConfig.BASE_WEBRTC
@@ -201,8 +203,28 @@ class StreamingViewModel(application: Application) :
         reconnectionJob = viewModelScope.launch {
             delay(baseDelay + Random.nextLong(0, 1000))
             if (lastState != PeerConnection.PeerConnectionState.CONNECTED) {
+                if (isServiceCompleted()) {
+                    Log.i(TAG, "Service completed detected before reconnect attempt. Navigating to summary.")
+                    _serviceCompleted.value = true
+                    return@launch
+                }
                 attemptRecovery()
             }
+        }
+    }
+
+    private suspend fun isServiceCompleted(): Boolean {
+        if (serviceId == 0L) return false
+        return try {
+            val response = RetrofitClient.apiService.getServiceById(serviceId)
+            if (response.isSuccessful) {
+                val status = response.body()?.status
+                Log.i(TAG, "Pre-reconnect status check: service $serviceId is $status")
+                status == "COMPLETED"
+            } else false
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in pre-reconnect status check: ${e.message}")
+            false
         }
     }
 

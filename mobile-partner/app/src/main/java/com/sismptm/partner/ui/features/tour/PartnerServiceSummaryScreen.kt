@@ -1,5 +1,8 @@
 package com.sismptm.partner.ui.features.tour
 
+import androidx.compose.ui.res.stringResource
+import com.sismptm.partner.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,9 +24,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.core.network.RetrofitClient
+import com.sismptm.partner.data.remote.api.dto.PaymentSummaryResponse
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.ui.theme.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +49,9 @@ class PartnerServiceSummaryViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private val _payment = MutableStateFlow<PaymentSummaryResponse?>(null)
+    val payment = _payment.asStateFlow()
+
     fun loadService(serviceId: Long) {
         _isLoading.value = true
         _error.value = null
@@ -52,6 +60,15 @@ class PartnerServiceSummaryViewModel : ViewModel() {
                 val response = RetrofitClient.apiService.getServiceById(serviceId)
                 if (response.isSuccessful) {
                     _service.value = response.body()
+                    try {
+                        val paymentResponse = RetrofitClient.apiService.getPaymentSummary(serviceId)
+                        if (paymentResponse.isSuccessful) {
+                            _payment.value = paymentResponse.body()
+                        }
+                        // Payment load failure is silent — service data is still shown
+                    } catch (e: Exception) {
+                        // Silent — do not override existing _error state
+                    }
                 } else {
                     _error.value = "Failed to load service details"
                 }
@@ -96,17 +113,18 @@ fun PartnerServiceSummaryScreen(
     val serviceData by viewModel.service.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val payment by viewModel.payment.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = Background,
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Service Summary", 
-                        color = TextPrimary, 
-                        fontWeight = FontWeight.Bold 
-                    ) 
+                        stringResource(R.string.service_summary),
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackToHome) {
@@ -135,7 +153,7 @@ fun PartnerServiceSummaryScreen(
                 }
                 error != null -> {
                     ErrorView(
-                        message = error ?: "Unknown error",
+                        message = error ?: stringResource(R.string.unknown_error),
                         onRetry = { viewModel.loadService(serviceId) },
                         onBack = onBackToHome
                     )
@@ -143,6 +161,7 @@ fun PartnerServiceSummaryScreen(
                 serviceData != null -> {
                     PartnerServiceSummaryContent(
                         service = serviceData!!,
+                        payment = payment,
                         onBackToHome = onBackToHome
                     )
                 }
@@ -178,11 +197,11 @@ private fun ErrorView(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onRetry) {
-            Text("Retry")
+            Text(stringResource(R.string.retry))
         }
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedButton(onClick = onBack) {
-            Text("Back to Home")
+            Text(stringResource(R.string.back_to_home))
         }
     }
 }
@@ -190,6 +209,7 @@ private fun ErrorView(
 @Composable
 private fun PartnerServiceSummaryContent(
     service: ServiceResponse,
+    payment: PaymentSummaryResponse?,
     onBackToHome: () -> Unit
 ) {
     Column(
@@ -203,7 +223,7 @@ private fun PartnerServiceSummaryContent(
         PartnerSuccessHeaderCard()
 
         // Earnings Stats
-        PartnerEarningsCard(service)
+        PartnerEarningsCard(service, payment)
 
         // Client Information
         ClientInfoCard(service)
@@ -229,7 +249,7 @@ private fun PartnerServiceSummaryContent(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "Back to Dashboard",
+                stringResource(R.string.back_to_dashboard),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -267,7 +287,7 @@ private fun PartnerSuccessHeaderCard() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Service Completed!",
+                text = stringResource(R.string.service_completed),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -276,7 +296,7 @@ private fun PartnerSuccessHeaderCard() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Great job! You've successfully completed this tour.",
+                text = stringResource(R.string.service_completed_msg),
                 fontSize = 14.sp,
                 color = Color(0xFFA5D6A7),
                 textAlign = TextAlign.Center
@@ -286,7 +306,7 @@ private fun PartnerSuccessHeaderCard() {
 }
 
 @Composable
-private fun PartnerEarningsCard(service: ServiceResponse) {
+private fun PartnerEarningsCard(service: ServiceResponse, payment: PaymentSummaryResponse?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -297,7 +317,7 @@ private fun PartnerEarningsCard(service: ServiceResponse) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Your Earnings",
+                text = stringResource(R.string.your_earnings),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -310,7 +330,7 @@ private fun PartnerEarningsCard(service: ServiceResponse) {
                 // Duration Stat
                 StatItem(
                     icon = Icons.Default.Timer,
-                    label = "Duration",
+                    label = stringResource(R.string.duration_label),
                     value = service.getFormattedDuration(),
                     color = PrimaryAccent
                 )
@@ -318,15 +338,21 @@ private fun PartnerEarningsCard(service: ServiceResponse) {
                 // Earnings Stat
                 StatItem(
                     icon = Icons.Default.AttachMoney,
-                    label = "You Earned",
-                    value = service.getFormattedCost(),
+                    label = stringResource(R.string.you_earned_label),
+                    value = payment?.let {
+                        stringResource(R.string.currency_format, String.format("%,.0f", it.totalAmount))
+                    } ?: service.getFormattedCost(),
                     color = Color(0xFF4CAF50)
                 )
             }
 
             // Rate info
             Text(
-                text = "Rate: $15,000 COP/hour",
+                text = payment?.let {
+                    "${stringResource(R.string.label_total_prefix)}${stringResource(R.string.currency_format, String.format("%,.0f", it.totalAmount))} • ${it.actualDurationMin}${stringResource(R.string.minutes_unit_short)}"
+                } ?: service.hourlyRate?.let {
+                    "${stringResource(R.string.label_rate_prefix)}${stringResource(R.string.currency_format, String.format("%,.0f", it))}${stringResource(R.string.per_hour_suffix)}"
+                } ?: stringResource(R.string.rate_na),
                 fontSize = 12.sp,
                 color = TextSecondary,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -388,7 +414,7 @@ private fun ClientInfoCard(service: ServiceResponse) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Client Information",
+                text = stringResource(R.string.client_info_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -418,7 +444,7 @@ private fun ClientInfoCard(service: ServiceResponse) {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = service.clientName ?: "Unknown Client",
+                        text = service.clientName ?: stringResource(R.string.unknown_client),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
@@ -446,7 +472,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Service Details",
+                text = stringResource(R.string.service_details),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -454,20 +480,20 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
 
             DetailItem(
                 icon = Icons.Default.LocationOn,
-                label = "Location",
-                value = service.startLocationDescription ?: "Not specified"
+                label = stringResource(R.string.location_label),
+                value = service.startLocationDescription ?: stringResource(R.string.not_specified)
             )
 
             DetailItem(
                 icon = Icons.Default.AccessTime,
-                label = "Service ID",
-                value = "#${service.serviceId}"
+                label = stringResource(R.string.tour_detail_service_id).substringBefore(":"),
+                value = stringResource(R.string.service_prefix) + service.serviceId
             )
 
             DetailItem(
                 icon = Icons.Default.CalendarToday,
-                label = "Completed On",
-                value = service.endedAt?.let { 
+                label = stringResource(R.string.completed_on),
+                value = service.endedAt?.let {
                     try {
                         val instant = java.time.Instant.parse(it)
                         val formatter = java.time.format.DateTimeFormatter
@@ -477,13 +503,13 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                     } catch (e: Exception) {
                         it
                     }
-                } ?: "N/A"
+                } ?: stringResource(R.string.rate_na)
             )
 
             DetailItem(
                 icon = Icons.Default.Schedule,
-                label = "Agreed Hours",
-                value = "${service.agreedHours} hours"
+                label = stringResource(R.string.agreed_hours_label),
+                value = "${service.agreedHours ?: stringResource(R.string.rate_na)}${stringResource(R.string.hours_unit)}"
             )
         }
     }
