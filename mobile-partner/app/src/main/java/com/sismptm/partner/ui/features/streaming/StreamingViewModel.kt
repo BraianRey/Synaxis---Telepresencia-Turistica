@@ -85,6 +85,21 @@ class StreamingViewModel(application: Application) :
         signalingClient?.connect()
     }
 
+    /**
+     * Pauses the local preview to save GPU memory when the app goes to the background.
+     * The stream continues sending to the remote client.
+     */
+    fun pauseStream() {
+        webRTCManager.detachLocalPreview()
+    }
+
+    /**
+     * Resumes the local preview when the app returns to the foreground.
+     */
+    fun resumeStream(surfaceViewRenderer: SurfaceViewRenderer) {
+        webRTCManager.attachLocalPreview(surfaceViewRenderer)
+    }
+
     override fun onConnected() {
         Log.i(TAG, "Signaling connected. Resetting reconnection attempts.")
         reconnectionAttempts = 0
@@ -92,7 +107,7 @@ class StreamingViewModel(application: Application) :
 
     override fun onJoinReceived(senderId: String) {
         if (senderId.isBlank()) return
-        Log.i(TAG, "Join request from client: $senderId. Performing proactive hardware reset.")
+        Log.i(TAG, "Join request from client: $senderId. Triggering network ICE restart/renegotiation.")
         this.targetClientId = senderId
 
         connectionTimeout?.cancel()
@@ -103,8 +118,8 @@ class StreamingViewModel(application: Application) :
             }
         }
 
-        // Proactive reset: Clear all hardware and network buffers to ensure clean recovery
-        webRTCManager.restartCapture()
+        // Trigger an SDP renegotiation without rebooting the physical camera hardware.
+        // This resolves the sudden black screen issue.
         webRTCManager.createOffer()
     }
 

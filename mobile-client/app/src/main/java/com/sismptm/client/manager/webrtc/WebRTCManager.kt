@@ -7,10 +7,11 @@ import android.os.Looper
 import android.util.Log
 import java.nio.ByteBuffer
 import org.webrtc.*
+import java.util.regex.Pattern
 
 /**
  * Manager for WebRTC PeerConnection on the Client (viewer) side.
- * Optimized for low-latency P2P streaming with device-aware constraints and surgical SDP injection.
+ * Optimized for low-latency P2P streaming with device-aware constraints and safe SDP injection.
  */
 class WebRTCManager(
     private val context: Context,
@@ -39,6 +40,8 @@ class WebRTCManager(
     private var peerConnectionFactory: PeerConnectionFactory? = null
     private var peerConnection: PeerConnection? = null
     private var dataChannel: DataChannel? = null
+    private var remoteVideoTrack: VideoTrack? = null
+    private var lastRenderer: SurfaceViewRenderer? = null
     private var isDisposed = false
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -78,10 +81,12 @@ class WebRTCManager(
         val totalRamGb = memInfo.totalMem / (1024 * 1024 * 1024.0)
         val processors = Runtime.getRuntime().availableProcessors()
         
+        // Conservative tiering: heavily penalize low RAM to prevent decoding crashes
         return when {
-            processors <= 4 || totalRamGb <= 3.0 -> 1 // Low-end
-            processors <= 6 || totalRamGb <= 6.0 -> 2 // Mid-range
-            else -> 3 // High-end
+            totalRamGb <= 3.0 -> 1 // Low tier: 480p max
+            processors <= 4 || totalRamGb <= 4.0 -> 1 
+            processors <= 6 || totalRamGb <= 6.0 -> 2 // Mid tier: 720p max
+            else -> 3 // High tier: 1080p max
         }
     }
 
@@ -133,6 +138,7 @@ class WebRTCManager(
                         is VideoTrack -> {
                             Log.i(TAG, "Remote video track received")
                             track.setEnabled(true)
+                            remoteVideoTrack = track
                             onRemoteTrack(track)
                         }
                         is AudioTrack -> {
@@ -226,73 +232,64 @@ class WebRTCManager(
     }
 
     /**
-     * Injects bitrate constraints and google-specific flags into the SDP.
-     * Uses a precise approach to only target the video section and prioritize H264.
+     * Injects bitrate constraints and google-specific flags into the SDP using robust regex.
+     * Uses a precise approach to only target the video section and prioritize organic ramp-up.
      */
     private fun sdpWithBitrate(sdp: String, bitrateKbps: Int): String {
-        val lines = sdp.split("\r\n").toMutableList()
-        var videoLineIndex = -1
-        for (i in lines.indices) {
-            if (lines[i].startsWith("m=video")) {
-                videoLineIndex = i
-                break
+        var modifiedSdp = sdp
+        
+        val h264Pattern = Pattern.compile("a=rtpmap:(\\d+) H264/90000\r\n")
+        val h264Matcher = h264Pattern.matcher(modifiedSdp)
+        var h264Payload: String? = null
+        
+        if (h264Matcher.find()) {
+            h264Payload = h264Matcher.group(1)
+        }
+        
+        val videoMidPattern = Pattern.compile("(a=mid:video\r\n)")
+        val videoMidMatcher = videoMidPattern.matcher(modifiedSdp)
+        if (videoMidMatcher.find()) {
+            modifiedSdp = videoMidMatcher.replaceFirst("$1b=AS:$bitrateKbps\r\n")
+        }
+        
+        if (h264Payload != null) {
+            val fmtpPattern = Pattern.compile("(a=fmtp:$h264Payload[^\r\n]+)")
+            val fmtpMatcher = fmtpPattern.matcher(modifiedSdp)
+            if (fmtpMatcher.find()) {
+                val originalFmtp = fmtpMatcher.group(1)
+                val cleanedFmtp = originalFmtp!!.split(";").filterNot { it.contains("x-google-") }.joinToString(";")
+                
+                // Allow organic startup to eliminate playback latency
+                val minBitrate = 100
+                val startBitrate = 300 
+                
+                val newFmtp = "$cleanedFmtp;x-google-min-bitrate=$minBitrate;x-google-max-bitrate=$bitrateKbps;x-google-start-bitrate=$startBitrate"
+                modifiedSdp = modifiedSdp.replace(originalFmtp, newFmtp)
             }
         }
-
-        if (videoLineIndex != -1) {
-            var h264Payload: String? = null
-            for (line in lines) {
-                if (line.startsWith("a=rtpmap:") && line.contains("H264/90000")) {
-                    h264Payload = line.substringBefore(" ").substringAfter(":")
-                    break
-                }
-            }
-
-            if (h264Payload != null) {
-                val parts = lines[videoLineIndex].split(" ").toMutableList()
-                if (parts.size > 3) {
-                    val currentPos = parts.indexOf(h264Payload)
-                    if (currentPos > 3) {
-                        parts.removeAt(currentPos)
-                        parts.add(3, h264Payload)
-                        lines[videoLineIndex] = parts.joinToString(" ")
-                    }
-                }
-            }
-
-            val minBitrate = 300
-            val startBitrate = (bitrateKbps * 0.75).toInt()
-            val targetPayload = h264Payload ?: "96"
-
-            val resultLines = mutableListOf<String>()
-            var inVideoSection = false
-            for (line in lines) {
-                if (line.startsWith("m=video")) inVideoSection = true
-                else if (line.startsWith("m=")) inVideoSection = false
-                
-                if (inVideoSection && line.startsWith("b=AS:")) continue
-                
-                resultLines.add(line)
-                
-                if (line.startsWith("a=mid:video")) {
-                    resultLines.add("b=AS:$bitrateKbps")
-                }
-            }
-
-            for (i in resultLines.indices) {
-                if (resultLines[i].startsWith("a=fmtp:$targetPayload")) {
-                    if (!resultLines[i].contains("x-google-max-bitrate")) {
-                        resultLines[i] = "${resultLines[i]};x-google-min-bitrate=$minBitrate;x-google-max-bitrate=$bitrateKbps;x-google-start-bitrate=$startBitrate"
-                    }
-                }
-            }
-            return resultLines.joinToString("\r\n")
-        }
-        return sdp
+        
+        return modifiedSdp
     }
 
     fun getStats(callback: (RTCStatsReport) -> Unit) {
         peerConnection?.getStats { callback(it) }
+    }
+
+    /**
+     * Detaches the remote video track from the SurfaceViewRenderer.
+     * Use this when the app goes to the background to save GPU memory and prevent OOM crashes.
+     */
+    fun detachRemoteView() {
+        val renderer = lastRenderer ?: return
+        remoteVideoTrack?.removeSink(renderer)
+    }
+
+    /**
+     * Re-attaches the remote video track to the SurfaceViewRenderer when the app returns to the foreground.
+     */
+    fun attachRemoteView(renderer: SurfaceViewRenderer) {
+        lastRenderer = renderer
+        remoteVideoTrack?.addSink(renderer)
     }
 
     fun setOnIceCandidateCallback(callback: (IceCandidate) -> Unit) {
