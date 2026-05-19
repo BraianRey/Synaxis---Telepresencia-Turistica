@@ -7,19 +7,33 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sismptm.partner.ui.theme.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -214,6 +228,25 @@ private fun HomeContent(
                         Text(stringResource(R.string.my_profile), color = TextPrimary)
                     }
                 }
+    Scaffold(
+        bottomBar = {
+            BottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it }
+            )
+        }
+    ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
+            when (selectedTab) {
+                0 -> RequestsTabContent(
+                    isOnline = isOnline,
+                    onToggleOnline = { isOnline = it },
+                    requestsState = requestsState,
+                    acceptingServiceId = acceptingServiceId,
+                    onAccept = { homeViewModel.acceptTour(it) }
+                )
+                1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
+                2 -> ProfileTab(onLogout = onLogout)
             }
         }
     }
@@ -320,14 +353,60 @@ private fun SectionHeader(text: String) {
 
 @Composable
 private fun ServiceHistoryCard(service: ServiceResponse) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold)
-                ServiceStatusBadge(service.status)
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
+        Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+            // Background image
+            service.locationReferenceImageUrl?.let { imageUrl ->
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .addHeader("User-Agent", "TourPresence/1.0 (Android; academic project)")
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = service.startLocationDescription,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = android.R.drawable.ic_dialog_alert),
+                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery)
+                )
+            } ?: run {
+                // Fallback gradient if no image
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(CardBackground)
+                )
             }
-            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}", color = TextTertiary)
-            Text("${stringResource(R.string.label_rate)}: ${service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)}", color = TextTertiary)
+
+            // Gradient overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color(0xCC000000)),
+                            startY = 60f
+                        )
+                    )
+            )
+
+            // Content overlay
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    ServiceStatusBadge(service.status)
+                }
+                Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
+                    color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
+                    color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
+            }
         }
     }
 }
@@ -430,6 +509,133 @@ private fun OfflineStatusCard() {
         Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.status_offline_title), color = Error, fontWeight = FontWeight.SemiBold)
             Text(stringResource(R.string.status_offline_explanation), textAlign = TextAlign.Center, color = TextTertiary)
+        }
+    }
+}
+
+@Composable
+private fun BottomNavigationBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    NavigationBar(
+        containerColor = Color(0xFF1E1E1E),
+        tonalElevation = 0.dp
+    ) {
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 0) Icons.Filled.Notifications else Icons.Outlined.Notifications,
+                    contentDescription = stringResource(R.string.tab_requests)
+                )
+            },
+            label = { Text(stringResource(R.string.tab_requests)) },
+            selected = selectedTab == 0,
+            onClick = { onTabSelected(0) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 1) Icons.Filled.Assignment else Icons.Outlined.Assignment,
+                    contentDescription = stringResource(R.string.tab_my_services)
+                )
+            },
+            label = { Text(stringResource(R.string.tab_my_services)) },
+            selected = selectedTab == 1,
+            onClick = { onTabSelected(1) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 2) Icons.Filled.Person else Icons.Outlined.Person,
+                    contentDescription = stringResource(R.string.profile)
+                )
+            },
+            label = { Text(stringResource(R.string.profile)) },
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+    }
+}
+
+@Composable
+private fun ProfileTab(onLogout: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = null,
+                tint = TextTertiary,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.profile),
+                fontSize = 14.sp,
+                color = TextTertiary
+            )
+            Spacer(Modifier.height(32.dp))
+            OutlinedButton(
+                onClick = {
+                    SessionManager.clearSession()
+                    onLogout()
+                },
+                border = BorderStroke(1.dp, TextTertiary),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = TextTertiary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.logout),
+                    color = TextTertiary
+                )
+            }
         }
     }
 }

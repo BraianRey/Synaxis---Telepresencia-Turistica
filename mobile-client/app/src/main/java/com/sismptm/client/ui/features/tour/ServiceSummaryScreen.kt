@@ -17,11 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.sismptm.client.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -598,6 +600,19 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                 label = stringResource(R.string.label_location),
                 value = service.startLocationDescription ?: stringResource(R.string.not_specified)
             )
+
+            service.locationReferenceImageUrl?.let { imageUrl ->
+                Spacer(modifier = Modifier.height(16.dp))
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Reference image of service location",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
             DetailItem(
                 icon = Icons.Default.AccessTime,

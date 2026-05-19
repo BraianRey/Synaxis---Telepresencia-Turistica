@@ -144,7 +144,7 @@ fun PartnerSearchScreen(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Bogotá, Colombia", color = TextSecondary, fontSize = 14.sp) },
+                        placeholder = { Text(stringResource(R.string.search_placeholder_example), color = TextSecondary, fontSize = 14.sp) },
                         leadingIcon = {
                             Box(
                                 modifier = Modifier
@@ -154,7 +154,7 @@ fun PartnerSearchScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = stringResource(R.string.back),
                                     tint = TextPrimary,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -187,7 +187,13 @@ fun PartnerSearchScreen(
                 containerColor = Color(0xFF1A1A1A),
                 modifier = Modifier.height(56.dp)
             ) {
-                val items = listOf("Explore", "Favorites", "Tours", "Messages", "Account")
+                val items = listOf(
+                    stringResource(R.string.nav_explore),
+                    stringResource(R.string.nav_favorites),
+                    stringResource(R.string.nav_tours),
+                    stringResource(R.string.nav_messages),
+                    stringResource(R.string.nav_account)
+                )
                 val icons = listOf(
                     Icons.Default.Home,
                     Icons.Default.Favorite,

@@ -27,7 +27,8 @@ data class ServiceResponse(
     val hourlyRate: Double? = null,
     val status: String,
     val startedAt: String?,
-    val endedAt: String?
+    val endedAt: String?,
+    val locationReferenceImageUrl: String? = null
 ) {
     /**
      * Calculates the service duration in minutes.

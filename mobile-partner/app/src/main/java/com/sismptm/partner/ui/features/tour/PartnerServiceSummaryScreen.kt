@@ -130,7 +130,7 @@ fun PartnerServiceSummaryScreen(
                     IconButton(onClick = onBackToHome) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = TextPrimary
                         )
                     }

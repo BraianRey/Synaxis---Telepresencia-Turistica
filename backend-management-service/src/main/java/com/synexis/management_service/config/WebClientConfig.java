@@ -14,4 +14,12 @@ public class WebClientConfig {
                 .defaultHeader("User-Agent", "telepresencia/0.1")
                 .build();
     }
+
+    @Bean
+    public WebClient wikimediaWebClient() {
+        return WebClient.builder()
+                .baseUrl("https://commons.wikimedia.org")
+                .defaultHeader("User-Agent", "TourPresence/1.0 (academic project)")
+                .build();
+    }
 }

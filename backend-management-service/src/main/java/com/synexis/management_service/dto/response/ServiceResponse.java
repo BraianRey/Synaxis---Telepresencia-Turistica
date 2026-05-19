@@ -26,7 +26,8 @@ public record ServiceResponse(
 
         Instant startedAt,
 
-        Instant endedAt
+        Instant endedAt,
+        String locationReferenceImageUrl
 
 ) {
     /**

@@ -2,6 +2,7 @@ package com.sismptm.client.ui.features.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -31,6 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -76,6 +82,7 @@ fun HomeScreen(
             when (selectedTab) {
                 0 -> ExploreTabContent(
                     uiState = uiState,
+                    servicesState = servicesState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
                     onNavigateToMapService = onNavigateToMapService,
                     onAvatarClick = { selectedTab = 2 }
@@ -94,6 +101,7 @@ fun HomeScreen(
 @Composable
 private fun ExploreTabContent(
     uiState: HomeUiState,
+    servicesState: HomeViewModel.ClientServicesUiState,
     onNavigateToPartnerSearch: () -> Unit,
     onNavigateToMapService: () -> Unit,
     onAvatarClick: () -> Unit
@@ -125,7 +133,18 @@ private fun ExploreTabContent(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        DestinationsSection(uiState.destinations)
+        val completedWithImage = if (servicesState is HomeViewModel.ClientServicesUiState.Success) {
+            servicesState.services
+                .filter { it.status.uppercase() == "COMPLETED" && it.locationReferenceImageUrl != null }
+                .take(5)
+        } else emptyList()
+
+        if (completedWithImage.isNotEmpty()) {
+            RecentPlacesSection(
+                services = completedWithImage,
+                onServiceClick = onNavigateToMapService
+            )
+        }
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
@@ -359,6 +378,7 @@ private fun ToursTabContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -442,8 +462,40 @@ private fun ClientServiceCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.SemiBold)
+            val dateText = run {
+                val iso = service.endedAt ?: service.startedAt
+                if (iso == null) {
+                    "${stringResource(R.string.service_prefix)}${service.serviceId}"
+                } else {
+                    try {
+                        val instant = java.time.Instant.parse(iso)
+                        val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                        val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(java.util.Locale.getDefault())
+                        fmt.format(zoned)
+                    } catch (e: Exception) {
+                        "${stringResource(R.string.service_prefix)}${service.serviceId}"
+                    }
+                }
+            }
+            Text(dateText, color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
+            service.locationReferenceImageUrl?.let { imageUrl ->
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .addHeader("User-Agent", "TourPresence/1.0 (Android; academic project)")
+                        .crossfade(400)
+                        .build(),
+                    contentDescription = "Service location image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                    contentScale = ContentScale.Crop,
+                    error = painterResource(id = android.R.drawable.ic_dialog_alert),
+                    placeholder = painterResource(id = android.R.drawable.ic_menu_gallery)
+                )
+            }
             Text("${stringResource(R.string.location_prefix)}${service.startLocationDescription ?: stringResource(R.string.not_specified)}", color = TextTertiary)
             Text(stringResource(R.string.hours_prefix) + service.agreedHours, color = TextTertiary)
             Text(stringResource(R.string.hourly_rate_prefix) + stringResource(R.string.currency_format, service.hourlyRate ?: 0.0), color = TextTertiary)
@@ -482,6 +534,136 @@ private fun ServiceStatusBadge(status: String) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
+    }
+}
+
+@Composable
+private fun ProfileTab(onLogout: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = null,
+                tint = TextTertiary,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.home_profile),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(Modifier.height(32.dp))
+            OutlinedButton(
+                onClick = {
+                    SessionManager.clearSession()
+                    onLogout()
+                },
+                border = BorderStroke(1.dp, TextTertiary),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = TextTertiary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_sign_out),
+                    color = TextTertiary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentPlacesSection(
+    services: List<ServiceResponse>,
+    onServiceClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+    ) {
+        Text(
+            text = "Lugares recientes",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 1.2.sp,
+            color = TextPrimary
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(services) { service ->
+                RecentPlaceCard(service = service, onClick = onServiceClick)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentPlaceCard(
+    service: ServiceResponse,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .height(200.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(service.locationReferenceImageUrl)
+                    .addHeader("User-Agent", "TourPresence/1.0 (Android; academic project)")
+                    .crossfade(400)
+                    .build(),
+                contentDescription = service.startLocationDescription,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color(0xCC000000)),
+                            startY = 80f
+                        )
+                    )
+            )
+            Text(
+                text = service.startLocationDescription ?: "",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(10.dp)
+            )
+        }
     }
 }
 

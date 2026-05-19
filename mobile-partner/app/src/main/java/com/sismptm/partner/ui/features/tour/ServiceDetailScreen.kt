@@ -32,7 +32,7 @@ fun ServiceDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Navigate back",
+                            contentDescription = stringResource(R.string.navigate_back),
                             tint = TextPrimary
                         )
                     }
@@ -74,18 +74,18 @@ fun ServiceDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "${stringResource(R.string.label_client)}: María García",
+                            text = stringResource(R.string.label_client) + ": " + stringResource(R.string.sample_client_name),
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary
                         )
                         Text(
-                            text = stringResource(R.string.tour_detail_status, "ACTIVE"),
+                            text = stringResource(R.string.tour_detail_status, stringResource(R.string.active)),
                             color = Success,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                         )
                         Text(
-                            text = "Route: Historic Downtown Tour",
+                            text = stringResource(R.string.route_historic_downtown_tour),
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextSecondary
                         )

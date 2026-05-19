@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -83,7 +84,7 @@ fun LoginScreen(
             IconButton(onClick = { viewModel.checkAvailability() }) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = "Check server status",
+                    contentDescription = stringResource(R.string.check_server_status),
                     tint = PrimaryAccent,
                     modifier = Modifier.size(20.dp)
                 )
@@ -144,7 +145,7 @@ fun LoginScreen(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = "Toggle password visibility",
+                        contentDescription = stringResource(R.string.toggle_password_visibility),
                         tint = TextSecondary
                     )
                 }
@@ -197,28 +198,23 @@ fun LoginScreen(
             onClick = { viewModel.login(email = email, password = password) },
             enabled = email.isNotBlank() && password.isNotBlank() && !isLoading,
             modifier = Modifier.fillMaxWidth().height(54.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = PrimaryAccent,
+                disabledContainerColor = PrimaryAccent.copy(alpha = 0.5f),
+                contentColor = TextPrimary,
+                disabledContentColor = TextPrimary.copy(alpha = 0.7f)
+            ),
             shape = RoundedCornerShape(12.dp)
         ) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary, strokeWidth = 2.dp)
             } else {
-                Text(text = stringResource(id = R.string.login_button), fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                Text(
+                    text = stringResource(id = R.string.login_button),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedButton(
-            onClick = onNavigateToStreaming,
-            modifier = Modifier.fillMaxWidth().height(54.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = PrimaryAccent
-            ),
-            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryAccent)
-        ) {
-            Text(text = stringResource(id = R.string.debug_streaming), fontWeight = FontWeight.SemiBold)
         }
 
         Spacer(modifier = Modifier.weight(1f))

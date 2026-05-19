@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Seeds initial data into Keycloak and PostgreSQL on startup.
@@ -50,6 +51,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
         log.info("\n\n=== DataInitializer: starting seed ===\n\n");
         seedClients();
@@ -140,26 +142,44 @@ public class DataInitializer implements ApplicationRunner {
                 2, ServiceStatus.COMPLETED,
                 3.4264, -76.5102,
                 now.minusDays(10), now.minusDays(10).plusHours(1),
-                now.minusDays(10).plusHours(1), now.minusDays(10).plusHours(3));
+                now.minusDays(10).plusHours(1), now.minusDays(10).plusHours(3),
+                "https://upload.wikimedia.org/wikipedia/commons/f/fc/Puente_del_Humilladero%2C_Popay%C3%A1n_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original");
 
         seedService(luis, carlos, "Cristo Rey, Cali",
                 3, ServiceStatus.COMPLETED,
                 6.2105, -75.5677,
                 now.minusDays(5), now.minusDays(5).plusHours(1),
-                now.minusDays(5).plusHours(2), now.minusDays(5).plusHours(5));
+                now.minusDays(5).plusHours(2), now.minusDays(5).plusHours(5),
+                "https://upload.wikimedia.org/wikipedia/commons/5/5b/Cristo_Rey%2C_Cali.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original");
 
         // CANCELLED — also visible in history
         seedService(john, laura, "Comuna 13, Medellín",
-                1, ServiceStatus.CANCELLED,
+                1, ServiceStatus.COMPLETED,
                 6.2518, -75.5636,
-                now.minusDays(3), null, null, null);
+                LocalDateTime.of(now.getYear(), 5, 5, 9, 0),
+                LocalDateTime.of(now.getYear(), 5, 5, 10, 0),
+                LocalDateTime.of(now.getYear(), 5, 5, 11, 0),
+                LocalDateTime.of(now.getYear(), 5, 5, 13, 0),
+                "https://upload.wikimedia.org/wikipedia/commons/0/00/Ball_court_-_Comuna_13_-_Medell%C3%ADn_-_Colombia_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original");
 
         // ACCEPTED — visible in active for both client and partner
         seedService(ana, laura, "La Candelaria, Bogotá",
-                4, ServiceStatus.ACCEPTED,
+                4, ServiceStatus.COMPLETED,
                 4.5981, -74.0758,
-                now.minusHours(2), now.minusHours(1), null, null);
+                LocalDateTime.of(now.getYear(), 5, 10, 8, 0),
+                LocalDateTime.of(now.getYear(), 5, 10, 9, 0),
+                LocalDateTime.of(now.getYear(), 5, 10, 9, 30),
+                LocalDateTime.of(now.getYear(), 5, 10, 12, 30),
+                "https://upload.wikimedia.org/wikipedia/commons/d/d1/Iglesia_de_Nuestra_Se%C3%B1ora_de_la_Candelaria%2C_Bogota.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original");
 
+        seedService(ana, laura, "Wall Street, New York",
+                4, ServiceStatus.COMPLETED,
+                40.7069, -74.0112,
+                LocalDateTime.of(now.getYear(), 9, 10, 8, 0),
+                LocalDateTime.of(now.getYear(), 9, 10, 9, 0),
+                LocalDateTime.of(now.getYear(), 9, 10, 9, 30),
+                LocalDateTime.of(now.getYear(), 9, 10, 12, 30),
+                "https://upload.wikimedia.org/wikipedia/commons/9/92/New_York_Stock_Exchange_August_2017_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original");
         log.info("Services seeded.");
     }
 
@@ -168,7 +188,8 @@ public class DataInitializer implements ApplicationRunner {
             ServiceStatus status,
             double latitude, double longitude,
             LocalDateTime requestedAt, LocalDateTime acceptedAt,
-            LocalDateTime startedAt, LocalDateTime endedAt) {
+            LocalDateTime startedAt, LocalDateTime endedAt,
+            String locationReferenceImageUrl) {
         try {
             ServiceEntity service = new ServiceEntity();
             service.setClient(client);
@@ -182,6 +203,7 @@ public class DataInitializer implements ApplicationRunner {
             service.setAcceptedAt(acceptedAt);
             service.setStartedAt(startedAt);
             service.setEndedAt(endedAt);
+            service.setLocationReferenceImageUrl(locationReferenceImageUrl);
             serviceRepository.save(service);
             log.info("Service seeded: {} → {} [{}]", client.getId(), partner.getId(), status);
         } catch (Exception e) {
