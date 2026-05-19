@@ -20,6 +20,11 @@ object SessionManager {
     var language: String
         get() = _languageFlow.value
         private set(value) { _languageFlow.value = value }
+        
+    fun updateLanguage(lang: String) {
+        language = lang
+    }
+    
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
 
     fun saveSession(token: String, id: Long, name: String, email: String, lang: String? = "en") {

@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +45,7 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     onLogout: () -> Unit,
     onNavigateToServiceReady: (Long) -> Unit,
+    onNavigateToProfile: () -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -72,7 +75,7 @@ fun HomeScreen(
     if (!hasLocationPermission) {
         HomePermissionDeniedScreen { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
     } else {
-        HomeContent(onLogout = onLogout, onNavigateToServiceReady = onNavigateToServiceReady, homeViewModel = homeViewModel)
+        HomeContent(onLogout = onLogout, onNavigateToServiceReady = onNavigateToServiceReady, onNavigateToProfile = onNavigateToProfile, homeViewModel = homeViewModel)
     }
 }
 
@@ -97,10 +100,12 @@ private fun HomePermissionDeniedScreen(onRetry: () -> Unit) {
 private fun HomeContent(
     onLogout: () -> Unit,
     onNavigateToServiceReady: (Long) -> Unit,
+    onNavigateToProfile: () -> Unit,
     homeViewModel: HomeViewModel
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var isOnline by remember { mutableStateOf(false) }
+    var isProfileMenuOpen by remember { mutableStateOf(false) }
 
     val requestsState by homeViewModel.requestsState.collectAsState()
     val acceptedTour by homeViewModel.acceptedTour.collectAsState()
@@ -142,8 +147,9 @@ private fun HomeContent(
         )
     }
 
-    Scaffold(
-        bottomBar = {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            bottomBar = {
             Button(
                 onClick = { SessionManager.clearSession(); onLogout() },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -152,22 +158,62 @@ private fun HomeContent(
                 Text(stringResource(R.string.logout), color = TextPrimary)
             }
         }
-    ) { innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
-            TabRow(selectedTabIndex = selectedTab, containerColor = CardBackground, contentColor = TextPrimary) {
-                Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.tab_requests)) })
-                Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.tab_my_services)) })
-            }
-
-            when (selectedTab) {
-                0 -> RequestsTabContent(
-                    isOnline = isOnline,
-                    onToggleOnline = { isOnline = it },
-                    requestsState = requestsState,
-                    acceptingServiceId = acceptingServiceId,
-                    onAccept = { homeViewModel.acceptTour(it) }
+        ) { innerPadding ->
+            Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
+                HeaderSection(
+                    partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },
+                    onProfileClick = { isProfileMenuOpen = true },
+                    modifier = Modifier.padding(16.dp)
                 )
-                1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
+
+                TabRow(selectedTabIndex = selectedTab, containerColor = CardBackground, contentColor = TextPrimary) {
+                    Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.tab_requests)) })
+                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.tab_my_services)) })
+                }
+
+                when (selectedTab) {
+                    0 -> RequestsTabContent(
+                        isOnline = isOnline,
+                        onToggleOnline = { isOnline = it },
+                        requestsState = requestsState,
+                        acceptingServiceId = acceptingServiceId,
+                        onAccept = { homeViewModel.acceptTour(it) }
+                    )
+                    1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
+                }
+            }
+        }
+
+        if (isProfileMenuOpen) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { isProfileMenuOpen = false }
+            )
+
+            Card(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 80.dp, end = 16.dp)
+                    .width(180.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = CardBackground)
+            ) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    TextButton(
+                        onClick = {
+                            isProfileMenuOpen = false
+                            onNavigateToProfile()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.my_profile), color = TextPrimary)
+                    }
+                }
             }
         }
     }
@@ -182,7 +228,6 @@ private fun RequestsTabContent(
     onAccept: (ServiceResponse) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) }) }
         item { AvailabilityCard(isOnline = isOnline, onToggleOnline = onToggleOnline) }
         item {
             OutlinedButton(
@@ -305,8 +350,8 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun HeaderSection(partnerName: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+private fun HeaderSection(partnerName: String, onProfileClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = buildAnnotatedString {
                 pushStyle(SpanStyle(color = TextTertiary, fontSize = 16.sp))
@@ -319,7 +364,14 @@ private fun HeaderSection(partnerName: String) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(PrimaryAccent), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(PrimaryAccent)
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
+        ) {
             Text(partnerName.take(1).uppercase(), color = TextPrimary, fontWeight = FontWeight.Bold)
         }
     }

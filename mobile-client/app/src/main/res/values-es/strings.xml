@@ -206,4 +206,12 @@
     <string name="currency_suffix">COP</string>
     <string name="price_format">%1$s COP</string>
     <string name="currency_format">$%1$s COP</string>
+    
+    <!-- Profile additions -->
+    <string name="my_profile">Mi Perfil</string>
+    <string name="preferred_language">Idioma Preferido</string>
+    <string name="edit">Editar</string>
+    <string name="save_changes">Guardar Cambios</string>
+    <string name="cancel">Cancelar</string>
+    <string name="role">Rol</string>
 </resources>
