@@ -83,7 +83,17 @@ fun RequestCard(
                     Text(text = stringResource(id = R.string.wants_tour, location), style = MaterialTheme.typography.bodyMedium, color = Color(0xFFB9C0CB))
                 }
 
-                Text(text = elapsedTime, style = MaterialTheme.typography.labelMedium, color = Color(0xFF9DA5B3))
+                if (clientPicDirectory != null) {
+                    val isScheduled = elapsedTime.startsWith("Reserved")
+                    Text(
+                        text = elapsedTime,
+                        style = if (isScheduled) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                        color = if (isScheduled) Color(0xFF7C3AED) else Color(0xFF9DA5B3),
+                        fontWeight = if (isScheduled) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                } else {
+                    Text(text = elapsedTime, style = MaterialTheme.typography.labelMedium, color = Color(0xFF9DA5B3))
+                }
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

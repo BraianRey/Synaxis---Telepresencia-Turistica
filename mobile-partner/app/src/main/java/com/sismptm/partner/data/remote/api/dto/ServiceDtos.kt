@@ -21,7 +21,8 @@ data class ServiceResponse(
     @SerializedName("status") val status: String,
     @SerializedName("startedAt") val startedAt: String?,
     @SerializedName("endedAt") val endedAt: String?,
-    @SerializedName("locationReferenceImageUrl") val locationReferenceImageUrl: String? = null
+    @SerializedName("locationReferenceImageUrl") val locationReferenceImageUrl: String? = null,
+    @SerializedName("scheduledAt") val scheduledAt: String? = null
 ) {
     /**
      * Calculates the service duration in minutes.

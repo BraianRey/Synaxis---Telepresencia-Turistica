@@ -52,8 +52,9 @@ import com.sismptm.client.ui.features.tour.ServiceViewModel
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
-    onLogout: () -> Unit,
     onNavigateToMapService: () -> Unit,
+    onNavigateToReserveMap: () -> Unit,
+    onLogout: () -> Unit,
     homeViewModel: HomeViewModel = viewModel(),
     serviceViewModel: ServiceViewModel = viewModel()
 ) {
@@ -80,7 +81,8 @@ fun HomeScreen(
                     uiState = uiState,
                     servicesState = servicesState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
-                    onNavigateToMapService = onNavigateToMapService
+                    onNavigateToMapService = onNavigateToMapService,
+                    onNavigateToReserveMap = onNavigateToReserveMap
                 )
                 1 -> ToursTabContent(
                     servicesState = servicesState,
@@ -98,7 +100,8 @@ private fun ExploreTabContent(
     uiState: HomeUiState,
     servicesState: HomeViewModel.ClientServicesUiState,
     onNavigateToPartnerSearch: () -> Unit,
-    onNavigateToMapService: () -> Unit
+    onNavigateToMapService: () -> Unit,
+    onNavigateToReserveMap: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -123,6 +126,25 @@ private fun ExploreTabContent(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = PrimaryAccent
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onNavigateToReserveMap,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 20.dp)
+                .fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "Reserve service",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
             )
         }
 
@@ -488,6 +510,17 @@ private fun ClientServiceCard(
             }
             Text(dateText, color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
+            if (!service.scheduledAt.isNullOrBlank()) {
+                val scheduledText = try {
+                    val instant = java.time.Instant.parse(service.scheduledAt)
+                    val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+                    "Scheduled: ${fmt.format(zoned)}"
+                } catch (e: Exception) {
+                    "Scheduled"
+                }
+                Text(scheduledText, color = Color(0xFF7C3AED), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            }
             service.locationReferenceImageUrl?.let { imageUrl ->
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)

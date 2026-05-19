@@ -15,9 +15,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
@@ -176,7 +178,8 @@ private fun HomeContent(
                     onAccept = { homeViewModel.acceptTour(it) }
                 )
                 1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
-                2 -> ProfileTab(onLogout = onLogout, picDirectory = SessionManager.picDirectory)
+                2 -> UpcomingTabContent(partnerServicesState = partnerServicesState)
+                3 -> ProfileTab(onLogout = onLogout, picDirectory = SessionManager.picDirectory)
             }
         }
     }
@@ -225,12 +228,24 @@ private fun RequestsTabContent(
                             val duration = service.agreedHours?.let { "${it}${stringResource(R.string.hours_unit).first()}" } ?: stringResource(R.string.rate_na)
                             val price = service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)
                             val clientName = service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)
-                            Log.d("RequestDebug", "Service ${service.serviceId}: clientName=$clientName, clientPicDirectory=${service.clientPicDirectory}")
+                            val elapsedLabel = if (!service.scheduledAt.isNullOrBlank()) {
+                                try {
+                                    val instant = java.time.Instant.parse(service.scheduledAt)
+                                    val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                                    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM, HH:mm").withLocale(java.util.Locale.getDefault())
+                                    "Reserved: ${fmt.format(zoned)}"
+                                } catch (e: Exception) {
+                                    "Reserved"
+                                }
+                            } else {
+                                stringResource(R.string.status_new)
+                            }
+                            Log.d("RequestDebug", "Service ${service.serviceId}: clientName=$clientName, clientPicDirectory=${service.clientPicDirectory}, scheduled=${service.scheduledAt}")
 
                             RequestCard(
                                 clientName = clientName,
                                 location = location,
-                                elapsedTime = stringResource(R.string.status_new),
+                                elapsedTime = elapsedLabel,
                                 duration = duration,
                                 price = price,
                                 clientPicDirectory = service.clientPicDirectory,
@@ -276,6 +291,57 @@ private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServ
         }
         is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Error) }
         else -> {}
+    }
+}
+
+@Composable
+private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState) {
+    when (partnerServicesState) {
+        HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryAccent) }
+        is HomeViewModel.PartnerServicesUiState.Success -> {
+            val upcomingServices = partnerServicesState.services.filter {
+                it.status.uppercase() == "ACCEPTED" && !it.scheduledAt.isNullOrBlank()
+            }.sortedBy { it.scheduledAt }
+
+            LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (upcomingServices.isNotEmpty()) {
+                    item { SectionHeader("Upcoming Reservations") }
+                    items(upcomingServices, key = { it.serviceId }) { service -> UpcomingServiceCard(service) }
+                } else {
+                    item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text("No upcoming reservations", color = Color.Gray) } }
+                }
+            }
+        }
+        is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Error) }
+        else -> {}
+    }
+}
+
+@Composable
+private fun UpcomingServiceCard(service: ServiceResponse) {
+    val scheduledText = service.scheduledAt?.let {
+        try {
+            val instant = java.time.Instant.parse(it)
+            val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+            fmt.format(zoned)
+        } catch (e: Exception) {
+            it
+        }
+    } ?: "Scheduled"
+
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                ServiceStatusBadge("ACCEPTED")
+            }
+            Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
+                color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
+                color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
+            Text("Scheduled: $scheduledText", color = PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
@@ -504,13 +570,32 @@ private fun BottomNavigationBar(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = if (selectedTab == 2) Icons.Filled.Person else Icons.Outlined.Person,
+                    imageVector = if (selectedTab == 2) Icons.Filled.CalendarMonth else Icons.Outlined.CalendarMonth,
+                    contentDescription = "Upcoming"
+                )
+            },
+            label = { Text("Upcoming") },
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 3) Icons.Filled.Person else Icons.Outlined.Person,
                     contentDescription = stringResource(R.string.profile)
                 )
             },
             label = { Text(stringResource(R.string.profile)) },
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = PrimaryAccent,
                 selectedTextColor = PrimaryAccent,

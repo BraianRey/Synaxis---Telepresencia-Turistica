@@ -7,7 +7,8 @@ package com.sismptm.client.data.remote.api.dto
 data class CreateServiceRequest(
     val longitude: Double,
     val latitude: Double,
-    val startLocationDescription: String?
+    val startLocationDescription: String?,
+    val scheduledAt: String? = null
 )
 
 /**
@@ -28,7 +29,8 @@ data class ServiceResponse(
     val status: String,
     val startedAt: String?,
     val endedAt: String?,
-    val locationReferenceImageUrl: String? = null
+    val locationReferenceImageUrl: String? = null,
+    val scheduledAt: String? = null
 ) {
     /**
      * Calculates the service duration in minutes.
