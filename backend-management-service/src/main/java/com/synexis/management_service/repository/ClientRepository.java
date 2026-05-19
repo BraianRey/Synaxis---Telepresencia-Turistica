@@ -12,6 +12,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     boolean existsByEmailIgnoreCase(String email);
 
+    boolean existsByKeycloakId(String keycloakId);
+
     Optional<Client> findByEmailIgnoreCase(String email);
 
     Optional<Client> findByKeycloakId(String keycloakId);

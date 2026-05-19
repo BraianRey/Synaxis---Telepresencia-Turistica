@@ -6,19 +6,12 @@ import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.UserLanguage;
 import com.synexis.management_service.entity.UserRole;
 import com.synexis.management_service.exception.EmailAlreadyExistsException;
-import com.synexis.management_service.exception.KeycloakUserCreationException;
 import com.synexis.management_service.repository.ClientRepository;
 import com.synexis.management_service.service.ClientService;
-
-import jakarta.ws.rs.core.Response;
+import com.synexis.management_service.service.KeycloakService;
 
 import java.time.Instant;
-import java.util.List;
 
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,15 +27,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ClientServiceImpl implements ClientService {
 
-    // @Value("${KEYCLOAK_REALM}")
-    private String keycloakRealm = "synexis"; // TODO - FIX - HARDCODED FOR TESTING - REVERT TO @Value IN PRODUCTION
-
     private final ClientRepository clientRepository;
-    private final Keycloak keycloak;
+    private final KeycloakService keycloakService;
 
-    public ClientServiceImpl(ClientRepository clientRepository, Keycloak keycloak) {
+    public ClientServiceImpl(ClientRepository clientRepository, KeycloakService keycloakService) {
         this.clientRepository = clientRepository;
-        this.keycloak = keycloak;
+        this.keycloakService = keycloakService;
     }
 
     @Override
@@ -50,86 +40,23 @@ public class ClientServiceImpl implements ClientService {
     public RegisterClientResponse registerClient(RegisterClientRequest request) {
 
         String normalizedEmail = request.email().trim().toLowerCase();
+        String trimmedName     = request.name().trim();
 
         if (clientRepository.existsByEmailIgnoreCase(normalizedEmail)) {
             throw new EmailAlreadyExistsException(normalizedEmail);
         }
 
-        // =========================
-        // CREATE USER IN KEYCLOAK
-        // =========================
-        // Create a Keycloak user record with username/email and enable status.
-        UserRepresentation user = new UserRepresentation();
-        user.setUsername(normalizedEmail);
-        user.setEmail(normalizedEmail);
-        user.setFirstName(request.name().trim());
-        user.setLastName(request.name().trim()); // Optional: could be set to something else if needed
-        user.setEnabled(true);
-        user.setEmailVerified(true);
+        String userId = keycloakService.resolveUserForRole(
+                normalizedEmail, request.password(), trimmedName, "CLIENT");
 
-        Response response = keycloak.realm(keycloakRealm)
-                .users()
-                .create(user);
-
-        if (response.getStatus() != 201) {
-            throw new KeycloakUserCreationException(response.getStatus());
+        if (clientRepository.existsByKeycloakId(userId)) {
+            throw new EmailAlreadyExistsException(normalizedEmail);
         }
 
-        System.out.println("Keycloak user created with email: " + normalizedEmail);
-
-        String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
-
-        // =========================
-        // SET PASSWORD IN KEYCLOAK
-        // =========================
-        // Configure the new Keycloak user credentials (non-temporary password).
-        CredentialRepresentation credential = new CredentialRepresentation();
-        credential.setType(CredentialRepresentation.PASSWORD);
-        credential.setValue(request.password()); // Use raw password here; Keycloak will hash it internally.
-        credential.setTemporary(false);
-
-        keycloak.realm(keycloakRealm)
-                .users()
-                .get(userId)
-                .resetPassword(credential);
-
-        System.out.println("Password set for Keycloak user: " + normalizedEmail);
-
-        // =========================
-        // ASSIGN REALM ROLE IN KEYCLOAK
-        // =========================
-        // 1. Get the internal ID (UUID) of the 'telepresence' client
-
-        String clientUuid = keycloak.realm(keycloakRealm)
-                .clients()
-                .findByClientId("telepresence") // This returns a list of matching clients
-                .get(0) // This could fail if 'telepresence' does not exist
-                .getId();
-
-        // 2. Get the representation of the 'CLIENT' role that belongs to that client
-        RoleRepresentation clientRole = keycloak.realm(keycloakRealm)
-                .clients()
-                .get(clientUuid)
-                .roles()
-                .get("CLIENT")
-                .toRepresentation();
-
-        // 3. Assign the role to the user at client level (clientLevel)
-        keycloak.realm(keycloakRealm)
-                .users()
-                .get(userId)
-                .roles()
-                .clientLevel(clientUuid)
-                .add(List.of(clientRole));
-
-        // PERSIST CLIENT ENTITY TO DATABASE (PASSWORD IS NOT STORED LOCALLY)
-        // =========================
-        // Save the client profile in local database with Keycloak id and normalized
-        // data.
         Client client = new Client();
-        client.setKeycloakId(userId); // IMPORTANT - LINK TO KEYCLOAK USER
+        client.setKeycloakId(userId);
         client.setEmail(normalizedEmail);
-        client.setName(request.name().trim());
+        client.setName(trimmedName);
         client.setTermsAccepted(request.termsAccepted());
         client.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
         client.setPicDirectory(normalizePicDirectory(request.picDirectory()));
@@ -138,18 +65,10 @@ public class ClientServiceImpl implements ClientService {
 
         Client saved = clientRepository.save(client);
 
-        System.out.println("Client entity saved to database with email: " + normalizedEmail);
-
         return new RegisterClientResponse(
-                saved.getId(),
-                saved.getEmail(),
-                saved.getName(),
-                saved.getStatus(),
-                saved.getLanguage(),
-                saved.getCreatedAt(),
-                saved.getTermsAccepted(),
-                saved.getPicDirectory(),
-                saved.getRole());
+                saved.getId(), saved.getEmail(), saved.getName(), saved.getStatus(),
+                saved.getLanguage(), saved.getCreatedAt(), saved.getTermsAccepted(),
+                saved.getPicDirectory(), saved.getRole());
     }
 
     private String normalizePicDirectory(String path) {
