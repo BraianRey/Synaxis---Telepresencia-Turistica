@@ -78,7 +78,7 @@ fun WelcomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
-                    onClick = onGetStarted,
+                    onClick = onSignIn,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp),
@@ -88,7 +88,7 @@ fun WelcomeScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.get_started),
+                        text = stringResource(R.string.sign_in),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
@@ -102,29 +102,21 @@ fun WelcomeScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.already_user),
+                        text = stringResource(R.string.new_here),
                         fontSize = 14.sp,
                         color = TextTertiary
                     )
                     Text(
-                        text = stringResource(R.string.sign_in),
+                        text = stringResource(R.string.create_account),
                         fontSize = 14.sp,
                         color = PrimaryAccent,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.clickable(onClick = onSignIn)
+                        modifier = Modifier.clickable(onClick = onGetStarted)
                     )
                 }
             }
         }
 
-        // Temporary Test Button for Streaming UI
-        TextButton(
-            onClick = onNavigateToStreaming,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 40.dp, end = 16.dp)
-        ) {
-            Text("Test Stream UI", color = PrimaryAccent, fontSize = 12.sp)
-        }
+        // Removed temporary test button for streaming (no longer needed)
     }
 }

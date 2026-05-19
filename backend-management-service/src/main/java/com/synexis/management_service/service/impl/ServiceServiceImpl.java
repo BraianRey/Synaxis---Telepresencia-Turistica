@@ -31,6 +31,7 @@ import com.synexis.management_service.repository.ServiceIdempotencyKeyRepository
 import com.synexis.management_service.repository.ServicePaymentRepository;
 import com.synexis.management_service.repository.ServiceRepository;
 import com.synexis.management_service.service.NotificationService;
+import com.synexis.management_service.client.WikimediaClient;
 
 import jakarta.persistence.LockModeType;
 import com.synexis.management_service.service.PaymentService;
@@ -53,6 +54,7 @@ public class ServiceServiceImpl implements ServiceService {
     private final ServicePaymentRepository servicePaymentRepository;
     private final ServiceHistoryService serviceHistoryService;
     private final NotificationService notificationService;
+    private final WikimediaClient wikimediaClient;
     private final ServiceIdempotencyKeyRepository serviceIdempotencyKeyRepository;
 
     public ServiceServiceImpl(
@@ -64,6 +66,7 @@ public class ServiceServiceImpl implements ServiceService {
             ServicePaymentRepository servicePaymentRepository,
             ServiceHistoryService serviceHistoryService,
             NotificationService notificationService,
+            WikimediaClient wikimediaClient,
             ServiceIdempotencyKeyRepository serviceIdempotencyKeyRepository) {
         this.serviceRepository = serviceRepository;
         this.serviceMapper = serviceMapper;
@@ -73,6 +76,7 @@ public class ServiceServiceImpl implements ServiceService {
         this.servicePaymentRepository = servicePaymentRepository;
         this.serviceHistoryService = serviceHistoryService;
         this.notificationService = notificationService;
+        this.wikimediaClient = wikimediaClient;
         this.serviceIdempotencyKeyRepository = serviceIdempotencyKeyRepository;
     }
 
@@ -350,6 +354,8 @@ public class ServiceServiceImpl implements ServiceService {
         }
 
         service.setStatus(ServiceStatus.COMPLETED);
+        String imageUrl = wikimediaClient.getLocationImageUrl(service.getLatitude(), service.getLongitude());
+        service.setLocationReferenceImageUrl(imageUrl);
         service.setEndedAt(LocalDateTime.now());
 
         Partner assignedPartner = service.getPartner();
@@ -390,6 +396,8 @@ public class ServiceServiceImpl implements ServiceService {
         }
 
         service.setStatus(ServiceStatus.COMPLETED);
+        String imageUrl = wikimediaClient.getLocationImageUrl(service.getLatitude(), service.getLongitude());
+        service.setLocationReferenceImageUrl(imageUrl);
         service.setEndedAt(LocalDateTime.now());
 
         Partner assignedPartner = service.getPartner();

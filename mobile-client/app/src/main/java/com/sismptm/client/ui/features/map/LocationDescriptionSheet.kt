@@ -11,9 +11,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sismptm.client.R
 
 @Composable
 fun LocationDescriptionSheet(
@@ -43,7 +45,7 @@ fun LocationDescriptionSheet(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Describe the location",
+                text = stringResource(R.string.describe_location_title),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -51,7 +53,7 @@ fun LocationDescriptionSheet(
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.close),
                     tint = Color.White
                 )
             }
@@ -66,14 +68,14 @@ fun LocationDescriptionSheet(
             )
         }
 
-        OutlinedTextField(
+            OutlinedTextField(
             value = description,
             onValueChange = { viewModel.onDescriptionChanged(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 100.dp)
                 .padding(bottom = 16.dp),
-            placeholder = { Text("E.g., Coffee shop near the park...", color = Color(0xFF888888)) },
+            placeholder = { Text(stringResource(R.string.location_placeholder_example), color = Color(0xFF888888)) },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color(0xFF444444),
                 focusedBorderColor = Color(0xFF2196F3),
@@ -98,7 +100,7 @@ fun LocationDescriptionSheet(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
             enabled = selectedLocation != null
         ) {
-            Text("Confirm location", color = Color.White, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.confirm_location), color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }

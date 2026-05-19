@@ -159,7 +159,8 @@
     <!-- ServiceReadyScreen -->
     <string name="ready_to_start">Ready to Start?</string>
     <string name="service_ref_prefix">Service Reference: #</string>
-    <string name="ready_start_instruction">The client has been notified and is waiting for you to start the transmission.</string>
+    <string name="ready_start_instruction">The client has been notified and is waiting for you to
+        start the transmission.</string>
     <string name="btn_start_transmission">START TRANSMISSION</string>
     <string name="btn_go_back_dashboard">Go back to dashboard</string>
 
@@ -183,5 +184,13 @@
     <string name="per_hour_suffix">/hour</string>
     <string name="you_earned_label">You Earned</string>
     <string name="duration_label">Duration</string>
+    <string name="check_server_status">Check server status</string>
+    <string name="toggle_password_visibility">Toggle password visibility</string>
+    <string name="back">Back</string>
+    <string name="navigate_back">Navigate back</string>
+    <string name="request_description_tour">Description: 4-hour guided tour</string>
+    <string name="route_historic_downtown_tour">Route: Historic Downtown Tour</string>
+    <string name="sample_client_name">María García</string>
+    <string name="sample_location_name">Puracé National Natural Park</string>
 
 </resources>
