@@ -74,8 +74,8 @@ fun PartnerNavGraph() {
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Login.route) { inclusive = false }
                     }
                 },
                 onNavigateToLogin = {

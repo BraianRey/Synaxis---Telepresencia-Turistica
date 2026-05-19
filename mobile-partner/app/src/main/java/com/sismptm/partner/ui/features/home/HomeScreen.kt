@@ -2,6 +2,7 @@ package com.sismptm.partner.ui.features.home
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -44,6 +45,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import com.sismptm.partner.core.session.SessionManager
+import com.sismptm.partner.core.network.NetworkConfig
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.manager.location.LocationManager
 import com.sismptm.partner.ui.common.RequestCard
@@ -174,7 +176,7 @@ private fun HomeContent(
                     onAccept = { homeViewModel.acceptTour(it) }
                 )
                 1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
-                2 -> ProfileTab(onLogout = onLogout)
+                2 -> ProfileTab(onLogout = onLogout, picDirectory = SessionManager.picDirectory)
             }
         }
     }
@@ -189,7 +191,7 @@ private fun RequestsTabContent(
     onAccept: (ServiceResponse) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) }) }
+        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) }, picDirectory = SessionManager.picDirectory) }
         item { AvailabilityCard(isOnline = isOnline, onToggleOnline = onToggleOnline) }
         item {
             OutlinedButton(
@@ -223,6 +225,7 @@ private fun RequestsTabContent(
                             val duration = service.agreedHours?.let { "${it}${stringResource(R.string.hours_unit).first()}" } ?: stringResource(R.string.rate_na)
                             val price = service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)
                             val clientName = service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)
+                            Log.d("RequestDebug", "Service ${service.serviceId}: clientName=$clientName, clientPicDirectory=${service.clientPicDirectory}")
 
                             RequestCard(
                                 clientName = clientName,
@@ -230,6 +233,7 @@ private fun RequestsTabContent(
                                 elapsedTime = stringResource(R.string.status_new),
                                 duration = duration,
                                 price = price,
+                                clientPicDirectory = service.clientPicDirectory,
                                 onDecline = {},
                                 onAccept = { onAccept(service) },
                                 isAccepting = acceptingServiceId == service.serviceId
@@ -358,7 +362,7 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun HeaderSection(partnerName: String) {
+private fun HeaderSection(partnerName: String, picDirectory: String? = null) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = buildAnnotatedString {
@@ -373,7 +377,22 @@ private fun HeaderSection(partnerName: String) {
             overflow = TextOverflow.Ellipsis
         )
         Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(PrimaryAccent), contentAlignment = Alignment.Center) {
-            Text(partnerName.take(1).uppercase(), color = TextPrimary, fontWeight = FontWeight.Bold)
+            if (picDirectory != null) {
+                val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(300)
+                        .build(),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(partnerName.take(1).uppercase(), color = TextPrimary, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -504,7 +523,7 @@ private fun BottomNavigationBar(
 }
 
 @Composable
-private fun ProfileTab(onLogout: () -> Unit) {
+private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -515,12 +534,35 @@ private fun ProfileTab(onLogout: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                tint = TextTertiary,
-                modifier = Modifier.size(64.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(CardBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                if (picDirectory != null) {
+                    val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(300)
+                            .build(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text(
                 text = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },

@@ -47,6 +47,8 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(InvalidCredentialsException::new);
 
         TokenResult token = requestToken(normalizedEmail, password);
+        String picDir = client.getPicDirectory();
+        System.out.println("[LoginDebug] Client login: email=" + normalizedEmail + ", picDirectory=" + picDir);
         return new LoginResponse(
                 token.accessToken,
                 token.refreshToken,
@@ -56,7 +58,8 @@ public class LoginServiceImpl implements LoginService {
                 client.getEmail(),
                 client.getName(),
                 client.getRole().name(),
-                client.getLanguage().name());
+                client.getLanguage().name(),
+                picDir);
     }
 
     @Override
@@ -66,6 +69,8 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(InvalidCredentialsException::new);
 
         TokenResult token = requestToken(normalizedEmail, password);
+        String picDir = partner.getPicDirectory();
+        System.out.println("[LoginDebug] Partner login: email=" + normalizedEmail + ", picDirectory=" + picDir);
         return new LoginResponse(
                 token.accessToken,
                 token.refreshToken,
@@ -75,7 +80,8 @@ public class LoginServiceImpl implements LoginService {
                 partner.getEmail(),
                 partner.getName(),
                 partner.getRole().name(),
-                partner.getLanguage().name());
+                partner.getLanguage().name(),
+                picDir);
     }
 
     private TokenResult requestToken(String email, String password) {

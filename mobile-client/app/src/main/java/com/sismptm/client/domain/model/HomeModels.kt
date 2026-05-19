@@ -31,5 +31,6 @@ data class HomeUiState(
     val destinations: List<Destination> = emptyList(),
     val mapPins: List<MapPin> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val picDirectory: String? = null
 )

@@ -10,6 +10,7 @@ data class ServiceResponse(
     // Client information
     @SerializedName("clientName") val clientName: String? = null,
     @SerializedName("clientEmail") val clientEmail: String? = null,
+    @SerializedName("clientPicDirectory") val clientPicDirectory: String? = null,
     // Partner information
     @SerializedName("partnerName") val partnerName: String? = null,
     @SerializedName("partnerEmail") val partnerEmail: String? = null,

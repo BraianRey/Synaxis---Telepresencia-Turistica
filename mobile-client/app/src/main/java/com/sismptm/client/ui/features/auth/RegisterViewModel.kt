@@ -31,7 +31,8 @@ class RegisterViewModel : ViewModel() {
         name: String,
         email: String,
         password: String,
-        termsAccepted: Boolean
+        termsAccepted: Boolean,
+        picDirectory: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = RegisterUiState.Loading
@@ -42,7 +43,8 @@ class RegisterViewModel : ViewModel() {
                     password = password,
                     name = name.trim(),
                     termsAccepted = termsAccepted,
-                    language = language
+                    language = language,
+                    picDirectory = picDirectory
                 )
                 val response = RetrofitClient.apiService.registerClient(request)
                 if (response.isSuccessful) {
@@ -89,4 +91,3 @@ class RegisterViewModel : ViewModel() {
         }
     }
 }
-

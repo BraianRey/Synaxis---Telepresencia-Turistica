@@ -97,7 +97,7 @@ fun NavGraph() {
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },

@@ -4,14 +4,22 @@ import com.sismptm.client.data.remote.api.dto.*
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
+import okhttp3.MultipartBody
 
 /**
  * Interface defining the API endpoints for the application.
  */
 interface ApiService {
+
+    /** Uploads a profile picture and returns the stored path */
+    @Multipart
+    @POST("api/upload/profile-pic")
+    suspend fun uploadProfilePicture(@Part file: MultipartBody.Part): Response<UploadResponse>
 
     /** Registers a new client */
     @POST("api/clients/register")

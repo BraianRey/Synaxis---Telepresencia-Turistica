@@ -1,4 +1,4 @@
-package com.sismptm.client.ui.common
+package com.sismptm.partner.ui.common
 
 import android.net.Uri
 import androidx.compose.foundation.border
@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.sismptm.partner.ui.theme.PrimaryAccent
 
 @Composable
 fun ProfilePictureUpload(
@@ -38,7 +38,7 @@ fun ProfilePictureUpload(
                 .clip(CircleShape)
                 .border(
                     width = 2.dp,
-                    color = Color(0xFF1E88E5),
+                    color = PrimaryAccent,
                     shape = CircleShape
                 )
                 .clickable(onClick = onPhotoClick),
@@ -61,7 +61,7 @@ fun ProfilePictureUpload(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Add photo",
                     modifier = Modifier.size(48.dp),
-                    tint = Color(0xFF1E88E5)
+                    tint = PrimaryAccent
                 )
             }
         }
@@ -71,7 +71,7 @@ fun ProfilePictureUpload(
         Text(
             text = if (selectedImageUri != null) "Change photo" else "Add photo",
             fontSize = 14.sp,
-            color = Color(0xFF1E88E5),
+            color = PrimaryAccent,
             fontWeight = FontWeight.Medium
         )
     }

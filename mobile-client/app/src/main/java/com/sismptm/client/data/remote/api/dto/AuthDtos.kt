@@ -18,7 +18,8 @@ data class LoginResponse(
     val email: String,
     val name: String,
     val role: String,
-    val language: String? = "en"
+    val language: String? = "en",
+    val picDirectory: String? = null
 )
 
 data class RegisterClientRequest(
@@ -50,4 +51,8 @@ data class UserProfileResponse(
     val language: String,
     val role: String,
     val picDirectory: String?
+)
+
+data class UploadResponse(
+    val picDirectory: String
 )

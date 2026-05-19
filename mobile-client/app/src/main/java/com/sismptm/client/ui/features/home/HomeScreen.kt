@@ -33,6 +33,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -86,7 +87,7 @@ fun HomeScreen(
                     onRefresh = { homeViewModel.loadClientServices() },
                     onOpenWaiting = onOpenServiceWaiting
                 )
-                2 -> ProfileTab(onLogout)
+                2 -> ProfileTab(onLogout, picDirectory = uiState.picDirectory)
             }
         }
     }
@@ -105,7 +106,7 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        HomeHeader(uiState.userName)
+        HomeHeader(uiState.userName, uiState.picDirectory)
         SearchBar()
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -143,7 +144,7 @@ private fun ExploreTabContent(
 }
 
 @Composable
-private fun HomeHeader(userName: String) {
+private fun HomeHeader(userName: String, picDirectory: String? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,12 +174,28 @@ private fun HomeHeader(userName: String) {
                 .background(CardBackground),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = "Avatar",
-                tint = TextTertiary,
-                modifier = Modifier.size(28.dp)
-            )
+            if (picDirectory != null) {
+                val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                android.util.Log.d("HomeDebug", "Loading profile image from: $imageUrl")
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(300)
+                        .build(),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = "Avatar",
+                    tint = TextTertiary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
@@ -530,7 +547,7 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun ProfileTab(onLogout: () -> Unit) {
+private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -541,12 +558,35 @@ private fun ProfileTab(onLogout: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                tint = TextTertiary,
-                modifier = Modifier.size(64.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(CardBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                if (picDirectory != null) {
+                    val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(300)
+                            .build(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.home_profile),
