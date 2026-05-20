@@ -4,7 +4,7 @@ package com.synexis.management_service.exception;
 public class InvalidCredentialsException extends RuntimeException {
 
     public InvalidCredentialsException() {
-        super("Las credenciales no son correctas.");
+        super("The credentials are not correct.");
     }
 }
 
