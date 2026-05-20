@@ -176,4 +176,11 @@
     <string name="you_earned_label">Ganaste</string>
     <string name="duration_label">Duración</string>
 
+    <!-- ProfileScreen -->
+    <string name="my_profile">Mi Perfil</string>
+    <string name="preferred_language">Idioma Preferido</string>
+    <string name="back">Volver</string>
+    <string name="edit">Editar</string>
+    <string name="save_changes">Guardar Cambios</string>
+    <string name="cancel">Cancelar</string>
 </resources>

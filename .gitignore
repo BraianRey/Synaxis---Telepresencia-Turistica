@@ -44,3 +44,5 @@ backend-management-service/picProfile/*
 
 # OpenCode Agent Context
 CONTEXTO.MD
+mobile-client/gradle.properties
+mobile-partner/gradle.properties

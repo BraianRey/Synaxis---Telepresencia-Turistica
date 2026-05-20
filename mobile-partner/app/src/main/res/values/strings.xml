@@ -184,6 +184,13 @@
     <string name="per_hour_suffix">/hour</string>
     <string name="you_earned_label">You Earned</string>
     <string name="duration_label">Duration</string>
+    <!-- ProfileScreen -->
+    <string name="my_profile">My Profile</string>
+    <string name="preferred_language">Preferred Language</string>
+    <string name="back">Back</string>
+    <string name="edit">Edit</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="cancel">Cancel</string>
     <string name="check_server_status">Check server status</string>
     <string name="toggle_password_visibility">Toggle password visibility</string>
     <string name="back">Back</string>
