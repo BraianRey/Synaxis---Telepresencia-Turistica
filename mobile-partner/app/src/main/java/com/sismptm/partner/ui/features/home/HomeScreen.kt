@@ -129,6 +129,8 @@ private fun HomeContent(
     val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
     val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
     val partnerServicesState by homeViewModel.partnerServicesState.collectAsState()
+    val averageRating by homeViewModel.averageRating.collectAsState()
+    val ratingCount by homeViewModel.ratingCount.collectAsState()
 
     LaunchedEffect(isOnline) {
         if (isOnline) {
@@ -149,6 +151,7 @@ private fun HomeContent(
 
     LaunchedEffect(Unit) {
         homeViewModel.loadPartnerServices()
+        homeViewModel.loadPartnerRatings()
     }
 
     if (acceptErrorMessage != null) {
@@ -186,7 +189,9 @@ private fun HomeContent(
                     onToggleOnline = { isOnline = it },
                     requestsState = requestsState,
                     acceptingServiceId = acceptingServiceId,
-                    onAccept = { homeViewModel.acceptTour(it) }
+                    onAccept = { homeViewModel.acceptTour(it) },
+                    averageRating = averageRating,
+                    ratingCount = ratingCount
                 )
                 1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
                 2 -> UpcomingTabContent(partnerServicesState = partnerServicesState)
@@ -202,7 +207,9 @@ private fun RequestsTabContent(
     onToggleOnline: (Boolean) -> Unit,
     requestsState: HomeViewModel.RequestsUiState,
     acceptingServiceId: Long?,
-    onAccept: (ServiceResponse) -> Unit
+    onAccept: (ServiceResponse) -> Unit,
+    averageRating: String,
+    ratingCount: Int
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
@@ -217,7 +224,7 @@ private fun RequestsTabContent(
                 Text(text = stringResource(R.string.send_location))
             }
         }
-        item { StatsGrid() }
+        item { StatsGrid(averageRating = averageRating, ratingCount = ratingCount) }
 
         item { IncomingRequestsHeader(newCount = if (requestsState is HomeViewModel.RequestsUiState.Success) requestsState.requests.size else 0) }
 
@@ -501,19 +508,29 @@ private fun AvailabilityCard(isOnline: Boolean, onToggleOnline: (Boolean) -> Uni
 }
 
 @Composable
-private fun StatsGrid() {
+private fun StatsGrid(averageRating: String, ratingCount: Int) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         StatsCard(modifier = Modifier.weight(1f).aspectRatio(1f), title = stringResource(R.string.tours_today), value = "0")
-        StatsCard(modifier = Modifier.weight(1f).aspectRatio(1f), title = stringResource(R.string.your_rating), value = "-")
+        StatsCard(
+            modifier = Modifier.weight(1f).aspectRatio(1f),
+            title = stringResource(R.string.your_rating),
+            value = averageRating,
+            subtitle = if (ratingCount > 0) "$ratingCount reviews" else null
+        )
     }
 }
 
 @Composable
-private fun StatsCard(modifier: Modifier, title: String, value: String) {
+private fun StatsCard(modifier: Modifier, title: String, value: String, subtitle: String? = null) {
     Card(modifier = modifier, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = TextSecondary)
-            Text(value, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+            Column {
+                Text(value, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                }
+            }
         }
     }
 }

@@ -59,7 +59,7 @@ public class RatingServiceImpl implements RatingService {
 
         Rating rating = Rating.builder()
                 .score(request.getScore())
-                .comment(request.getComment())
+                .comment(request.getComment() != null ? request.getComment() : "")
                 .client(authenticatedClient)
                 .partner(service.getPartner())
                 .service(service)
@@ -111,7 +111,7 @@ public class RatingServiceImpl implements RatingService {
         }
 
         rating.setScore(request.getScore());
-        rating.setComment(request.getComment());
+        rating.setComment(request.getComment() != null ? request.getComment() : "");
 
         Rating updated = ratingRepository.save(rating);
         updatePartnerRatingStats(rating.getPartner());
@@ -138,15 +138,15 @@ public class RatingServiceImpl implements RatingService {
 
     /**
      * Retrieves the authenticated Client from the JWT subject in the SecurityContext.
-     * Assumes the token subject is the Client email or username.
+     * The token subject is the Keycloak user UUID (keycloakId).
      */
     private Client getAuthenticatedClient() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName(); // JWT subject (email / keycloak preferred_username)
+        String keycloakId = authentication.getName(); // JWT subject (Keycloak UUID)
 
-        return clientRepository.findByEmailIgnoreCase(username)
+        return clientRepository.findByKeycloakId(keycloakId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Authenticated client not found: " + username));
+                        "Authenticated client not found: " + keycloakId));
     }
 
     private void validateServiceOwnership(ServiceEntity service, Client client) {

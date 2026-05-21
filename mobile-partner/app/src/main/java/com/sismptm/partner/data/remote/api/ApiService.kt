@@ -54,4 +54,8 @@ interface ApiService {
 
     @GET("api/services/{serviceId}")
     suspend fun getServiceById(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    /** Retrieves all ratings for a specific partner */
+    @GET("api/ratings/partner/{partnerId}")
+    suspend fun getRatingsByPartner(@Path("partnerId") partnerId: Long): Response<List<RatingResponse>>
 }

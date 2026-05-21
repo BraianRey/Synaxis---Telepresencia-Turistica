@@ -26,9 +26,9 @@ public class Rating {
     @Column(nullable = false)
     private Integer score;
 
-    @NotBlank(message = "Comment is required")
-    @Size(min = 10, max = 500, message = "Comment must be between 10 and 500 characters")
-    @Column(nullable = false, length = 500)
+    @Size(max = 200, message = "Comment must not exceed 200 characters")
+    @Column(nullable = false, length = 200)
+    @org.hibernate.annotations.ColumnDefault("''")
     private String comment;
 
     @CreationTimestamp

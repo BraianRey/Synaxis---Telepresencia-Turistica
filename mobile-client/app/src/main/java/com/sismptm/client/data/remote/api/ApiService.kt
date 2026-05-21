@@ -70,4 +70,12 @@ interface ApiService {
     suspend fun completeServiceByClient(
         @Path("serviceId") serviceId: Long
     ): Response<ServiceResponse>
+
+    /** Creates a new rating for a completed service */
+    @POST("api/ratings")
+    suspend fun createRating(@Body request: RatingRequest): Response<RatingResponse>
+
+    /** Retrieves the rating associated with a specific service */
+    @GET("api/ratings/service/{serviceId}")
+    suspend fun getRatingByService(@Path("serviceId") serviceId: Long): Response<RatingResponse>
 }

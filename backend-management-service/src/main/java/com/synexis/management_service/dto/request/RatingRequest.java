@@ -18,7 +18,6 @@ public class RatingRequest {
     @Max(value = 5, message = "Maximum score is 5")
     private Integer score;
 
-    @NotBlank(message = "Comment is required")
-    @Size(min = 10, max = 500, message = "Comment must be between 10 and 500 characters")
+    @Size(max = 200, message = "Comment must not exceed 200 characters")
     private String comment;
 }
