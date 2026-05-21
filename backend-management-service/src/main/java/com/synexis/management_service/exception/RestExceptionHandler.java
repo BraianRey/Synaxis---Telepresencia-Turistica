@@ -88,6 +88,12 @@ public class RestExceptionHandler {
                 .body(Map.of("error", "Resource was modified by another request; please retry"));
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Map<String, String>> handleBusiness(BusinessException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", ex.getMessage()));
+    }
+    
+
     /**
      * Catch-all for any unexpected exception so we return a JSON body instead of
      * the default Spring HTML error page. This makes debugging much easier from

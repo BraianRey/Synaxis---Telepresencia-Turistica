@@ -61,6 +61,8 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setRole(UserRole.PARTNER);
         partner.setCreatedAt(Instant.now());
         partner.setLocation(GeoUtils.createPoint(request.longitude(), request.latitude()));
+        partner.setAverageRating(0.0);
+        partner.setRatingCount(0);
 
         Partner saved = partnerRepository.save(partner);
 

@@ -6,10 +6,12 @@ import java.util.Set;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.synexis.management_service.entity.ServiceEntity;
 import com.synexis.management_service.entity.ServiceStatus;
 
+@Repository
 public interface ServiceRepository extends JpaRepository<ServiceEntity, Long> {
 
     @EntityGraph(attributePaths = "payment")
