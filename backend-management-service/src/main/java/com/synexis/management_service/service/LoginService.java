@@ -1,6 +1,6 @@
 package com.synexis.management_service.service;
 
-import com.synexis.management_service.dto.response.LoginResponse;
+import com.synexis.management_service.dto.response.usersProfile.LoginResponse;
 
 public interface LoginService {
 

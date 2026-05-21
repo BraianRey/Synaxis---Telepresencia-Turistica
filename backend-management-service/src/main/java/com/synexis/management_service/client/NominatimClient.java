@@ -36,4 +36,22 @@ public class NominatimClient {
         area.setCountryCode(response.getAddress().getCountry_code());
         return area;
     }
+
+    public String getCityFromCoordinates(double x, double y) {
+        NominatimResponse response = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/reverse")
+                        .queryParam("lat", y)
+                        .queryParam("lon", x)
+                        .queryParam("format", "json")
+                        .build())
+                .retrieve()
+                .bodyToMono(NominatimResponse.class)
+                .block();
+
+        if (response == null || response.getAddress() == null)
+            return "unknown";
+
+        return response.getAddress().getCity();
+    }
 }

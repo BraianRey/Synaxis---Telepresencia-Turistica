@@ -2,10 +2,12 @@ package com.synexis.management_service.service.impl;
 
 import com.synexis.management_service.dto.request.RegisterClientRequest;
 import com.synexis.management_service.dto.response.RegisterClientResponse;
+import com.synexis.management_service.dto.response.usersProfile.ClientPublicProfileResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.UserLanguage;
 import com.synexis.management_service.entity.UserRole;
 import com.synexis.management_service.exception.EmailAlreadyExistsException;
+import com.synexis.management_service.exception.ResourceNotFoundException;
 import com.synexis.management_service.repository.ClientRepository;
 import com.synexis.management_service.service.ClientService;
 import com.synexis.management_service.service.KeycloakService;
@@ -70,6 +72,23 @@ public class ClientServiceImpl implements ClientService {
                 saved.getLanguage(), saved.getCreatedAt(), saved.getTermsAccepted(),
                 saved.getPicDirectory(), saved.getRole());
     }
+
+    public ClientPublicProfileResponse getPublicProfile(Long clientId) {
+
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Client not found with id: " + clientId
+                        ));
+
+        return new ClientPublicProfileResponse(
+                client.getName(),
+                client.getPicDirectory(),
+                client.getLanguage().name(),
+                client.getCreatedAt()
+        );
+    }
+
 
     private String normalizePicDirectory(String path) {
         if (path == null)
