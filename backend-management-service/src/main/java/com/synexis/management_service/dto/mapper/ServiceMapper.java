@@ -39,6 +39,7 @@ public class ServiceMapper {
                                 // Partner info
                                 partner != null ? partner.getName() : null,
                                 partner != null ? partner.getEmail() : null,
+                                partner != null ? partner.getPicDirectory() : null,
                                 // Service details
                                 service.getStartLocationDescription(),
                                 service.getAgreedHours(),

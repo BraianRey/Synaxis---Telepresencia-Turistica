@@ -10,20 +10,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/.idea/deploymentTargetSelector.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/core/session/SessionManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/core/session/SessionManager.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/api/dto/ServiceDtos.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/api/dto/ServiceDtos.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceSummaryScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceSummaryScreen.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/core/session/SessionManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/core/session/SessionManager.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/navigation/NavGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/navigation/NavGraph.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/PartnerServiceSummaryScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/PartnerServiceSummaryScreen.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,7 +30,7 @@
       <entry key="_C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner" value="3C8UADKCGKXxXzWFWBdybxy2d9a" />
     </persistenceIdMap>
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[PhysicalDevice::serial=M7T4NRSGHY65PZSK]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\David\.android\avd\Medium_Phone_API_36.1_2_2.avd]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -84,7 +76,7 @@
     &quot;accountId&quot;: &quot;cd5502d4-d496-442f-89c2-ae7c104d5f2f&quot;
   }
 }</component>
-  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\Janus\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\David\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
   <component name="ProjectColorInfo">{
     &quot;associatedIndex&quot;: 3
     }</component>
@@ -97,7 +89,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">{
-    &quot;keyToString&quot;: {
+  &quot;keyToString&quot;: {
     &quot;Android App.app.executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;Notification.DisplayName-DoNotAsk-Android Gradle Upgrade Notification&quot;: &quot;Android Gradle Upgrade Notification&quot;,
@@ -110,13 +102,13 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;BRey&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;David&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/universidad/semestres/octavo semestre/proyecto1/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
-    }
-    }</component>
+  }
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\TEST\Synaxis---Telepresencia-Turistica\mobile-partner\app\src\main\java\com\sismptm\partner\data\remote" />
@@ -144,8 +136,6 @@
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
       <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
-      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
-      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
       <option name="DEBUGGER_TYPE" value="Auto" />
       <Auto>
         <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
@@ -219,12 +209,12 @@
       <map>
         <entry key="com.sismptm.partner">
           <value>
-            <CheckInfo lastCheckTimestamp="1779158275644" />
+            <CheckInfo lastCheckTimestamp="1779393736473" />
           </value>
         </entry>
         <entry key="com.sismptm.partner.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1779158275611" />
+            <CheckInfo lastCheckTimestamp="1779393736476" />
           </value>
         </entry>
       </map>

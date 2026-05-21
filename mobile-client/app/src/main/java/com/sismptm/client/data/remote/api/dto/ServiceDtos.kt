@@ -22,6 +22,7 @@ data class ServiceResponse(
     // Partner information
     val partnerName: String? = null,
     val partnerEmail: String? = null,
+    val partnerPicDirectory: String? = null,
     // Service details
     val startLocationDescription: String?,
     val agreedHours: Int? = null,

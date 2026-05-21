@@ -18,6 +18,7 @@ public record ServiceResponse(
 
         String partnerName,
         String partnerEmail,
+        String partnerPicDirectory,
 
         String startLocationDescription,
 

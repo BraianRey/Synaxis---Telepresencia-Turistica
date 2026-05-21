@@ -24,6 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -520,7 +523,7 @@ private fun PartnerInfoCard(service: ServiceResponse) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Avatar placeholder
+                // Avatar
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -528,12 +531,27 @@ private fun PartnerInfoCard(service: ServiceResponse) {
                         .background(Color.Gray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
+                    if (service.partnerPicDirectory != null) {
+                        val imageUrl = NetworkConfig.BASE_URL + service.partnerPicDirectory
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(300)
+                                .build(),
+                            contentDescription = "Partner picture",
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -608,7 +626,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                     contentDescription = "Reference image of service location",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(120.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
