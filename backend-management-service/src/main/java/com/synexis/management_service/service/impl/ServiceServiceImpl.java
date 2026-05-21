@@ -196,9 +196,9 @@ public class ServiceServiceImpl implements ServiceService {
         return new PaymentSummaryResponse(
                 payment.getService().getIdService(),
                 payment.getActualDurationMin(),
-                payment.getBilledHours(),
+                payment.getBilledMinutes(),
                 payment.getTotalAmount(),
-                payment.getHourlyRate(),
+                payment.getRatePerMinute(),
                 payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 payment.getConfirmed());
     }
@@ -218,9 +218,9 @@ public class ServiceServiceImpl implements ServiceService {
         return new PaymentSummaryResponse(
                 payment.getService().getIdService(),
                 payment.getActualDurationMin(),
-                payment.getBilledHours(),
+                payment.getBilledMinutes(),
                 payment.getTotalAmount(),
-                payment.getHourlyRate(),
+                payment.getRatePerMinute(),
                 payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 payment.getConfirmed());
     }
