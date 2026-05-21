@@ -12,15 +12,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material.icons.outlined.Videocam
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,6 +51,7 @@ import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.ui.features.tour.ServiceViewModel
+import com.sismptm.client.ui.features.profile.ProfileScreen
 
 @Composable
 fun HomeScreen(
@@ -82,14 +87,15 @@ fun HomeScreen(
                     servicesState = servicesState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
                     onNavigateToMapService = onNavigateToMapService,
-                    onNavigateToReserveMap = onNavigateToReserveMap
+                    onNavigateToReserveMap = onNavigateToReserveMap,
+                    onAvatarClick = { selectedTab = 2 }
                 )
                 1 -> ToursTabContent(
                     servicesState = servicesState,
                     onRefresh = { homeViewModel.loadClientServices() },
                     onOpenWaiting = onOpenServiceWaiting
                 )
-                2 -> ProfileTab(onLogout, picDirectory = uiState.picDirectory)
+                2 -> ProfileScreen(onLogout)
             }
         }
     }
@@ -101,7 +107,8 @@ private fun ExploreTabContent(
     servicesState: HomeViewModel.ClientServicesUiState,
     onNavigateToPartnerSearch: () -> Unit,
     onNavigateToMapService: () -> Unit,
-    onNavigateToReserveMap: () -> Unit
+    onNavigateToReserveMap: () -> Unit,
+    onAvatarClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -109,7 +116,7 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        HomeHeader(uiState.userName, uiState.picDirectory)
+        HomeHeader(uiState.userName, uiState.picDirectory, onAvatarClick)
         SearchBar()
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -166,7 +173,7 @@ private fun ExploreTabContent(
 }
 
 @Composable
-private fun HomeHeader(userName: String, picDirectory: String? = null) {
+private fun HomeHeader(userName: String, picDirectory: String? = null, onAvatarClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,7 +200,8 @@ private fun HomeHeader(userName: String, picDirectory: String? = null) {
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(CardBackground),
+                .background(CardBackground)
+                .clickable { onAvatarClick() },
             contentAlignment = Alignment.Center
         ) {
             if (picDirectory != null) {
@@ -802,4 +810,3 @@ private fun BottomNavigationBar(
         )
     }
 }
-

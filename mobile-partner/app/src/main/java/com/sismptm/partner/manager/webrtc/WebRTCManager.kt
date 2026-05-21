@@ -6,10 +6,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import org.webrtc.*
+import java.util.regex.Pattern
 
 /**
  * Orchestrates WebRTC operations for broadcasting. Manages the peer connection lifecycle, hardware
- * media capture, and stream quality.
+ * media capture, and stream quality. Handles self-recovery on hardware freezes and adapts
+ * connection bitrates organically.
  */
 class WebRTCManager(
         private val context: Context,
@@ -74,10 +76,12 @@ class WebRTCManager(
         val totalRamGb = memInfo.totalMem / (1024 * 1024 * 1024.0)
         val processors = Runtime.getRuntime().availableProcessors()
 
+        // Conservative tiering: heavily penalize low RAM to prevent OOM and encoder crashes
         return when {
-            processors <= 4 || totalRamGb <= 3.0 -> 1
-            processors <= 6 || totalRamGb <= 6.0 -> 2
-            else -> 3
+            totalRamGb <= 3.0 -> 1 // Low tier: 480p max
+            processors <= 4 || totalRamGb <= 4.0 -> 1 
+            processors <= 6 || totalRamGb <= 6.0 -> 2 // Mid tier: 720p max
+            else -> 3 // High tier: 1080p max
         }
     }
 
@@ -102,7 +106,7 @@ class WebRTCManager(
                 surfaceViewRenderer.init(eglBase.eglBaseContext, null)
                 surfaceViewRenderer.setEnableHardwareScaler(true)
                 surfaceViewRenderer.setMirror(false) // Disable mirroring for back-facing camera capture
-                surfaceViewRenderer.setFpsReduction(30f) // Reduce GPU overhead for local preview
+                surfaceViewRenderer.setFpsReduction(15f) // Reduce GPU overhead for local preview
             } catch (e: IllegalStateException) {
                 Log.w(TAG, "SurfaceViewRenderer already initialized, skipping init")
             }
@@ -114,7 +118,26 @@ class WebRTCManager(
                 deviceNames.find { enumerator.isBackFacing(it) }
                         ?: deviceNames.firstOrNull() ?: return
 
-        val capturer = enumerator.createCapturer(deviceName, null)
+        // Implement self-healing hardware event handler
+        val eventsHandler = object : CameraVideoCapturer.CameraEventsHandler {
+            override fun onCameraError(errorDescription: String?) {
+                Log.e(TAG, "Hardware Camera Error: $errorDescription")
+                mainHandler.post { restartCapture() }
+            }
+            override fun onCameraDisconnected() {
+                Log.w(TAG, "Hardware Camera Disconnected (OS reclaimed access)")
+                mainHandler.post { restartCapture() }
+            }
+            override fun onCameraFreezed(errorDescription: String?) {
+                Log.e(TAG, "Hardware Camera Freezed: $errorDescription")
+                mainHandler.post { restartCapture() }
+            }
+            override fun onCameraOpening(cameraName: String?) {}
+            override fun onFirstFrameAvailable() {}
+            override fun onCameraClosed() {}
+        }
+
+        val capturer = enumerator.createCapturer(deviceName, eventsHandler)
         this.videoCapturer = capturer
 
         videoSource = peerConnectionFactory!!.createVideoSource(capturer.isScreencast)
@@ -122,7 +145,7 @@ class WebRTCManager(
         capturer.initialize(surfaceTextureHelper, context, videoSource!!.capturerObserver)
 
         when (deviceTier) {
-            3 -> capturer.startCapture(1920, 1080, 30)
+            3 -> capturer.startCapture(1280, 720, 30) // Capped at 720p to prevent thermal throttling on high-end devices
             2 -> capturer.startCapture(1280, 720, 30)
             else -> capturer.startCapture(640, 480, 30)
         }
@@ -142,6 +165,24 @@ class WebRTCManager(
 
         isCapturing = true
         setupNewPeerConnection()
+    }
+
+    /**
+     * Detaches the local video track from the SurfaceViewRenderer.
+     * Use this when the app goes to the background to save GPU memory and prevent OOM crashes,
+     * while keeping the camera and stream running for the remote viewer.
+     */
+    fun detachLocalPreview() {
+        val renderer = lastRenderer ?: return
+        localVideoTrack?.removeSink(renderer)
+    }
+
+    /**
+     * Re-attaches the local video track to the SurfaceViewRenderer when the app returns to the foreground.
+     */
+    fun attachLocalPreview(renderer: SurfaceViewRenderer) {
+        lastRenderer = renderer
+        localVideoTrack?.addSink(renderer)
     }
 
     /**
@@ -300,66 +341,49 @@ class WebRTCManager(
         )
     }
 
+    /**
+     * Injects bitrate limits into the SDP using robust regex parsing.
+     * Starts with a low organic bitrate to prevent buffer overflow and eliminates initial latency.
+     */
     private fun sdpWithBitrate(sdp: String, bitrateKbps: Int): String {
-        val lines = sdp.split("\r\n").toMutableList()
-        var videoLineIndex = -1
-        for (i in lines.indices) {
-            if (lines[i].startsWith("m=video")) {
-                videoLineIndex = i
-                break
-            }
-        }
-
-        if (videoLineIndex == -1) return sdp
-
-        // 1. Identify H264 payload to prioritize it in the media line
+        var modifiedSdp = sdp
+        
+        // Find H264 payload type (usually 96, 102, or 125)
+        val h264Pattern = Pattern.compile("a=rtpmap:(\\d+) H264/90000\r\n")
+        val h264Matcher = h264Pattern.matcher(modifiedSdp)
         var h264Payload: String? = null
-        for (line in lines) {
-            if (line.startsWith("a=rtpmap:") && line.contains("H264/90000")) {
-                h264Payload = line.substringBefore(" ").substringAfter(":")
-                break
-            }
+        
+        if (h264Matcher.find()) {
+            h264Payload = h264Matcher.group(1)
         }
-
+        
+        // Inject b=AS (Application Specific) max bitrate limit into video mid
+        val videoMidPattern = Pattern.compile("(a=mid:video\r\n)")
+        val videoMidMatcher = videoMidPattern.matcher(modifiedSdp)
+        if (videoMidMatcher.find()) {
+            modifiedSdp = videoMidMatcher.replaceFirst("$1b=AS:$bitrateKbps\r\n")
+        }
+        
+        // Inject Google-specific limits to the H264 fmtp line
         if (h264Payload != null) {
-            val mVideoLine = lines[videoLineIndex]
-            val parts = mVideoLine.split(" ").toMutableList()
-            if (parts.size > 3) {
-                parts.remove(h264Payload)
-                parts.add(3, h264Payload) // Move H264 payload to the first preference position
-                lines[videoLineIndex] = parts.joinToString(" ")
+            val fmtpPattern = Pattern.compile("(a=fmtp:$h264Payload[^\r\n]+)")
+            val fmtpMatcher = fmtpPattern.matcher(modifiedSdp)
+            if (fmtpMatcher.find()) {
+                val originalFmtp = fmtpMatcher.group(1)
+                // Clean any existing x-google flags to prevent duplicates
+                val cleanedFmtp = originalFmtp!!.split(";").filterNot { it.contains("x-google-") }.joinToString(";")
+                
+                // Allow WebRTC to start at a low bitrate (300kbps) and scale up organically.
+                // This eliminates the 3-second startup latency caused by forced high bitrates.
+                val minBitrate = 100
+                val startBitrate = 300 
+                
+                val newFmtp = "$cleanedFmtp;x-google-min-bitrate=$minBitrate;x-google-max-bitrate=$bitrateKbps;x-google-start-bitrate=$startBitrate"
+                modifiedSdp = modifiedSdp.replace(originalFmtp, newFmtp)
             }
         }
-
-        // 2. Rebuild SDP cleaning previous bitrate and proprietary flags
-        val minBitrate = 300 // Safe minimum for real-time guidance as expected by Client
-        val startBitrate = (bitrateKbps * 0.8).toInt()
-        val resultLines = mutableListOf<String>()
-        var inVideoSection = false
-
-        for (line in lines) {
-            if (line.startsWith("m=video")) inVideoSection = true
-            else if (line.startsWith("m=audio")) inVideoSection = false
-
-            // Filter out existing bitrate lines in the video section
-            if (inVideoSection && line.startsWith("b=AS:")) continue
-
-            // Clean previous Google-specific latency flags from fmtp line
-            if (h264Payload != null && line.startsWith("a=fmtp:$h264Payload")) {
-                val cleanedFmtp = line.split(";").filterNot { it.contains("x-google-") }.joinToString(";")
-                resultLines.add("$cleanedFmtp;x-google-min-bitrate=$minBitrate;x-google-max-bitrate=$bitrateKbps;x-google-start-bitrate=$startBitrate")
-                continue
-            }
-
-            resultLines.add(line)
-
-            // Inject optimized bitrate settings for the video track
-            if (line.startsWith("a=mid:video")) {
-                resultLines.add("b=AS:$bitrateKbps")
-            }
-        }
-
-        return resultLines.joinToString("\r\n")
+        
+        return modifiedSdp
     }
 
     fun setRemoteDescription(sdp: String, isOffer: Boolean) {

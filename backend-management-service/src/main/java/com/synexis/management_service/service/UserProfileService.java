@@ -24,7 +24,7 @@ public class UserProfileService {
     }
 
     public UserProfileResponse getMyProfile(String keycloakId) {
-        // Busca primero en Client
+        // Start by looking up Client
         Optional<Client> clientOpt = clientRepository.findByKeycloakId(keycloakId);
         if (clientOpt.isPresent()) {
             Client client = clientOpt.get();
@@ -37,7 +37,7 @@ public class UserProfileService {
                     client.getPicDirectory());
         }
 
-        // Si no, busca en Partner
+        // Otherwise, look up Partner
         Optional<Partner> partnerOpt = partnerRepository.findByKeycloakId(keycloakId);
         if (partnerOpt.isPresent()) {
             Partner partner = partnerOpt.get();
@@ -50,7 +50,7 @@ public class UserProfileService {
                     partner.getPicDirectory());
         }
 
-        // Si no encuentra en ninguno, lanza excepción
+        // If not found in either, throw exception
         throw new ResourceNotFoundException("User not found with keycloakId: " + keycloakId);
     }
 }

@@ -111,12 +111,12 @@ public class LoginServiceImpl implements LoginService {
                 throw new WrongPasswordException();
             }
             throw new KeycloakUserCreationException(
-                    "Error de autenticacion en Keycloak. Status: " + response.statusCode());
+                    "Keycloak authentication error. Status: " + response.statusCode());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new KeycloakUserCreationException("No se pudo validar el login con Keycloak: " + ex.getMessage());
+            throw new KeycloakUserCreationException("Unable to validate login with Keycloak: " + ex.getMessage());
         } catch (IOException ex) {
-            throw new KeycloakUserCreationException("No se pudo validar el login con Keycloak: " + ex.getMessage());
+            throw new KeycloakUserCreationException("Unable to validate login with Keycloak: " + ex.getMessage());
         }
     }
 

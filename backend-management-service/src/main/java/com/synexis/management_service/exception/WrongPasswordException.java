@@ -4,7 +4,7 @@ package com.synexis.management_service.exception;
 public class WrongPasswordException extends RuntimeException {
 
     public WrongPasswordException() {
-        super("La contraseña es incorrecta. Vuelve a intentarlo.");
+        super("The password is incorrect. Please try again.");
     }
 }
 

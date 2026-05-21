@@ -31,4 +31,10 @@ public class Partner extends UserBase {
     @Enumerated(EnumType.STRING)
     @Column(name = "availability_status", nullable = false, length = 20)
     private PartnerAvailabilityStatus availabilityStatus = PartnerAvailabilityStatus.available;
+
+    @Column(name = "average_rating")
+    private Double averageRating;
+
+    @Column(name = "rating_count")
+    private Integer ratingCount;
 }

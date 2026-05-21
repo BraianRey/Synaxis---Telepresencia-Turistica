@@ -34,6 +34,10 @@ object SessionManager {
         get() = _languageFlow.value
         private set(value) { _languageFlow.value = value }
 
+    fun updateLanguage(lang: String) {
+        language = lang
+    }
+
     /**
      * Checks if a user is currently logged in based on the presence of an access token.
      */

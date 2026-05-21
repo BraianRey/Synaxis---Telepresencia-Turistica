@@ -20,14 +20,14 @@ public class ServicePayment {
     @Column(name = "actual_duration_min")
     private Integer actualDurationMin;
 
-    @Column(name = "billed_hours", precision = 10, scale = 4)
-    private BigDecimal billedHours;
+    @Column(name = "billed_minutes", nullable = false)
+    private Integer billedMinutes;
 
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(name = "hourly_rate", precision = 10, scale = 2)
-    private BigDecimal hourlyRate;
+    @Column(name = "rate_per_minute", precision = 10, scale = 6)
+    private BigDecimal ratePerMinute;
 
     @Column(name = "calculated_at")
     private LocalDateTime calculatedAt;
@@ -59,12 +59,12 @@ public class ServicePayment {
         this.actualDurationMin = actualDurationMin;
     }
 
-    public BigDecimal getBilledHours() {
-        return billedHours;
+    public Integer getBilledMinutes() {
+        return billedMinutes;
     }
 
-    public void setBilledHours(BigDecimal billedHours) {
-        this.billedHours = billedHours;
+    public void setBilledMinutes(Integer billedMinutes) {
+        this.billedMinutes = billedMinutes;
     }
 
     public BigDecimal getTotalAmount() {
@@ -75,12 +75,12 @@ public class ServicePayment {
         this.totalAmount = totalAmount;
     }
 
-    public BigDecimal getHourlyRate() {
-        return hourlyRate;
+    public BigDecimal getRatePerMinute() {
+        return ratePerMinute;
     }
 
-    public void setHourlyRate(BigDecimal hourlyRate) {
-        this.hourlyRate = hourlyRate;
+    public void setRatePerMinute(BigDecimal ratePerMinute) {
+        this.ratePerMinute = ratePerMinute;
     }
 
     public LocalDateTime getCalculatedAt() {

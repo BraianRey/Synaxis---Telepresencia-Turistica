@@ -6,6 +6,8 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -61,6 +63,7 @@ import kotlinx.coroutines.delay
 fun HomeScreen(
     onLogout: () -> Unit,
     onNavigateToServiceReady: (Long) -> Unit,
+    onNavigateToProfile: () -> Unit,
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -90,7 +93,7 @@ fun HomeScreen(
     if (!hasLocationPermission) {
         HomePermissionDeniedScreen { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)) }
     } else {
-        HomeContent(onLogout = onLogout, onNavigateToServiceReady = onNavigateToServiceReady, homeViewModel = homeViewModel)
+        HomeContent(onLogout = onLogout, onNavigateToServiceReady = onNavigateToServiceReady, onNavigateToProfile = onNavigateToProfile, homeViewModel = homeViewModel)
     }
 }
 
@@ -115,6 +118,7 @@ private fun HomePermissionDeniedScreen(onRetry: () -> Unit) {
 private fun HomeContent(
     onLogout: () -> Unit,
     onNavigateToServiceReady: (Long) -> Unit,
+    onNavigateToProfile: () -> Unit,
     homeViewModel: HomeViewModel
 ) {
     var selectedTab by remember { mutableStateOf(0) }
@@ -169,6 +173,13 @@ private fun HomeContent(
         }
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
+            HeaderSection(
+                partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },
+                picDirectory = SessionManager.picDirectory,
+                onProfileClick = { selectedTab = 3 },
+                modifier = Modifier.padding(16.dp)
+            )
+
             when (selectedTab) {
                 0 -> RequestsTabContent(
                     isOnline = isOnline,
@@ -194,7 +205,7 @@ private fun RequestsTabContent(
     onAccept: (ServiceResponse) -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { HeaderSection(partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) }, picDirectory = SessionManager.picDirectory) }
+
         item { AvailabilityCard(isOnline = isOnline, onToggleOnline = onToggleOnline) }
         item {
             OutlinedButton(
@@ -428,8 +439,8 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun HeaderSection(partnerName: String, picDirectory: String? = null) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+private fun HeaderSection(partnerName: String, picDirectory: String? = null, onProfileClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = buildAnnotatedString {
                 pushStyle(SpanStyle(color = TextTertiary, fontSize = 16.sp))
@@ -442,7 +453,14 @@ private fun HeaderSection(partnerName: String, picDirectory: String? = null) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-        Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(PrimaryAccent), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(PrimaryAccent)
+                .clickable { onProfileClick() },
+            contentAlignment = Alignment.Center
+        ) {
             if (picDirectory != null) {
                 val imageUrl = NetworkConfig.BASE_URL + picDirectory
                 AsyncImage(
