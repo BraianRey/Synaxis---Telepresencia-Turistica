@@ -1,5 +1,6 @@
 package com.sismptm.client.ui.features.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.core.network.RetrofitClient
@@ -32,8 +33,11 @@ class HomeViewModel : ViewModel() {
     init {
         // Step 1: Display name immediately from local session
         val localName = SessionManager.userName
+        val localPic = SessionManager.picDirectory
+        Log.d("HomeDebug", "SessionManager.picDirectory=$localPic, userName=$localName, userId=${SessionManager.userId}")
         _uiState.value = _uiState.value.copy(
             userName = if (localName.isNotBlank()) localName else "Viajero",
+            picDirectory = localPic,
             isLoading = false,
             destinations = listOf(
                 Destination(1, "Popayan", "Colombia", "Puente del Humilladero", 3),
@@ -55,9 +59,10 @@ class HomeViewModel : ViewModel() {
             try {
                 val profile = apiService.getMyProfile()
                 val fullName = profile.name.trim()
-                if (fullName.isNotBlank()) {
-                    _uiState.value = _uiState.value.copy(userName = fullName)
-                }
+                _uiState.value = _uiState.value.copy(
+                    userName = if (fullName.isNotBlank()) fullName else _uiState.value.userName,
+                    picDirectory = profile.picDirectory ?: _uiState.value.picDirectory
+                )
             } catch (_: Exception) {
                 // Keep local name, don't show error
             }

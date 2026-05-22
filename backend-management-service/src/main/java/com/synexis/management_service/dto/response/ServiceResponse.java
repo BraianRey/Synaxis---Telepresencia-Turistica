@@ -1,5 +1,7 @@
 package com.synexis.management_service.dto.response;
 
+import com.synexis.management_service.payment.PaymentPricing;
+
 import java.time.Instant;
 
 /**
@@ -12,9 +14,11 @@ public record ServiceResponse(
 
         String clientName,
         String clientEmail,
+        String clientPicDirectory,
 
         String partnerName,
         String partnerEmail,
+        String partnerPicDirectory,
 
         String startLocationDescription,
 
@@ -42,20 +46,15 @@ public record ServiceResponse(
     }
 
     /**
-     * Calculates the total cost based on duration and hourly rate.
-     * Returns null if duration cannot be calculated.
+     * Estimates total cost: minimum {@link PaymentPricing#MIN_BILLING_MINUTES} minutes
+     * at {@link PaymentPricing#MIN_PACKAGE_PRICE_USD} USD, then per minute.
      */
     public Double getTotalCost() {
         Long durationMinutes = getDurationMinutes();
-        if (durationMinutes == null || hourlyRate == null) {
+        if (durationMinutes == null) {
             return null;
         }
-        if (durationMinutes <= 60) {
-            return hourlyRate;
-        }
-        long excessMinutes = durationMinutes - 60;
-        double excessCost = (excessMinutes / 60.0) * hourlyRate;
-        return Math.round((hourlyRate + excessCost) * 100.0) / 100.0;
+        return PaymentPricing.estimateTotalFromActualMinutes(durationMinutes.intValue()).doubleValue();
     }
 
     /**
@@ -85,6 +84,6 @@ public record ServiceResponse(
         if (cost == null) {
             return "N/A";
         }
-        return String.format("$%,.0f COP", cost);
+        return String.format("$%.2f USD", cost);
     }
 }

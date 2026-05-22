@@ -24,8 +24,8 @@ class ServiceViewModel : ViewModel() {
     private val _createServiceState = MutableStateFlow<CreateServiceUiState>(CreateServiceUiState.Idle)
     val createServiceState: StateFlow<CreateServiceUiState> = _createServiceState
 
-    fun createService(location: MapLocation, description: String) {
-        Log.d(TAG, "[START] createService() called | lat=${location.lat} lon=${location.lon} desc='$description'")
+    fun createService(location: MapLocation, description: String, scheduledAt: String? = null) {
+        Log.d(TAG, "[START] createService() called | lat=${location.lat} lon=${location.lon} desc='$description' scheduledAt=$scheduledAt")
         viewModelScope.launch {
             _createServiceState.value = CreateServiceUiState.Loading
             Log.d(TAG, "[STATE] Transition to Loading")
@@ -34,7 +34,8 @@ class ServiceViewModel : ViewModel() {
                 val request = CreateServiceRequest(
                     longitude = location.lon,
                     latitude = location.lat,
-                    startLocationDescription = description.takeIf { it.isNotBlank() }
+                    startLocationDescription = description.takeIf { it.isNotBlank() },
+                    scheduledAt = scheduledAt
                 )
                 Log.d(TAG, "[NETWORK] Sending request: $request")
 

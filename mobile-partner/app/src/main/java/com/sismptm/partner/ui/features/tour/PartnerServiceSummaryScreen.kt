@@ -23,6 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import com.sismptm.partner.core.network.NetworkConfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -424,7 +429,7 @@ private fun ClientInfoCard(service: ServiceResponse) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Avatar placeholder
+                // Avatar
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -432,12 +437,27 @@ private fun ClientInfoCard(service: ServiceResponse) {
                         .background(Color.Gray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
+                    if (service.clientPicDirectory != null) {
+                        val imageUrl = NetworkConfig.BASE_URL + service.clientPicDirectory
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(300)
+                                .build(),
+                            contentDescription = "Client picture",
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))

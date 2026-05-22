@@ -6,9 +6,9 @@ import java.time.Instant;
 public record PaymentSummaryResponse(
         Long serviceId,
         Integer actualDurationMin,
-        BigDecimal billedHours,
+        Integer billedMinutes,
         BigDecimal totalAmount,
-        BigDecimal hourlyRate,
+        BigDecimal ratePerMinute,
         Instant calculatedAt,
         Boolean confirmed) {
 }

@@ -24,6 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,6 +34,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.data.remote.api.dto.PaymentSummaryResponse
+import com.sismptm.client.data.remote.api.dto.RatingRequest
+import com.sismptm.client.data.remote.api.dto.RatingResponse
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.ui.theme.*
 import kotlinx.coroutines.Job
@@ -58,6 +63,28 @@ class ServiceSummaryViewModel : ViewModel() {
     private val _paymentConfirmed = MutableStateFlow(false)
     val paymentConfirmed = _paymentConfirmed.asStateFlow()
     private var paymentPollingJob: Job? = null
+
+    // Rating state
+    private val _existingRating = MutableStateFlow<RatingResponse?>(null)
+    val existingRating = _existingRating.asStateFlow()
+
+    private val _showRatingDialog = MutableStateFlow(false)
+    val showRatingDialog = _showRatingDialog.asStateFlow()
+
+    private val _ratingScore = MutableStateFlow(0)
+    val ratingScore = _ratingScore.asStateFlow()
+
+    private val _ratingComment = MutableStateFlow("")
+    val ratingComment = _ratingComment.asStateFlow()
+
+    private val _isSubmittingRating = MutableStateFlow(false)
+    val isSubmittingRating = _isSubmittingRating.asStateFlow()
+
+    private val _ratingError = MutableStateFlow<String?>(null)
+    val ratingError = _ratingError.asStateFlow()
+
+    private val _ratingSubmitted = MutableStateFlow(false)
+    val ratingSubmitted = _ratingSubmitted.asStateFlow()
 
     fun loadService(serviceId: Long) {
         _isLoading.value = true
@@ -131,6 +158,96 @@ class ServiceSummaryViewModel : ViewModel() {
         paymentPollingJob?.cancel()
         paymentPollingJob = null
     }
+
+    fun checkExistingRating(serviceId: Long) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getRatingByService(serviceId)
+                if (response.isSuccessful) {
+                    _existingRating.value = response.body()
+                }
+            } catch (e: Exception) {
+                Log.e("ServiceSummaryViewModel", "Error checking rating: ${e.message}")
+            }
+        }
+    }
+
+    fun openRatingDialog() {
+        _showRatingDialog.value = true
+        _ratingError.value = null
+    }
+
+    fun dismissRatingDialog() {
+        _showRatingDialog.value = false
+        _ratingScore.value = 0
+        _ratingComment.value = ""
+        _ratingError.value = null
+    }
+
+    fun skipRating() {
+        _showRatingDialog.value = false
+        _ratingScore.value = 0
+        _ratingComment.value = ""
+        _ratingError.value = null
+    }
+
+    fun onRatingScoreChanged(score: Int) {
+        _ratingScore.value = score
+        _ratingError.value = null
+    }
+
+    fun onRatingCommentChanged(comment: String) {
+        _ratingComment.value = comment.take(200)
+        _ratingError.value = null
+    }
+
+    fun submitRating(serviceId: Long) {
+        if (_ratingScore.value < 1) {
+            _ratingError.value = "Please select a rating"
+            return
+        }
+        _isSubmittingRating.value = true
+        _ratingError.value = null
+        viewModelScope.launch {
+            try {
+                val request = RatingRequest(
+                    serviceId = serviceId,
+                    score = _ratingScore.value,
+                    comment = _ratingComment.value // empty string if blank avoids DB NOT NULL constraint
+                )
+                val response = RetrofitClient.apiService.createRating(request)
+                if (response.isSuccessful) {
+                    _existingRating.value = response.body()
+                    _showRatingDialog.value = false
+                    _ratingSubmitted.value = true
+                    _ratingScore.value = 0
+                    _ratingComment.value = ""
+                    Log.i("ServiceSummaryViewModel", "Rating submitted for service $serviceId")
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    val backendMessage = try {
+                        val json = org.json.JSONObject(errorBody ?: "{}")
+                        json.optString("error", "")
+                    } catch (ex: Exception) {
+                        ""
+                    }
+                    val displayMessage = if (backendMessage.isNotBlank()) backendMessage
+                        else "Failed to submit rating. Try again. (HTTP ${response.code()})"
+                    _ratingError.value = displayMessage
+                    Log.e("ServiceSummaryViewModel", "Rating failed: HTTP ${response.code()}, body: $errorBody")
+                }
+            } catch (e: Exception) {
+                _ratingError.value = e.message ?: "Unknown error"
+                Log.e("ServiceSummaryViewModel", "Error submitting rating: ${e.message}")
+            } finally {
+                _isSubmittingRating.value = false
+            }
+        }
+    }
+
+    fun resetRatingSubmitted() {
+        _ratingSubmitted.value = false
+    }
 }
 
 /**
@@ -156,12 +273,24 @@ fun ServiceSummaryScreen(
         } else {
             viewModel.loadService(serviceId)
         }
+        viewModel.checkExistingRating(serviceId)
     }
     val serviceData by viewModel.service.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val payment by viewModel.payment.collectAsStateWithLifecycle()
     val paymentConfirmed by viewModel.paymentConfirmed.collectAsStateWithLifecycle()
+
+    val existingRating by viewModel.existingRating.collectAsStateWithLifecycle()
+    val showRatingDialog by viewModel.showRatingDialog.collectAsStateWithLifecycle()
+    val ratingScore by viewModel.ratingScore.collectAsStateWithLifecycle()
+    val ratingComment by viewModel.ratingComment.collectAsStateWithLifecycle()
+    val isSubmittingRating by viewModel.isSubmittingRating.collectAsStateWithLifecycle()
+    val ratingError by viewModel.ratingError.collectAsStateWithLifecycle()
+    val ratingSubmitted by viewModel.ratingSubmitted.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(serviceId, payment) {
         if (payment == null) {
             viewModel.startPaymentPolling(serviceId)
@@ -170,8 +299,19 @@ fun ServiceSummaryScreen(
         }
     }
 
+    LaunchedEffect(ratingSubmitted) {
+        if (ratingSubmitted) {
+            snackbarHostState.showSnackbar(
+                message = "Thank you! Your rating has been submitted.",
+                duration = SnackbarDuration.Short
+            )
+            viewModel.resetRatingSubmitted()
+        }
+    }
+
     Scaffold(
         containerColor = Background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -218,12 +358,28 @@ fun ServiceSummaryScreen(
                         service = serviceData!!,
                         payment = payment,
                         paymentConfirmed = paymentConfirmed,
+                        existingRating = existingRating,
                         onConfirmPayment = { viewModel.confirmPayment(serviceId) },
-                        onBackToHome = onBackToHome
+                        onBackToHome = onBackToHome,
+                        onOpenRatingDialog = { viewModel.openRatingDialog() }
                     )
                 }
             }
         }
+    }
+
+    if (showRatingDialog && existingRating == null) {
+        RatingModal(
+            score = ratingScore,
+            comment = ratingComment,
+            isSubmitting = isSubmittingRating,
+            error = ratingError,
+            onScoreChange = { viewModel.onRatingScoreChanged(it) },
+            onCommentChange = { viewModel.onRatingCommentChanged(it) },
+            onSubmit = { viewModel.submitRating(serviceId) },
+            onSkip = { viewModel.skipRating() },
+            onDismiss = { viewModel.dismissRatingDialog() }
+        )
     }
 }
 
@@ -268,8 +424,10 @@ private fun ServiceSummaryContent(
     service: ServiceResponse,
     payment: PaymentSummaryResponse?,
     paymentConfirmed: Boolean,
+    existingRating: RatingResponse?,
     onConfirmPayment: () -> Unit,
-    onBackToHome: () -> Unit
+    onBackToHome: () -> Unit,
+    onOpenRatingDialog: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -334,7 +492,7 @@ private fun ServiceSummaryContent(
         ServiceStatsCard(service, payment)
 
         // Partner Information
-        PartnerInfoCard(service)
+        PartnerInfoCard(service, existingRating, onOpenRatingDialog)
 
         // Service Details
         ServiceDetailsCard(service)
@@ -499,7 +657,11 @@ private fun StatItem(
 }
 
 @Composable
-private fun PartnerInfoCard(service: ServiceResponse) {
+private fun PartnerInfoCard(
+    service: ServiceResponse,
+    existingRating: RatingResponse?,
+    onOpenRatingDialog: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -520,7 +682,7 @@ private fun PartnerInfoCard(service: ServiceResponse) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Avatar placeholder
+                // Avatar
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -528,12 +690,27 @@ private fun PartnerInfoCard(service: ServiceResponse) {
                         .background(Color.Gray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
+                    if (service.partnerPicDirectory != null) {
+                        val imageUrl = NetworkConfig.BASE_URL + service.partnerPicDirectory
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(300)
+                                .build(),
+                            contentDescription = "Partner picture",
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -553,25 +730,60 @@ private fun PartnerInfoCard(service: ServiceResponse) {
                 }
             }
 
-            // Rating placeholder
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                repeat(5) { index ->
+            if (existingRating != null) {
+                // Real rating display
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    repeat(5) { index ->
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (index < existingRating.score) StarColor else TextSecondary
+                        )
+                    }
+                    Text(
+                        text = "(${existingRating.score}.0)",
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
+                if (!existingRating.comment.isNullOrBlank()) {
+                    Text(
+                        text = "\"${existingRating.comment}\"",
+                        fontSize = 13.sp,
+                        color = TextTertiary,
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            } else {
+                // Rate button
+                Button(
+                    onClick = onOpenRatingDialog,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (index < 4) StarColor else TextSecondary
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        stringResource(R.string.rate_your_guide),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
                     )
                 }
-                Text(
-                    text = "(4.8)",
-                    fontSize = 12.sp,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
             }
         }
     }
@@ -608,7 +820,7 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                     contentDescription = "Reference image of service location",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(120.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )

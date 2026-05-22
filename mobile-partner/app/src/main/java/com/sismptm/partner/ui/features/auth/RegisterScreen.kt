@@ -1,5 +1,10 @@
 package com.sismptm.partner.ui.features.auth
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -26,8 +32,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
+import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.domain.validation.RegisterValidator
+import com.sismptm.partner.ui.common.ProfilePictureUpload
 import com.sismptm.partner.ui.theme.*
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 private data class CityOption(val label: String, val longitude: Double, val latitude: Double)
 
@@ -54,13 +69,18 @@ fun RegisterScreen(
     var acceptedTerms by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadError by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
     val emailHasError = email.isNotBlank() && !RegisterValidator.isValidEmail(email)
     val passwordMismatch = confirmPassword.isNotBlank() && !RegisterValidator.doPasswordsMatch(password, confirmPassword)
 
     val uiState by viewModel.uiState.collectAsState()
-    val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading
+    val isLoading = uiState is RegisterViewModel.RegisterUiState.Loading || isUploading
 
     val isFormValid = RegisterValidator.isFormValid(
         fullName = name,
@@ -69,6 +89,15 @@ fun RegisterScreen(
         confirmPassword = confirmPassword,
         acceptedTerms = acceptedTerms
     ) && selectedCity != null
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            selectedImageUri = it
+            uploadError = null
+        }
+    }
 
     LaunchedEffect(uiState) {
         if (uiState is RegisterViewModel.RegisterUiState.Success) {
@@ -98,7 +127,24 @@ fun RegisterScreen(
             color = TextSecondary
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        ProfilePictureUpload(
+            onPhotoClick = { imagePickerLauncher.launch("image/*") },
+            selectedImageUri = selectedImageUri
+        )
+
+        if (uploadError != null) {
+            Text(
+                text = uploadError!!,
+                color = Error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = name,
@@ -296,14 +342,70 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                viewModel.register(
-                    name = name,
-                    email = email,
-                    password = password,
-                    longitude = selectedCity?.longitude ?: 0.0,
-                    latitude = selectedCity?.latitude ?: 0.0,
-                    termsAccepted = acceptedTerms
-                )
+                scope.launch {
+                    val uri = selectedImageUri
+                    var picDirectory: String? = null
+
+                    if (uri != null) {
+                        isUploading = true
+                        try {
+                            // Decode original image
+                            val inputStream = context.contentResolver.openInputStream(uri)
+                            val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                            inputStream?.close()
+
+                            if (originalBitmap == null) {
+                                throw IllegalStateException("Could not decode image")
+                            }
+
+                            // Resize if larger than 800px on any dimension
+                            val maxDimension = 800
+                            val scaleRatio = minOf(
+                                maxDimension.toFloat() / originalBitmap.width,
+                                maxDimension.toFloat() / originalBitmap.height,
+                                1.0f
+                            )
+                            val resizedBitmap = if (scaleRatio < 1.0f) {
+                                val newWidth = (originalBitmap.width * scaleRatio).toInt()
+                                val newHeight = (originalBitmap.height * scaleRatio).toInt()
+                                Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+                            } else {
+                                originalBitmap
+                            }
+
+                            // Compress to JPEG 80%
+                            val baos = ByteArrayOutputStream()
+                            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
+                            val compressedBytes = baos.toByteArray()
+                            baos.close()
+
+                            val tempFile = File(context.cacheDir, "profile_upload_${System.currentTimeMillis()}.jpg")
+                            tempFile.writeBytes(compressedBytes)
+
+                            val requestBody = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                            val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
+                            val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
+                            if (uploadResponse.isSuccessful) {
+                                picDirectory = uploadResponse.body()?.picDirectory
+                            }
+                            tempFile.delete()
+                        } catch (e: Exception) {
+                            uploadError = "Image upload failed: ${e.localizedMessage ?: "Unknown error"}. Registration will continue without photo."
+                        } finally {
+                            isUploading = false
+                        }
+                    }
+
+                    viewModel.register(
+                        name = name,
+                        email = email,
+                        password = password,
+                        longitude = selectedCity?.longitude ?: 0.0,
+                        latitude = selectedCity?.latitude ?: 0.0,
+                        termsAccepted = acceptedTerms,
+                        picDirectory = picDirectory
+                    )
+                }
             },
             enabled = isFormValid && !isLoading,
             modifier = Modifier.fillMaxWidth().height(54.dp),

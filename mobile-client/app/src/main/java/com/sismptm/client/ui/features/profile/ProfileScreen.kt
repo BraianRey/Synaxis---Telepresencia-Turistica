@@ -23,7 +23,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import com.sismptm.client.R
+import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.ui.theme.Background
 import com.sismptm.client.ui.theme.CardBackground
@@ -66,12 +71,28 @@ fun ProfileScreen(onLogout: () -> Unit) {
                 .background(PrimaryAccent.copy(alpha = 0.2f)),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = initial,
-                color = PrimaryAccent,
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold
-            )
+            val picDirectory = SessionManager.picDirectory
+            if (picDirectory != null) {
+                val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(300)
+                        .build(),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = initial,
+                    color = PrimaryAccent,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(32.dp))
