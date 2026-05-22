@@ -1,7 +1,7 @@
 package com.synexis.management_service.controller;
 
 import com.synexis.management_service.dto.request.LoginRequest;
-import com.synexis.management_service.dto.response.LoginResponse;
+import com.synexis.management_service.dto.response.usersProfile.LoginResponse;
 import com.synexis.management_service.service.LoginService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

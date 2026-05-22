@@ -2,7 +2,7 @@ package com.synexis.management_service.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.synexis.management_service.dto.response.LoginResponse;
+import com.synexis.management_service.dto.response.usersProfile.LoginResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.exception.InvalidCredentialsException;

@@ -1,12 +1,15 @@
 package com.synexis.management_service.service.impl;
 
+import com.synexis.management_service.client.NominatimClient;
 import com.synexis.management_service.dto.request.RegisterPartnerRequest;
 import com.synexis.management_service.dto.response.RegisterPartnerResponse;
+import com.synexis.management_service.dto.response.usersProfile.PartnerPublicProfileResponse;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.entity.PartnerAvailabilityStatus;
 import com.synexis.management_service.entity.UserLanguage;
 import com.synexis.management_service.entity.UserRole;
 import com.synexis.management_service.exception.EmailAlreadyExistsException;
+import com.synexis.management_service.exception.ResourceNotFoundException;
 import com.synexis.management_service.repository.PartnerRepository;
 import com.synexis.management_service.service.KeycloakService;
 import com.synexis.management_service.service.PartnerService;
@@ -26,10 +29,12 @@ public class PartnerServiceImpl implements PartnerService {
 
     private final PartnerRepository partnerRepository;
     private final KeycloakService keycloakService;
+    private final NominatimClient nominatimClient;
 
-    public PartnerServiceImpl(PartnerRepository partnerRepository, KeycloakService keycloakService) {
+    public PartnerServiceImpl(PartnerRepository partnerRepository, KeycloakService keycloakService, NominatimClient nominatimClient) {
         this.partnerRepository = partnerRepository;
         this.keycloakService = keycloakService;
+        this.nominatimClient = nominatimClient;
     }
 
     @Override
@@ -78,6 +83,30 @@ public class PartnerServiceImpl implements PartnerService {
                 saved.getRole(), 
                 saved.getAvailabilityStatus());
     }
+
+    public PartnerPublicProfileResponse getPublicProfile(Long partnerId) {
+
+        Partner partner = partnerRepository.findById(partnerId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Partner not found with id: " + partnerId
+                        ));
+
+        return new PartnerPublicProfileResponse(
+                partner.getName(),
+                partner.getPicDirectory(),
+                partner.getAverageRating(),
+                partner.getRatingCount(),
+                partner.getLanguage().name(),
+                partner.getAvailabilityStatus().name(),
+                partner.getCreatedAt(),
+                nominatimClient.getCityFromCoordinates(
+                        partner.getLocation().getX(),
+                        partner.getLocation().getY()
+                )
+        );
+    }
+
     
     private String normalizePicDirectory(String path) {
         if (path == null)
