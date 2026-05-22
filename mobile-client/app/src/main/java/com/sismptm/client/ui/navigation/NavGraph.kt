@@ -22,6 +22,7 @@ import com.sismptm.client.ui.features.streaming.StreamingScreen
 import com.sismptm.client.ui.features.auth.WelcomeScreen
 import com.sismptm.client.ui.features.map.MapServiceScreen
 import com.sismptm.client.ui.features.home.HomeScreen
+import com.sismptm.client.ui.features.reservation.ReserveServiceScreen
 
 /**
  * Sealed class representing all navigation routes in the mobile-client application.
@@ -44,6 +45,10 @@ sealed class Screen(val route: String) {
     }
     object ServiceSummary : Screen("service_summary/{serviceId}") {
         fun createRoute(serviceId: Long): String = "service_summary/$serviceId"
+    }
+    object Reserve : Screen("reserve/{lat}/{lon}/{description}") {
+        fun createRoute(lat: Double, lon: Double, description: String): String =
+            "reserve/$lat/$lon/${java.net.URLEncoder.encode(description, "UTF-8")}"
     }
 }
 
@@ -97,7 +102,7 @@ fun NavGraph() {
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegisterSuccess = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
                 },
@@ -116,8 +121,11 @@ fun NavGraph() {
                 onOpenServiceWaiting = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
                 },
-                onNavigateToMapService = {  // ← AGREGAR ESTE PARÁMETRO
+                onNavigateToMapService = {
                     navController.navigate(Screen.MapService.route)
+                },
+                onNavigateToReserveMap = {
+                    navController.navigate(Screen.MapService.route + "?mode=reserve")
                 },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
@@ -127,14 +135,51 @@ fun NavGraph() {
             )
         }
 
-        composable(Screen.MapService.route) {
+        composable(
+            route = Screen.MapService.route + "?mode={mode}",
+            arguments = listOf(navArgument("mode") {
+                type = NavType.StringType
+                defaultValue = "request"
+            })
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString("mode") ?: "request"
+            val isReserveMode = mode == "reserve"
             MapServiceScreen(
+                reserveMode = isReserveMode,
                 onBack = {
                     navController.popBackStack()
                 },
                 onServiceCreated = { serviceId ->
                     navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
                         popUpTo(Screen.MapService.route) { inclusive = true }
+                    }
+                },
+                onNavigateToReserve = { lat, lon, description ->
+                    navController.navigate(Screen.Reserve.createRoute(lat, lon, description)) {
+                        popUpTo(Screen.MapService.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Reserve.route,
+            arguments = listOf(
+                navArgument("lat") { type = NavType.FloatType },
+                navArgument("lon") { type = NavType.FloatType },
+                navArgument("description") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val lat = backStackEntry.arguments?.getFloat("lat")?.toDouble() ?: 0.0
+            val lon = backStackEntry.arguments?.getFloat("lon")?.toDouble() ?: 0.0
+            val description = backStackEntry.arguments?.getString("description") ?: ""
+            ReserveServiceScreen(
+                location = com.sismptm.client.ui.features.map.MapLocation(lat = lat, lon = lon),
+                description = java.net.URLDecoder.decode(description, "UTF-8"),
+                onBack = { navController.popBackStack() },
+                onReservationCreated = { serviceId ->
+                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                        popUpTo(Screen.Reserve.route) { inclusive = true }
                     }
                 }
             )

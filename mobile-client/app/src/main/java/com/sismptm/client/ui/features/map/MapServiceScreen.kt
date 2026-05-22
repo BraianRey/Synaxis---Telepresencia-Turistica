@@ -29,10 +29,12 @@ import com.sismptm.client.ui.features.tour.CreateServiceUiState
 @SuppressLint("MissingPermission")
 @Composable
 fun MapServiceScreen(
+    reserveMode: Boolean = false,
     mapViewModel: MapViewModel = viewModel(),
     serviceViewModel: ServiceViewModel = viewModel(),
     onBack: () -> Unit,
-    onServiceCreated: (Long) -> Unit = {}
+    onServiceCreated: (Long) -> Unit = {},
+    onNavigateToReserve: (Double, Double, String) -> Unit = { _, _, _ -> }
 ) {
     val context = LocalContext.current
     MapLibre.getInstance(context)
@@ -123,9 +125,15 @@ fun MapServiceScreen(
             ) {
                 LocationDescriptionSheet(
                     viewModel = mapViewModel,
+                    reserveMode = reserveMode,
                     onConfirm = { location, description ->
-                        Log.d("MapServiceScreen", "[ACTION] onConfirm received, calling createService")
-                        serviceViewModel.createService(location, description)
+                        if (reserveMode) {
+                            Log.d("MapServiceScreen", "[ACTION] Reserve mode: navigating to ReserveServiceScreen")
+                            onNavigateToReserve(location.lat, location.lon, description)
+                        } else {
+                            Log.d("MapServiceScreen", "[ACTION] onConfirm received, calling createService")
+                            serviceViewModel.createService(location, description)
+                        }
                     },
                     onDismiss = { mapViewModel.hideDescriptionSheet() }
                 )

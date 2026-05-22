@@ -10,6 +10,7 @@ data class ServiceResponse(
     // Client information
     @SerializedName("clientName") val clientName: String? = null,
     @SerializedName("clientEmail") val clientEmail: String? = null,
+    @SerializedName("clientPicDirectory") val clientPicDirectory: String? = null,
     // Partner information
     @SerializedName("partnerName") val partnerName: String? = null,
     @SerializedName("partnerEmail") val partnerEmail: String? = null,
@@ -20,7 +21,8 @@ data class ServiceResponse(
     @SerializedName("status") val status: String,
     @SerializedName("startedAt") val startedAt: String?,
     @SerializedName("endedAt") val endedAt: String?,
-    @SerializedName("locationReferenceImageUrl") val locationReferenceImageUrl: String? = null
+    @SerializedName("locationReferenceImageUrl") val locationReferenceImageUrl: String? = null,
+    @SerializedName("scheduledAt") val scheduledAt: String? = null
 ) {
     /**
      * Calculates the service duration in minutes.

@@ -2,6 +2,7 @@ package com.sismptm.partner.ui.features.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.core.session.SessionManager
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.data.repository.PartnerRepositoryImpl
@@ -51,6 +52,15 @@ class HomeViewModel(
 
     private val _acceptErrorMessage = MutableStateFlow<String?>(null)
     val acceptErrorMessage: StateFlow<String?> = _acceptErrorMessage.asStateFlow()
+
+    private val _averageRating = MutableStateFlow<String>("-")
+    val averageRating: StateFlow<String> = _averageRating.asStateFlow()
+
+    private val _ratingCount = MutableStateFlow(0)
+    val ratingCount: StateFlow<Int> = _ratingCount.asStateFlow()
+
+    private val _isLoadingRatings = MutableStateFlow(false)
+    val isLoadingRatings: StateFlow<Boolean> = _isLoadingRatings.asStateFlow()
 
     fun loadAvailableRequests(silent: Boolean = false) {
         viewModelScope.launch {
@@ -126,6 +136,33 @@ class HomeViewModel(
             401 -> "Unauthorized. Please log in again."
             409 -> "This request is no longer available."
             else -> "Server error ($code). Please try again."
+        }
+    }
+
+    fun loadPartnerRatings() {
+        val partnerId = SessionManager.partnerId
+        if (partnerId == 0L) return
+
+        viewModelScope.launch {
+            _isLoadingRatings.value = true
+            try {
+                val response = RetrofitClient.apiService.getRatingsByPartner(partnerId)
+                if (response.isSuccessful) {
+                    val ratings = response.body().orEmpty()
+                    if (ratings.isNotEmpty()) {
+                        val avg = ratings.map { it.score }.average()
+                        _averageRating.value = String.format("%.1f", avg)
+                        _ratingCount.value = ratings.size
+                    } else {
+                        _averageRating.value = "-"
+                        _ratingCount.value = 0
+                    }
+                }
+            } catch (e: Exception) {
+                // Silent — do not disrupt the home screen
+            } finally {
+                _isLoadingRatings.value = false
+            }
         }
     }
 

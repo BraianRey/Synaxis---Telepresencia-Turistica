@@ -1,5 +1,6 @@
 package com.sismptm.partner.ui.features.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.core.session.SessionManager
@@ -41,13 +42,16 @@ class LoginViewModel(
                 val response = loginUseCase(LoginRequest(email = email.trim(), password = password))
                 if (response.isSuccessful) {
                     response.body()?.let { body ->
+                        Log.d("LoginDebug", "Partner login response: id=${body.id}, name=${body.name}, picDirectory=${body.picDirectory}")
                         SessionManager.saveSession(
                             token = body.accessToken,
                             id = body.id,
                             name = body.name,
                             email = body.email,
-                            lang = body.language
+                            lang = body.language,
+                            picDirectory = body.picDirectory
                         )
+                        Log.d("LoginDebug", "Partner SessionManager saved: picDirectory=${SessionManager.picDirectory}")
                     }
                     _uiState.value = LoginUiState.Success
                 } else {

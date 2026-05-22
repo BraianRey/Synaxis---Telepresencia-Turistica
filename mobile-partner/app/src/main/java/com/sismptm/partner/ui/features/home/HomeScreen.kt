@@ -2,6 +2,7 @@ package com.sismptm.partner.ui.features.home
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -16,9 +17,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
@@ -46,6 +49,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import com.sismptm.partner.core.session.SessionManager
+import com.sismptm.partner.core.network.NetworkConfig
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.manager.location.LocationManager
 import com.sismptm.partner.ui.common.RequestCard
@@ -119,13 +123,14 @@ private fun HomeContent(
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     var isOnline by remember { mutableStateOf(false) }
-    var isProfileMenuOpen by remember { mutableStateOf(false) }
 
     val requestsState by homeViewModel.requestsState.collectAsState()
     val acceptedTour by homeViewModel.acceptedTour.collectAsState()
     val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
     val acceptErrorMessage by homeViewModel.acceptErrorMessage.collectAsState()
     val partnerServicesState by homeViewModel.partnerServicesState.collectAsState()
+    val averageRating by homeViewModel.averageRating.collectAsState()
+    val ratingCount by homeViewModel.ratingCount.collectAsState()
 
     LaunchedEffect(isOnline) {
         if (isOnline) {
@@ -146,6 +151,7 @@ private fun HomeContent(
 
     LaunchedEffect(Unit) {
         homeViewModel.loadPartnerServices()
+        homeViewModel.loadPartnerRatings()
     }
 
     if (acceptErrorMessage != null) {
@@ -161,73 +167,6 @@ private fun HomeContent(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            bottomBar = {
-            Button(
-                onClick = { SessionManager.clearSession(); onLogout() },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CardBackground)
-            ) {
-                Text(stringResource(R.string.logout), color = TextPrimary)
-            }
-        }
-        ) { innerPadding ->
-            Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
-                HeaderSection(
-                    partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },
-                    onProfileClick = { isProfileMenuOpen = true },
-                    modifier = Modifier.padding(16.dp)
-                )
-
-                TabRow(selectedTabIndex = selectedTab, containerColor = CardBackground, contentColor = TextPrimary) {
-                    Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }, text = { Text(stringResource(R.string.tab_requests)) })
-                    Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text(stringResource(R.string.tab_my_services)) })
-                }
-
-                when (selectedTab) {
-                    0 -> RequestsTabContent(
-                        isOnline = isOnline,
-                        onToggleOnline = { isOnline = it },
-                        requestsState = requestsState,
-                        acceptingServiceId = acceptingServiceId,
-                        onAccept = { homeViewModel.acceptTour(it) }
-                    )
-                    1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
-                }
-            }
-        }
-
-        if (isProfileMenuOpen) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { isProfileMenuOpen = false }
-            )
-
-            Card(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 80.dp, end = 16.dp)
-                    .width(180.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
-            ) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    TextButton(
-                        onClick = {
-                            isProfileMenuOpen = false
-                            onNavigateToProfile()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(R.string.my_profile), color = TextPrimary)
-                    }
-                }
     Scaffold(
         bottomBar = {
             BottomNavigationBar(
@@ -237,16 +176,26 @@ private fun HomeContent(
         }
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(Background)) {
+            HeaderSection(
+                partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },
+                picDirectory = SessionManager.picDirectory,
+                onProfileClick = { selectedTab = 3 },
+                modifier = Modifier.padding(16.dp)
+            )
+
             when (selectedTab) {
                 0 -> RequestsTabContent(
                     isOnline = isOnline,
                     onToggleOnline = { isOnline = it },
                     requestsState = requestsState,
                     acceptingServiceId = acceptingServiceId,
-                    onAccept = { homeViewModel.acceptTour(it) }
+                    onAccept = { homeViewModel.acceptTour(it) },
+                    averageRating = averageRating,
+                    ratingCount = ratingCount
                 )
                 1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
-                2 -> ProfileTab(onLogout = onLogout)
+                2 -> UpcomingTabContent(partnerServicesState = partnerServicesState)
+                3 -> ProfileTab(onLogout = onLogout, picDirectory = SessionManager.picDirectory)
             }
         }
     }
@@ -258,9 +207,12 @@ private fun RequestsTabContent(
     onToggleOnline: (Boolean) -> Unit,
     requestsState: HomeViewModel.RequestsUiState,
     acceptingServiceId: Long?,
-    onAccept: (ServiceResponse) -> Unit
+    onAccept: (ServiceResponse) -> Unit,
+    averageRating: String,
+    ratingCount: Int
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
         item { AvailabilityCard(isOnline = isOnline, onToggleOnline = onToggleOnline) }
         item {
             OutlinedButton(
@@ -272,7 +224,7 @@ private fun RequestsTabContent(
                 Text(text = stringResource(R.string.send_location))
             }
         }
-        item { StatsGrid() }
+        item { StatsGrid(averageRating = averageRating, ratingCount = ratingCount) }
 
         item { IncomingRequestsHeader(newCount = if (requestsState is HomeViewModel.RequestsUiState.Success) requestsState.requests.size else 0) }
 
@@ -294,13 +246,27 @@ private fun RequestsTabContent(
                             val duration = service.agreedHours?.let { "${it}${stringResource(R.string.hours_unit).first()}" } ?: stringResource(R.string.rate_na)
                             val price = service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)
                             val clientName = service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)
+                            val elapsedLabel = if (!service.scheduledAt.isNullOrBlank()) {
+                                try {
+                                    val instant = java.time.Instant.parse(service.scheduledAt)
+                                    val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                                    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM, HH:mm").withLocale(java.util.Locale.getDefault())
+                                    "Reserved: ${fmt.format(zoned)}"
+                                } catch (e: Exception) {
+                                    "Reserved"
+                                }
+                            } else {
+                                stringResource(R.string.status_new)
+                            }
+                            Log.d("RequestDebug", "Service ${service.serviceId}: clientName=$clientName, clientPicDirectory=${service.clientPicDirectory}, scheduled=${service.scheduledAt}")
 
                             RequestCard(
                                 clientName = clientName,
                                 location = location,
-                                elapsedTime = stringResource(R.string.status_new),
+                                elapsedTime = elapsedLabel,
                                 duration = duration,
                                 price = price,
+                                clientPicDirectory = service.clientPicDirectory,
                                 onDecline = {},
                                 onAccept = { onAccept(service) },
                                 isAccepting = acceptingServiceId == service.serviceId
@@ -343,6 +309,57 @@ private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServ
         }
         is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Error) }
         else -> {}
+    }
+}
+
+@Composable
+private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState) {
+    when (partnerServicesState) {
+        HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryAccent) }
+        is HomeViewModel.PartnerServicesUiState.Success -> {
+            val upcomingServices = partnerServicesState.services.filter {
+                it.status.uppercase() == "ACCEPTED" && !it.scheduledAt.isNullOrBlank()
+            }.sortedBy { it.scheduledAt }
+
+            LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (upcomingServices.isNotEmpty()) {
+                    item { SectionHeader("Upcoming Reservations") }
+                    items(upcomingServices, key = { it.serviceId }) { service -> UpcomingServiceCard(service) }
+                } else {
+                    item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text("No upcoming reservations", color = Color.Gray) } }
+                }
+            }
+        }
+        is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Error) }
+        else -> {}
+    }
+}
+
+@Composable
+private fun UpcomingServiceCard(service: ServiceResponse) {
+    val scheduledText = service.scheduledAt?.let {
+        try {
+            val instant = java.time.Instant.parse(it)
+            val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+            fmt.format(zoned)
+        } catch (e: Exception) {
+            it
+        }
+    } ?: "Scheduled"
+
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                ServiceStatusBadge("ACCEPTED")
+            }
+            Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
+                color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
+                color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
+            Text("Scheduled: $scheduledText", color = PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
@@ -429,7 +446,7 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun HeaderSection(partnerName: String, onProfileClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun HeaderSection(partnerName: String, picDirectory: String? = null, onProfileClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = buildAnnotatedString {
@@ -451,7 +468,22 @@ private fun HeaderSection(partnerName: String, onProfileClick: () -> Unit, modif
                 .clickable { onProfileClick() },
             contentAlignment = Alignment.Center
         ) {
-            Text(partnerName.take(1).uppercase(), color = TextPrimary, fontWeight = FontWeight.Bold)
+            if (picDirectory != null) {
+                val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(300)
+                        .build(),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(partnerName.take(1).uppercase(), color = TextPrimary, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -476,19 +508,29 @@ private fun AvailabilityCard(isOnline: Boolean, onToggleOnline: (Boolean) -> Uni
 }
 
 @Composable
-private fun StatsGrid() {
+private fun StatsGrid(averageRating: String, ratingCount: Int) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         StatsCard(modifier = Modifier.weight(1f).aspectRatio(1f), title = stringResource(R.string.tours_today), value = "0")
-        StatsCard(modifier = Modifier.weight(1f).aspectRatio(1f), title = stringResource(R.string.your_rating), value = "-")
+        StatsCard(
+            modifier = Modifier.weight(1f).aspectRatio(1f),
+            title = stringResource(R.string.your_rating),
+            value = averageRating,
+            subtitle = if (ratingCount > 0) "$ratingCount reviews" else null
+        )
     }
 }
 
 @Composable
-private fun StatsCard(modifier: Modifier, title: String, value: String) {
+private fun StatsCard(modifier: Modifier, title: String, value: String, subtitle: String? = null) {
     Card(modifier = modifier, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = TextSecondary)
-            Text(value, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+            Column {
+                Text(value, style = MaterialTheme.typography.headlineMedium, color = TextPrimary, fontWeight = FontWeight.Bold)
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                }
+            }
         }
     }
 }
@@ -563,13 +605,32 @@ private fun BottomNavigationBar(
         NavigationBarItem(
             icon = {
                 Icon(
-                    imageVector = if (selectedTab == 2) Icons.Filled.Person else Icons.Outlined.Person,
+                    imageVector = if (selectedTab == 2) Icons.Filled.CalendarMonth else Icons.Outlined.CalendarMonth,
+                    contentDescription = "Upcoming"
+                )
+            },
+            label = { Text("Upcoming") },
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = PrimaryAccent,
+                selectedTextColor = PrimaryAccent,
+                unselectedIconColor = TextTertiary,
+                unselectedTextColor = TextTertiary,
+                indicatorColor = Color.Transparent
+            )
+        )
+
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = if (selectedTab == 3) Icons.Filled.Person else Icons.Outlined.Person,
                     contentDescription = stringResource(R.string.profile)
                 )
             },
             label = { Text(stringResource(R.string.profile)) },
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = PrimaryAccent,
                 selectedTextColor = PrimaryAccent,
@@ -582,7 +643,7 @@ private fun BottomNavigationBar(
 }
 
 @Composable
-private fun ProfileTab(onLogout: () -> Unit) {
+private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -593,12 +654,35 @@ private fun ProfileTab(onLogout: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                tint = TextTertiary,
-                modifier = Modifier.size(64.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(CardBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                if (picDirectory != null) {
+                    val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(300)
+                            .build(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text(
                 text = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },

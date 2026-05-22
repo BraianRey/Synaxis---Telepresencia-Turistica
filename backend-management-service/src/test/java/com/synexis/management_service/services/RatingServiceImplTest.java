@@ -63,7 +63,7 @@ class RatingServiceImplTest {
     private static final Long PARTNER_ID = 2L;
     private static final Long SERVICE_ID = 3L;
     private static final Long RATING_ID  = 4L;
-    private static final String USERNAME = "client@test.com";
+    private static final String KEYCLOAK_ID = "31fdeb94-0271-4b77-8dcc-b5c7c9c37bb2";
 
     // ─── Reusable objects ─────────────────────────────────────────────────────
     private Client        client;
@@ -94,7 +94,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 5, "Excellent service provided");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(service));
             when(ratingRepository.existsByService(service)).thenReturn(false);
             when(ratingRepository.save(any(Rating.class))).thenReturn(rating);
@@ -133,7 +133,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 4, "Very good service delivered");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.empty());
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -153,14 +153,14 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 3, "Acceptable service received");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.empty());
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.empty());
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
                 holder.when(SecurityContextHolder::getContext).thenReturn(securityContext);
 
                 assertThatThrownBy(() -> ratingService.createRating(request))
                         .isInstanceOf(ResourceNotFoundException.class)
-                        .hasMessageContaining(USERNAME);
+                        .hasMessageContaining(KEYCLOAK_ID);
 
                 verifyNoInteractions(serviceRepository, ratingRepository, partnerRepository);
             }
@@ -176,7 +176,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 4, "Well-executed service today");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(foreignService));
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -198,7 +198,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 5, "Service completed without issues");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(pendingService));
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -218,7 +218,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 4, "Very satisfactory service received");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(service));
             when(ratingRepository.existsByService(service)).thenReturn(true);
 
@@ -364,7 +364,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 2, "Service could be improved in various aspects");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.of(rating));
             when(ratingRepository.save(any(Rating.class))).thenAnswer(inv -> inv.getArgument(0));
             when(ratingRepository.findAverageScoreByPartnerId(PARTNER_ID)).thenReturn(Optional.of(3.0));
@@ -400,7 +400,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 1, "Terrible service received today");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.of(foreignRating));
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -420,7 +420,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 4, "Quite satisfactory service received");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.empty());
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -447,7 +447,7 @@ class RatingServiceImplTest {
         @DisplayName("Successful case: deletes the rating and recalculates partner average")
         void shouldDeleteRatingAndUpdatePartnerStats() {
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.of(rating));
             when(ratingRepository.findAverageScoreByPartnerId(PARTNER_ID)).thenReturn(Optional.of(4.0));
             when(ratingRepository.countByPartnerId(PARTNER_ID)).thenReturn(2L);
@@ -476,7 +476,7 @@ class RatingServiceImplTest {
             foreignRating.setId(RATING_ID);
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.of(foreignRating));
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -494,7 +494,7 @@ class RatingServiceImplTest {
         @DisplayName("Throws ResourceNotFoundException when the rating to delete does not exist")
         void shouldThrowWhenRatingNotFoundOnDelete() {
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.empty());
 
             try (MockedStatic<SecurityContextHolder> holder = mockStatic(SecurityContextHolder.class)) {
@@ -523,7 +523,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 5, "Impeccable service in every way");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(service));
             when(ratingRepository.existsByService(service)).thenReturn(false);
             when(ratingRepository.save(any(Rating.class))).thenReturn(rating);
@@ -549,7 +549,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 5, "First service rated now");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(service));
             when(ratingRepository.existsByService(service)).thenReturn(false);
             when(ratingRepository.save(any(Rating.class))).thenReturn(rating);
@@ -575,7 +575,7 @@ class RatingServiceImplTest {
         @DisplayName("Assigns ratingCount = 0 when COUNT returns 0")
         void shouldSetRatingCountToZeroWhenCountIsZero() {
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(ratingRepository.findById(RATING_ID)).thenReturn(Optional.of(rating));
             when(ratingRepository.findAverageScoreByPartnerId(PARTNER_ID)).thenReturn(Optional.empty());
             when(ratingRepository.countByPartnerId(PARTNER_ID)).thenReturn(0L);
@@ -599,7 +599,7 @@ class RatingServiceImplTest {
             RatingRequest request = buildRequest(SERVICE_ID, 4, "Service delivered with notable quality");
 
             mockSecurityContext();
-            when(clientRepository.findByEmailIgnoreCase(USERNAME)).thenReturn(Optional.of(client));
+            when(clientRepository.findByKeycloakId(KEYCLOAK_ID)).thenReturn(Optional.of(client));
             when(serviceRepository.findById(SERVICE_ID)).thenReturn(Optional.of(service));
             when(ratingRepository.existsByService(service)).thenReturn(false);
             when(ratingRepository.save(any(Rating.class))).thenReturn(rating);
@@ -623,13 +623,14 @@ class RatingServiceImplTest {
     // =========================================================================
 
     private Client buildClient() {
-        return buildClientWithId(CLIENT_ID, USERNAME);
+        return buildClientWithId(CLIENT_ID, KEYCLOAK_ID);
     }
 
-    private Client buildClientWithId(Long id, String email) {
+    private Client buildClientWithId(Long id, String keycloakId) {
         Client c = new Client();
         c.setId(id);
-        c.setEmail(email);
+        c.setKeycloakId(keycloakId);
+        c.setEmail("client@test.com");
         return c;
     }
 
@@ -677,6 +678,6 @@ class RatingServiceImplTest {
      */
     private void mockSecurityContext() {
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getName()).thenReturn(USERNAME);
+        when(authentication.getName()).thenReturn(KEYCLOAK_ID);
     }
 }

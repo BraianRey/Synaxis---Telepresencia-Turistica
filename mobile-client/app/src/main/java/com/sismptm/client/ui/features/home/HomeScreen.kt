@@ -37,6 +37,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -56,8 +57,9 @@ import com.sismptm.client.ui.features.profile.ProfileScreen
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
-    onLogout: () -> Unit,
     onNavigateToMapService: () -> Unit,
+    onNavigateToReserveMap: () -> Unit,
+    onLogout: () -> Unit,
     homeViewModel: HomeViewModel = viewModel(),
     serviceViewModel: ServiceViewModel = viewModel()
 ) {
@@ -85,6 +87,7 @@ fun HomeScreen(
                     servicesState = servicesState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
                     onNavigateToMapService = onNavigateToMapService,
+                    onNavigateToReserveMap = onNavigateToReserveMap,
                     onAvatarClick = { selectedTab = 2 }
                 )
                 1 -> ToursTabContent(
@@ -104,6 +107,7 @@ private fun ExploreTabContent(
     servicesState: HomeViewModel.ClientServicesUiState,
     onNavigateToPartnerSearch: () -> Unit,
     onNavigateToMapService: () -> Unit,
+    onNavigateToReserveMap: () -> Unit,
     onAvatarClick: () -> Unit
 ) {
     Column(
@@ -112,7 +116,7 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        HomeHeader(uiState.userName, onAvatarClick)
+        HomeHeader(uiState.userName, uiState.picDirectory, onAvatarClick)
         SearchBar()
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -129,6 +133,25 @@ private fun ExploreTabContent(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = PrimaryAccent
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onNavigateToReserveMap,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 20.dp)
+                .fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "Reserve service",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
             )
         }
 
@@ -150,7 +173,7 @@ private fun ExploreTabContent(
 }
 
 @Composable
-private fun HomeHeader(userName: String, onAvatarClick: () -> Unit) {
+private fun HomeHeader(userName: String, picDirectory: String? = null, onAvatarClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,12 +204,28 @@ private fun HomeHeader(userName: String, onAvatarClick: () -> Unit) {
                 .clickable { onAvatarClick() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = "Avatar",
-                tint = TextTertiary,
-                modifier = Modifier.size(28.dp)
-            )
+            if (picDirectory != null) {
+                val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                android.util.Log.d("HomeDebug", "Loading profile image from: $imageUrl")
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(300)
+                        .build(),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = "Avatar",
+                    tint = TextTertiary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
@@ -479,6 +518,17 @@ private fun ClientServiceCard(
             }
             Text(dateText, color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
+            if (!service.scheduledAt.isNullOrBlank()) {
+                val scheduledText = try {
+                    val instant = java.time.Instant.parse(service.scheduledAt)
+                    val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+                    "Scheduled: ${fmt.format(zoned)}"
+                } catch (e: Exception) {
+                    "Scheduled"
+                }
+                Text(scheduledText, color = Color(0xFF7C3AED), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            }
             service.locationReferenceImageUrl?.let { imageUrl ->
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -538,7 +588,7 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun ProfileTab(onLogout: () -> Unit) {
+private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -549,12 +599,35 @@ private fun ProfileTab(onLogout: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                tint = TextTertiary,
-                modifier = Modifier.size(64.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(CardBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                if (picDirectory != null) {
+                    val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(300)
+                            .build(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.home_profile),

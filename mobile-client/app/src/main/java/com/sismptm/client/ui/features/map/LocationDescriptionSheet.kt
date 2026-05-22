@@ -20,6 +20,7 @@ import com.sismptm.client.R
 @Composable
 fun LocationDescriptionSheet(
     viewModel: MapViewModel,
+    reserveMode: Boolean = false,
     onConfirm: (location: MapLocation, description: String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -97,10 +98,14 @@ fun LocationDescriptionSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+            colors = ButtonDefaults.buttonColors(containerColor = if (reserveMode) Color(0xFF7C3AED) else Color(0xFF2196F3)),
             enabled = selectedLocation != null
         ) {
-            Text(stringResource(R.string.confirm_location), color = Color.White, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (reserveMode) "Continue to Schedule" else stringResource(R.string.confirm_location),
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

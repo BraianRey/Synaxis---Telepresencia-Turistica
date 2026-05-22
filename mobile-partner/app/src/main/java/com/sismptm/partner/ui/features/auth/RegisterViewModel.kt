@@ -35,7 +35,8 @@ class RegisterViewModel(
         password: String,
         longitude: Double,
         latitude: Double,
-        termsAccepted: Boolean
+        termsAccepted: Boolean,
+        picDirectory: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = RegisterUiState.Loading
@@ -48,7 +49,8 @@ class RegisterViewModel(
                     longitude = longitude,
                     latitude = latitude,
                     termsAccepted = termsAccepted,
-                    language = language
+                    language = language,
+                    picDirectory = picDirectory
                 )
                 val response = registerUseCase(request)
                 if (response.isSuccessful) {
@@ -87,4 +89,3 @@ class RegisterViewModel(
         _uiState.value = RegisterUiState.Idle
     }
 }
-

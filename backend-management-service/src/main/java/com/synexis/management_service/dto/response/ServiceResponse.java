@@ -14,9 +14,11 @@ public record ServiceResponse(
 
         String clientName,
         String clientEmail,
+        String clientPicDirectory,
 
         String partnerName,
         String partnerEmail,
+        String partnerPicDirectory,
 
         String startLocationDescription,
 
