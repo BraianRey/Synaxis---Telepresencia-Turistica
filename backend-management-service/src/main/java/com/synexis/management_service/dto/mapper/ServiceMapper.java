@@ -17,10 +17,10 @@ public class ServiceMapper {
                 ServiceEntity service = new ServiceEntity();
 
                 service.setClient(client);
-                service.setLongitude(request.longitude());
-                service.setLatitude(request.latitude());
-                service.setStartLocationDescription(request.startLocationDescription());
-                service.setAgreedHours(request.agreedHours());
+                service.setLongitude(request.getLongitude());
+                service.setLatitude(request.getLatitude());
+                service.setStartLocationDescription(request.getStartLocationDescription());
+                service.setAgreedHours(request.getAgreedHours());
 
                 return service;
         }

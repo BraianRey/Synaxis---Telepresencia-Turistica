@@ -2,38 +2,47 @@ package com.synexis.management_service.dto.response;
 
 import com.synexis.management_service.payment.PaymentPricing;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.Instant;
 
 /**
  * Service response DTO with comprehensive information about the service,
  * including client and partner details for summary display.
  */
-public record ServiceResponse(
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ServiceResponse {
 
-        Long serviceId,
+    private Long serviceId;
 
-        String clientName,
-        String clientEmail,
-        String clientPicDirectory,
+    private String clientName;
+    private String clientEmail;
+    private String clientPicDirectory;
 
-        String partnerName,
-        String partnerEmail,
-        String partnerPicDirectory,
+    private String partnerName;
+    private String partnerEmail;
+    private String partnerPicDirectory;
 
-        String startLocationDescription,
+    private String startLocationDescription;
 
-        Integer agreedHours,
+    private Integer agreedHours;
 
-        Double hourlyRate,
+    private Double hourlyRate;
 
-        String status,
+    private String status;
 
-        Instant startedAt,
+    private Instant startedAt;
 
-        Instant endedAt,
-        String locationReferenceImageUrl
+    private Instant endedAt;
+    private String locationReferenceImageUrl;
 
-) {
+
     /**
      * Calculates the service duration in minutes.
      * Returns null if the service hasn't started or ended.

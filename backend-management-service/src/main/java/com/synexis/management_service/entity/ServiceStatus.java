@@ -3,8 +3,10 @@ package com.synexis.management_service.entity;
 public enum ServiceStatus {
     REQUESTED,
     ACCEPTED,
+    WAITING_FOR_START,
     READY,
-    STARTED,
+    IN_PROGRESS,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    EXPIRED
 }
