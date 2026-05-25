@@ -3,7 +3,6 @@ package com.synexis.management_service.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -58,11 +57,20 @@ public class ServiceEntity {
     @Column(name = "location_reference_image_url", length = 500)
     private String locationReferenceImageUrl;
 
+    // SCHEDULING
+    @Column(name = "scheduled", nullable = false)
+    private boolean scheduled = false;
+
+    @Column(name = "scheduled_for")
+    private LocalDateTime scheduledFor;
+
+    @Column(name = "scheduled_end_at")
+    private LocalDateTime scheduledEndAt;
+
     @OneToOne(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
     private ServicePayment payment;
 
     public ServicePayment getPayment() {
         return payment;
     }
-
 }

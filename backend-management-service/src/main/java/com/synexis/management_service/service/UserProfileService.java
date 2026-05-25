@@ -6,4 +6,5 @@ public interface UserProfileService {
 
     UserProfileResponse getMyProfile(String keycloakId);
     
+
 }
