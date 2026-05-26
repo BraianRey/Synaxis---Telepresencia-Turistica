@@ -205,6 +205,27 @@ public class ServiceServiceImpl implements ServiceService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ServiceResponse> getActiveServicesByClient(Long clientId) {
+        clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Client not found with id: " + clientId
+                ));
+
+        List<ServiceEntity> services = serviceRepository.findByClient_IdAndStatusIn(
+                clientId,
+                List.of(
+                        ServiceStatus.ACCEPTED,
+                        ServiceStatus.WAITING_FOR_START,
+                        ServiceStatus.READY,
+                        ServiceStatus.IN_PROGRESS
+                )
+        );
+
+        return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ServiceResponse getServiceForClient(Long serviceId, Long clientId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new ResourceNotFoundException(
