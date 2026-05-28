@@ -144,7 +144,9 @@ private fun HomeContent(
 
     LaunchedEffect(acceptedTour) {
         acceptedTour?.let {
-            onNavigateToServiceReady(it.serviceId)
+            if (it.scheduledAt.isNullOrBlank()) {
+                onNavigateToServiceReady(it.serviceId)
+            }
             homeViewModel.clearAcceptedTour()
         }
     }
@@ -193,8 +195,8 @@ private fun HomeContent(
                     averageRating = averageRating,
                     ratingCount = ratingCount
                 )
-                1 -> MyServicesTabContent(partnerServicesState = partnerServicesState)
-                2 -> UpcomingTabContent(partnerServicesState = partnerServicesState)
+                1 -> MyServicesTabContent(partnerServicesState = partnerServicesState, onNavigateToServiceReady = onNavigateToServiceReady)
+                2 -> UpcomingTabContent(partnerServicesState = partnerServicesState, onNavigateToServiceReady = onNavigateToServiceReady)
                 3 -> ProfileTab(onLogout = onLogout, picDirectory = SessionManager.picDirectory)
             }
         }
@@ -282,24 +284,24 @@ private fun RequestsTabContent(
 }
 
 @Composable
-private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState) {
+private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState, onNavigateToServiceReady: (Long) -> Unit) {
     when (partnerServicesState) {
         HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryAccent) }
         is HomeViewModel.PartnerServicesUiState.Success -> {
-            val activeStatuses = setOf("ACCEPTED", "STARTED")
+            val activeStatuses = setOf("ACCEPTED", "WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
             val activeServices = partnerServicesState.services.filter { it.status.uppercase() in activeStatuses }
             val historyServices = partnerServicesState.services.filter { it.status.uppercase() !in activeStatuses }
 
             LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (activeServices.isNotEmpty()) {
                     item { SectionHeader(stringResource(R.string.services_active)) }
-                    items(activeServices, key = { it.serviceId }) { service -> ServiceHistoryCard(service) }
+                    items(activeServices, key = { it.serviceId }) { service -> ServiceHistoryCard(service, onNavigateToServiceReady) }
                 }
 
                 if (historyServices.isNotEmpty()) {
                     item { Spacer(modifier = Modifier.height(8.dp)) }
                     item { SectionHeader(stringResource(R.string.services_history)) }
-                    items(historyServices, key = { it.serviceId }) { service -> ServiceHistoryCard(service) }
+                    items(historyServices, key = { it.serviceId }) { service -> ServiceHistoryCard(service, null) }
                 }
 
                 if (activeServices.isEmpty() && historyServices.isEmpty()) {
@@ -313,18 +315,29 @@ private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServ
 }
 
 @Composable
-private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState) {
+private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState, onNavigateToServiceReady: (Long) -> Unit) {
     when (partnerServicesState) {
         HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryAccent) }
         is HomeViewModel.PartnerServicesUiState.Success -> {
+            val activeStatuses = setOf("ACCEPTED", "WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
             val upcomingServices = partnerServicesState.services.filter {
-                it.status.uppercase() == "ACCEPTED" && !it.scheduledAt.isNullOrBlank()
-            }.sortedBy { it.scheduledAt }
+                it.status.uppercase() in activeStatuses && !it.scheduledAt.isNullOrBlank()
+            }.sortedWith(compareByDescending<ServiceResponse> { service ->
+                val isActive = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+                var isTimeToStart = false
+                if (!service.scheduledAt.isNullOrBlank()) {
+                    try {
+                        val instant = java.time.Instant.parse(service.scheduledAt)
+                        isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
+                    } catch (e: Exception) {}
+                }
+                isActive || isTimeToStart
+            }.thenBy { it.scheduledAt ?: "ZZZZ" })
 
             LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (upcomingServices.isNotEmpty()) {
                     item { SectionHeader("Upcoming Reservations") }
-                    items(upcomingServices, key = { it.serviceId }) { service -> UpcomingServiceCard(service) }
+                    items(upcomingServices, key = { it.serviceId }) { service -> UpcomingServiceCard(service, onNavigateToServiceReady) }
                 } else {
                     item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text("No upcoming reservations", color = Color.Gray) } }
                 }
@@ -336,10 +349,13 @@ private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServic
 }
 
 @Composable
-private fun UpcomingServiceCard(service: ServiceResponse) {
+private fun UpcomingServiceCard(service: ServiceResponse, onNavigateToServiceReady: (Long) -> Unit) {
+    var isTimeToStart by remember { mutableStateOf(false) }
+
     val scheduledText = service.scheduledAt?.let {
         try {
             val instant = java.time.Instant.parse(it)
+            isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
             val zoned = instant.atZone(java.time.ZoneId.systemDefault())
             val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
             fmt.format(zoned)
@@ -348,17 +364,46 @@ private fun UpcomingServiceCard(service: ServiceResponse) {
         }
     } ?: "Scheduled"
 
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = CardBackground)) {
+    val isActive = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+    val shouldHighlight = isTimeToStart || isActive
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = if (shouldHighlight) CardBackground.copy(alpha = 0.8f) else CardBackground),
+        border = if (shouldHighlight) BorderStroke(2.dp, PrimaryAccent) else null
+    ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                ServiceStatusBadge("ACCEPTED")
+                ServiceStatusBadge(service.status)
             }
             Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
                 color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
                 color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
-            Text("Scheduled: $scheduledText", color = PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.scheduled_for, scheduledText), color = PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            if (shouldHighlight) {
+                Button(
+                    onClick = { onNavigateToServiceReady(service.serviceId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(if (isActive) stringResource(R.string.btn_reenter_service) else stringResource(R.string.btn_enter_service))
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { onNavigateToServiceReady(service.serviceId) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, PrimaryAccent)
+                ) {
+                    Text(stringResource(R.string.btn_enter_service), color = PrimaryAccent)
+                }
+            }
         }
     }
 }
@@ -369,8 +414,15 @@ private fun SectionHeader(text: String) {
 }
 
 @Composable
-private fun ServiceHistoryCard(service: ServiceResponse) {
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
+private fun ServiceHistoryCard(service: ServiceResponse, onNavigateToServiceReady: ((Long) -> Unit)? = null) {
+    val isActive = service.status.uppercase() in setOf("WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = if (isActive && onNavigateToServiceReady != null) BorderStroke(2.dp, PrimaryAccent) else null
+    ) {
         Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
             // Background image
             service.locationReferenceImageUrl?.let { imageUrl ->
@@ -421,8 +473,22 @@ private fun ServiceHistoryCard(service: ServiceResponse) {
                 }
                 Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
                     color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
-                    color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
+                        color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
+                    
+                    if (isActive && onNavigateToServiceReady != null) {
+                        Button(
+                            onClick = { onNavigateToServiceReady(service.serviceId) },
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Text(stringResource(R.string.btn_reenter_service), fontSize = 11.sp)
+                        }
+                    }
+                }
             }
         }
     }
@@ -435,7 +501,9 @@ private fun ServiceStatusBadge(status: String) {
     val (bg, fg) = when (normalized) {
         "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
         "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
-        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "WAITING_FOR_START" -> Color(0xFFF9A825) to Color(0xFFFFFDE7)
+        "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
+        "STARTED", "IN_PROGRESS" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
         "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)

@@ -178,8 +178,9 @@ fun NavGraph() {
                 description = java.net.URLDecoder.decode(description, "UTF-8"),
                 onBack = { navController.popBackStack() },
                 onReservationCreated = { serviceId ->
-                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
-                        popUpTo(Screen.Reserve.route) { inclusive = true }
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                        launchSingleTop = true
                     }
                 }
             )

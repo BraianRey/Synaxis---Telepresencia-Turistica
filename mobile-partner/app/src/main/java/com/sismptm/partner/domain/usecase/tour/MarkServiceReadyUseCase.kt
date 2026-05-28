@@ -10,5 +10,5 @@ import retrofit2.Response
  */
 class MarkServiceReadyUseCase(private val repository: PartnerRepository) {
     suspend operator fun invoke(serviceId: Long): Response<ServiceResponse> =
-        RetrofitClient.apiService.startService(serviceId)
+        RetrofitClient.apiService.readyService(serviceId)
 }

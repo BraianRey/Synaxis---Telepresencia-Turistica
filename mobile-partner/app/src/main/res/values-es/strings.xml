@@ -154,6 +154,10 @@
     <string name="ready_start_instruction">El cliente ha sido notificado y está esperando que inicies la transmisión.</string>
     <string name="btn_start_transmission">INICIAR TRANSMISIÓN</string>
     <string name="btn_go_back_dashboard">Volver al panel</string>
+    <string name="btn_enter_service">Ingresar al Servicio</string>
+    <string name="btn_reenter_service">Reingresar al Servicio</string>
+    <string name="scheduled_for">Programado para: %1$s</string>
+    <string name="time_to_start">¡Hora de iniciar!</string>
 
     <!-- HomeScreen -->
     <string name="not_specified">No especificado</string>

@@ -361,6 +361,15 @@ public class ServiceServiceImpl implements ServiceService {
                     "Only ACCEPTED or WAITING_FOR_START services can be set to READY");
         }
 
+        // Scheduled time-gate: must not mark as ready before the reserved date/time
+        if (service.isScheduled()
+                && service.getScheduledFor() != null
+                && LocalDateTime.now().isBefore(service.getScheduledFor())) {
+            throw new BusinessRuleViolationException(
+                    "Scheduled service cannot be set to READY before its scheduled time: "
+                            + service.getScheduledFor());
+        }
+
         if (!partnerId.equals(service.getPartner().getId())) {
             throw new ForbiddenAccessException("Partner does not own this service");
         }

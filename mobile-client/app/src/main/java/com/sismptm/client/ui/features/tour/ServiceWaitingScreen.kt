@@ -44,7 +44,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED")
+private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY")
 private val terminalStatuses = setOf("COMPLETED", "CANCELLED")
 
 data class ServiceWaitingUiState(
@@ -208,9 +208,9 @@ fun ServiceWaitingScreen(
         viewModel.load(serviceId)
     }
 
-    // Auto-navigate to streaming when status is STARTED
+    // Auto-navigate to streaming when status is READY or IN_PROGRESS or STARTED
     LaunchedEffect(status) {
-        if (status == "STARTED") {
+        if (status == "READY" || status == "STARTED" || status == "IN_PROGRESS") {
             onNavigateToStreaming(serviceId)
         }
     }
@@ -284,8 +284,9 @@ fun ServiceWaitingScreen(
                             text = when (status) {
                                 "REQUESTED" -> stringResource(R.string.waiting_for_partner_accept)
                                 "ACCEPTED" -> stringResource(R.string.partner_accepted_waiting_start)
+                                "WAITING_FOR_START" -> stringResource(R.string.partner_accepted_waiting_start)
                                 "READY" -> stringResource(R.string.ready_for_tour_start)
-                                "STARTED" -> stringResource(R.string.partner_ready_streaming)
+                                "STARTED", "IN_PROGRESS" -> stringResource(R.string.partner_ready_streaming)
                                 "COMPLETED" -> stringResource(R.string.tour_finished_successfully)
                                 "CANCELLED" -> stringResource(R.string.tour_cancelled)
                                 else -> stringResource(R.string.checking_latest_status)
@@ -336,8 +337,9 @@ private fun StatusBadge(status: String) {
     val (bg, fg) = when (normalized) {
         "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
         "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        "WAITING_FOR_START" -> Color(0xFFF9A825) to Color(0xFFFFFDE7)
         "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
-        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "STARTED", "IN_PROGRESS" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
         "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)

@@ -2,6 +2,7 @@ package com.sismptm.partner.ui.features.tour
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.data.repository.PartnerRepositoryImpl
 import com.sismptm.partner.domain.usecase.tour.MarkServiceReadyUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,33 @@ class ServiceReadyViewModel(
         data class Error(val message: String) : ReadyUiState
     }
 
+    private val _serviceState = MutableStateFlow<com.sismptm.partner.data.remote.api.dto.ServiceResponse?>(null)
+    val serviceState: StateFlow<com.sismptm.partner.data.remote.api.dto.ServiceResponse?> = _serviceState
+
+    // Separate state for the cancel flow so it doesn't interfere with the ready flow
+    sealed interface CancelUiState {
+        object Idle : CancelUiState
+        object Loading : CancelUiState
+        object Success : CancelUiState
+        data class Error(val message: String) : CancelUiState
+    }
+
+    private val _cancelUiState = MutableStateFlow<CancelUiState>(CancelUiState.Idle)
+    val cancelUiState: StateFlow<CancelUiState> = _cancelUiState
+
+    fun fetchService(serviceId: Long) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getServiceById(serviceId)
+                if (response.isSuccessful) {
+                    _serviceState.value = response.body()
+                }
+            } catch (e: Exception) {
+                // Ignore for now, let the user mark as ready anyway if it fails
+            }
+        }
+    }
+
     fun markAsReady(serviceId: Long) {
         viewModelScope.launch {
             _uiState.value = ReadyUiState.Loading
@@ -40,5 +68,25 @@ class ServiceReadyViewModel(
             }
         }
     }
-}
 
+    fun cancelService(serviceId: Long) {
+        viewModelScope.launch {
+            _cancelUiState.value = CancelUiState.Loading
+            try {
+                val response = RetrofitClient.apiService.cancelServiceByPartner(serviceId)
+                if (response.isSuccessful) {
+                    _cancelUiState.value = CancelUiState.Success
+                } else {
+                    val code = response.code()
+                    _cancelUiState.value = CancelUiState.Error("No se pudo cancelar el servicio ($code).")
+                }
+            } catch (e: Exception) {
+                _cancelUiState.value = CancelUiState.Error(e.localizedMessage ?: "Error de conexión al cancelar")
+            }
+        }
+    }
+
+    fun clearCancelError() {
+        _cancelUiState.value = CancelUiState.Idle
+    }
+}

@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
 import com.sismptm.client.core.session.SessionManager
+import com.sismptm.client.core.websocket.ClientServiceWebSocketClient
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
@@ -408,6 +409,17 @@ private fun ToursTabContent(
     onRefresh: () -> Unit,
     onOpenWaiting: (Long) -> Unit
 ) {
+    val context = LocalContext.current
+    val webSocketClient = remember { ClientServiceWebSocketClient.getInstance(context) }
+    val serviceUpdate by webSocketClient.serviceUpdate.collectAsStateWithLifecycle()
+    
+    // AUTOMATIC REFRESH: When WebSocket sends service update, trigger reload
+    LaunchedEffect(serviceUpdate) {
+        serviceUpdate?.let {
+            onRefresh()
+        }
+    }
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -427,9 +439,8 @@ private fun ToursTabContent(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
-            OutlinedButton(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.refresh), color = Color.White)
-            }
+            // REMOVED: Manual refresh button
+            // Services now update automatically via WebSocket
 
             when (servicesState) {
                 HomeViewModel.ClientServicesUiState.Idle,
@@ -444,8 +455,19 @@ private fun ToursTabContent(
                     if (servicesState.services.isEmpty()) {
                         Text(text = stringResource(R.string.no_service_requests_yet), color = TextSecondary)
                     } else {
-                        val activeStatuses = setOf("REQUESTED", "ACCEPTED", "STARTED")
+                        val activeStatuses = setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
                         val activeServices = servicesState.services.filter { it.status.uppercase() in activeStatuses }
+                            .sortedWith(compareByDescending<ServiceResponse> { service ->
+                                val isReady = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+                                var isTimeToStart = false
+                                if (!service.scheduledAt.isNullOrBlank()) {
+                                    try {
+                                        val instant = java.time.Instant.parse(service.scheduledAt)
+                                        isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
+                                    } catch (e: Exception) {}
+                                }
+                                isReady || isTimeToStart
+                            }.thenBy { it.scheduledAt ?: "ZZZZ" })
                         val historyServices = servicesState.services.filter { it.status.uppercase() !in activeStatuses }
 
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -491,11 +513,24 @@ private fun ClientServiceCard(
     service: ServiceResponse,
     onOpenWaiting: (Long) -> Unit
 ) {
-    val isActive = service.status.uppercase() in setOf("REQUESTED", "ACCEPTED", "STARTED")
+    val isActive = service.status.uppercase() in setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
+    
+    var isTimeToStart by remember { mutableStateOf(false) }
+    if (!service.scheduledAt.isNullOrBlank()) {
+        try {
+            val instant = java.time.Instant.parse(service.scheduledAt)
+            isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
+        } catch (e: Exception) {}
+    }
+
+    val isReady = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+    val shouldHighlight = isTimeToStart || isReady
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430)),
-        shape = RoundedCornerShape(14.dp)
+        colors = CardDefaults.cardColors(containerColor = if (shouldHighlight) Color(0xFF2D3748) else Color(0xFF1E2430)),
+        shape = RoundedCornerShape(14.dp),
+        border = if (shouldHighlight) BorderStroke(2.dp, PrimaryAccent) else null
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -569,7 +604,9 @@ private fun ServiceStatusBadge(status: String) {
     val (bg, fg) = when (normalized) {
         "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
         "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
-        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "WAITING_FOR_START" -> Color(0xFFF9A825) to Color(0xFFFFFDE7)
+        "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
+        "STARTED", "IN_PROGRESS" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
         "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)

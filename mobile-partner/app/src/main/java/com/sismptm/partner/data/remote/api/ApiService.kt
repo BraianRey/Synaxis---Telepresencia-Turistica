@@ -40,11 +40,17 @@ interface ApiService {
     @POST("api/services/{serviceId}/accept")
     suspend fun acceptService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 
+    @POST("api/services/{serviceId}/ready")
+    suspend fun readyService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
     @POST("api/services/{serviceId}/start")
     suspend fun startService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 
     @POST("api/services/{serviceId}/complete")
     suspend fun completeService(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
+
+    @POST("api/services/{serviceId}/cancel/by-partner")
+    suspend fun cancelServiceByPartner(@Path("serviceId") serviceId: Long): Response<ServiceResponse>
 
     /** Retrieves the payment summary for a completed service */
     @GET("api/services/{serviceId}/payment")

@@ -53,6 +53,11 @@ public class ServiceMapper {
                                                 ? service.getEndedAt().atZone(java.time.ZoneId.systemDefault())
                                                                 .toInstant()
                                                 : null,
-                                service.getLocationReferenceImageUrl());
+                                service.getLocationReferenceImageUrl(),
+                                service.isScheduled(),
+                                service.getScheduledFor() != null
+                                                ? service.getScheduledFor().atZone(java.time.ZoneId.systemDefault())
+                                                                .toInstant()
+                                                : null);
         }
 }
