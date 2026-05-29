@@ -11,26 +11,19 @@
   <component name="ChangeListManager">
     <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/mapper/ServiceMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/ServiceResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/response/ServiceResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/dto/request/RegisterServiceRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/repository/ServiceRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/repository/ServiceRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/test/java/com/synexis/management_service/services/ServiceServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/test/java/com/synexis/management_service/services/ServiceServiceImplTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceWaitingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceWaitingScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/navigation/NavGraph.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/reservation/ReserveServiceScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/reservation/ReserveServiceScreen.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/api/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/api/ApiService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/repository/PartnerRepositoryImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/repository/PartnerRepositoryImpl.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/domain/repository/PartnerRepository.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/domain/repository/PartnerRepository.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/domain/usecase/tour/MarkServiceReadyUseCase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/domain/usecase/tour/MarkServiceReadyUseCase.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/api/dto/ServiceDtos.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/api/dto/ServiceDtos.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/streaming/StreamingViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/streaming/StreamingViewModel.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/navigation/NavGraph.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/navigation/NavGraph.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +38,7 @@
       <entry key="_C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner" value="3C8UADKCGKXxXzWFWBdybxy2d9a" />
     </persistenceIdMap>
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\Janus\.android\avd\Medium_Phone.avd]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[PhysicalDevice::serial=M7T4NRSGHY65PZSK]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />

@@ -28,6 +28,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -47,7 +48,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
 import com.sismptm.client.core.session.SessionManager
-import com.sismptm.client.core.websocket.ClientServiceWebSocketClient
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
@@ -409,17 +409,6 @@ private fun ToursTabContent(
     onRefresh: () -> Unit,
     onOpenWaiting: (Long) -> Unit
 ) {
-    val context = LocalContext.current
-    val webSocketClient = remember { ClientServiceWebSocketClient.getInstance(context) }
-    val serviceUpdate by webSocketClient.serviceUpdate.collectAsStateWithLifecycle()
-    
-    // AUTOMATIC REFRESH: When WebSocket sends service update, trigger reload
-    LaunchedEffect(serviceUpdate) {
-        serviceUpdate?.let {
-            onRefresh()
-        }
-    }
-    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -433,14 +422,29 @@ private fun ToursTabContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = stringResource(R.string.my_services),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-            // REMOVED: Manual refresh button
-            // Services now update automatically via WebSocket
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.my_services),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Button(
+                    onClick = { onRefresh() },
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Refresh", fontSize = 12.sp)
+                }
+            }
 
             when (servicesState) {
                 HomeViewModel.ClientServicesUiState.Idle,

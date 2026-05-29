@@ -8,6 +8,7 @@ import com.synexis.management_service.entity.ServiceEntity;
 import com.synexis.management_service.payment.PaymentPricing;
 
 import org.springframework.stereotype.Component;
+import java.time.ZoneOffset;
 
 @Component
 public class ServiceMapper {
@@ -46,17 +47,17 @@ public class ServiceMapper {
                                 Double.valueOf(PaymentPricing.EQUIVALENT_HOURLY_RATE_USD),
                                 service.getStatus().name(),
                                 service.getStartedAt() != null
-                                                ? service.getStartedAt().atZone(java.time.ZoneId.systemDefault())
+                                                ? service.getStartedAt().atZone(ZoneOffset.UTC)
                                                                 .toInstant()
                                                 : null,
                                 service.getEndedAt() != null
-                                                ? service.getEndedAt().atZone(java.time.ZoneId.systemDefault())
+                                                ? service.getEndedAt().atZone(ZoneOffset.UTC)
                                                                 .toInstant()
                                                 : null,
                                 service.getLocationReferenceImageUrl(),
                                 service.isScheduled(),
                                 service.getScheduledFor() != null
-                                                ? service.getScheduledFor().atZone(java.time.ZoneId.systemDefault())
+                                                ? service.getScheduledFor().atZone(ZoneOffset.UTC)
                                                                 .toInstant()
                                                 : null);
         }

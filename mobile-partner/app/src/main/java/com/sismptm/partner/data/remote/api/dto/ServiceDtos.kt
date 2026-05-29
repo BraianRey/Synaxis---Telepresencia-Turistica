@@ -22,6 +22,7 @@ data class ServiceResponse(
     @SerializedName("startedAt") val startedAt: String?,
     @SerializedName("endedAt") val endedAt: String?,
     @SerializedName("locationReferenceImageUrl") val locationReferenceImageUrl: String? = null,
+    @SerializedName("scheduled") val scheduled: Boolean? = null,
     @SerializedName("scheduledAt") val scheduledAt: String? = null
 ) {
     /**

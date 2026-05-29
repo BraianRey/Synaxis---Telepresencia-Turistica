@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
-import com.sismptm.partner.core.websocket.ServiceWebSocketClient
+import kotlinx.coroutines.delay
 
 /**
  * Screen that prepares the partner for the streaming session after accepting a tour.
@@ -40,11 +40,6 @@ fun ServiceReadyScreen(
     val uiState by viewModel.uiState.collectAsState()
     val cancelUiState by viewModel.cancelUiState.collectAsState()
     val serviceState by viewModel.serviceState.collectAsState()
-    
-    // Observe WebSocket notifications for server-driven time gate
-    val webSocketClient = remember { ServiceWebSocketClient.getInstance(context) }
-    val serviceTimeArrivedUpdate by webSocketClient.serviceTimeArrivedUpdate.collectAsState()
-    val serviceStatusUpdate by webSocketClient.serviceStatusUpdate.collectAsState()
 
     var showCancelDialog by remember { mutableStateOf(false) }
     var isTimeToStartEnabled by remember { mutableStateOf(false) }
@@ -52,23 +47,21 @@ fun ServiceReadyScreen(
     LaunchedEffect(serviceId) {
         viewModel.fetchService(serviceId)
     }
-
-    // CRITICAL: Server validates time gate via WebSocket SERVICE_TIME_ARRIVED notification
-    // Partner cannot manipulate device time to bypass this check
-    LaunchedEffect(serviceTimeArrivedUpdate) {
-        serviceTimeArrivedUpdate?.let { update ->
-            if (update.serviceId == serviceId) {
-                isTimeToStartEnabled = true
-            }
-        }
-    }
     
     // Immediate service (no scheduled time) can start immediately
     LaunchedEffect(serviceState) {
         serviceState?.let { service ->
-            if (service.scheduledAt.isNullOrBlank()) {
-                // Immediate service: no scheduled time, can start now
+            if (service.scheduled == false) {
                 isTimeToStartEnabled = true
+            } else if (service.status.uppercase() in setOf("READY", "ACCEPTED")) {
+                isTimeToStartEnabled = true
+            } else if (service.status.uppercase() == "WAITING_FOR_START") {
+                isTimeToStartEnabled = false
+                
+                while (true) {
+                    delay(5000)
+                    viewModel.fetchService(serviceId)
+                }
             }
         }
     }
@@ -199,8 +192,8 @@ fun ServiceReadyScreen(
                 }
             }
 
-            // Scheduled time info banner: server-driven
-            if (serviceState?.scheduledAt?.isNotBlank() == true && !isTimeToStartEnabled) {
+            // Scheduled time info banner: show when waiting for time
+            if (serviceState?.scheduled == true && serviceState?.status?.uppercase() == "WAITING_FOR_START") {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF78350F)),
                     shape = RoundedCornerShape(8.dp)

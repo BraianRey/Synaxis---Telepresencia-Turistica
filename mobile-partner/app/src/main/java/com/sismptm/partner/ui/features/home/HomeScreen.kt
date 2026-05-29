@@ -144,7 +144,9 @@ private fun HomeContent(
 
     LaunchedEffect(acceptedTour) {
         acceptedTour?.let {
-            if (it.scheduledAt.isNullOrBlank()) {
+            // Only redirect to prep screen if it's explicitly marked as NOT scheduled (false)
+            // If scheduled is null or true, treat as scheduled service and don't redirect
+            if (it.scheduled == false) {
                 onNavigateToServiceReady(it.serviceId)
             }
             homeViewModel.clearAcceptedTour()
@@ -196,7 +198,7 @@ private fun HomeContent(
                     ratingCount = ratingCount
                 )
                 1 -> MyServicesTabContent(partnerServicesState = partnerServicesState, onNavigateToServiceReady = onNavigateToServiceReady)
-                2 -> UpcomingTabContent(partnerServicesState = partnerServicesState, onNavigateToServiceReady = onNavigateToServiceReady)
+                2 -> UpcomingTabContent(partnerServicesState = partnerServicesState, onNavigateToServiceReady = onNavigateToServiceReady, homeViewModel = homeViewModel)
                 3 -> ProfileTab(onLogout = onLogout, picDirectory = SessionManager.picDirectory)
             }
         }
@@ -248,19 +250,19 @@ private fun RequestsTabContent(
                             val duration = service.agreedHours?.let { "${it}${stringResource(R.string.hours_unit).first()}" } ?: stringResource(R.string.rate_na)
                             val price = service.hourlyRate?.let { "$${"%.0f".format(it)}${stringResource(R.string.rate_unit_suffix)}" } ?: stringResource(R.string.rate_na)
                             val clientName = service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)
-                            val elapsedLabel = if (!service.scheduledAt.isNullOrBlank()) {
+                            val elapsedLabel = if (service.scheduled == true && !service.scheduledAt.isNullOrBlank()) {
                                 try {
                                     val instant = java.time.Instant.parse(service.scheduledAt)
                                     val zoned = instant.atZone(java.time.ZoneId.systemDefault())
-                                    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM, HH:mm").withLocale(java.util.Locale.getDefault())
-                                    "Reserved: ${fmt.format(zoned)}"
+                                    val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm").withLocale(java.util.Locale.getDefault())
+                                    "At ${fmt.format(zoned)}"
                                 } catch (e: Exception) {
                                     "Reserved"
                                 }
                             } else {
                                 stringResource(R.string.status_new)
                             }
-                            Log.d("RequestDebug", "Service ${service.serviceId}: clientName=$clientName, clientPicDirectory=${service.clientPicDirectory}, scheduled=${service.scheduledAt}")
+                            Log.d("RequestDebug", "Service ${service.serviceId}: scheduled=${service.scheduled}, scheduledAt=${service.scheduledAt}, clientName=$clientName")
 
                             RequestCard(
                                 clientName = clientName,
@@ -315,7 +317,11 @@ private fun MyServicesTabContent(partnerServicesState: HomeViewModel.PartnerServ
 }
 
 @Composable
-private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServicesUiState, onNavigateToServiceReady: (Long) -> Unit) {
+private fun UpcomingTabContent(
+    partnerServicesState: HomeViewModel.PartnerServicesUiState, 
+    onNavigateToServiceReady: (Long) -> Unit,
+    homeViewModel: HomeViewModel
+) {
     when (partnerServicesState) {
         HomeViewModel.PartnerServicesUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryAccent) }
         is HomeViewModel.PartnerServicesUiState.Success -> {
@@ -342,6 +348,18 @@ private fun UpcomingTabContent(partnerServicesState: HomeViewModel.PartnerServic
                     item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text("No upcoming reservations", color = Color.Gray) } }
                 }
             }
+
+            LaunchedEffect(upcomingServices) {
+                while (true) {
+                    delay(5000)
+                    val hasWaitingServices = upcomingServices.any { 
+                        it.status.uppercase() == "WAITING_FOR_START" 
+                    }
+                    if (hasWaitingServices) {
+                        homeViewModel.loadPartnerServices()
+                    }
+                }
+            }
         }
         is HomeViewModel.PartnerServicesUiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(partnerServicesState.message, color = Error) }
         else -> {}
@@ -357,53 +375,47 @@ private fun UpcomingServiceCard(service: ServiceResponse, onNavigateToServiceRea
             val instant = java.time.Instant.parse(it)
             isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
             val zoned = instant.atZone(java.time.ZoneId.systemDefault())
-            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm").withLocale(java.util.Locale.getDefault())
             fmt.format(zoned)
         } catch (e: Exception) {
             it
         }
     } ?: "Scheduled"
 
+    val statusDisplay = when (service.status.uppercase()) {
+        "WAITING_FOR_START" -> "Starts at $scheduledText"
+        "READY" -> "Time arrived!"
+        "ACCEPTED" -> "Ready to start"
+        "IN_PROGRESS" -> "In progress"
+        else -> service.status
+    }
+
+    val backgroundColor = when (service.status.uppercase()) {
+        "WAITING_FOR_START" -> Color(0xFFFFF3CD)
+        "READY" -> Color(0xFFD4EDDA)
+        else -> Color.White
+    }
+
     val isActive = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
-    val shouldHighlight = isTimeToStart || isActive
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onNavigateToServiceReady(service.serviceId) },
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = if (shouldHighlight) CardBackground.copy(alpha = 0.8f) else CardBackground),
-        border = if (shouldHighlight) BorderStroke(2.dp, PrimaryAccent) else null
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        border = if (isActive) BorderStroke(2.dp, PrimaryAccent) else null
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 ServiceStatusBadge(service.status)
             }
             Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
-                color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
-                color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
-            Text(stringResource(R.string.scheduled_for, scheduledText), color = PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-
-            Spacer(modifier = Modifier.height(8.dp))
-            if (shouldHighlight) {
-                Button(
-                    onClick = { onNavigateToServiceReady(service.serviceId) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(if (isActive) stringResource(R.string.btn_reenter_service) else stringResource(R.string.btn_enter_service))
-                }
-            } else {
-                OutlinedButton(
-                    onClick = { onNavigateToServiceReady(service.serviceId) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, PrimaryAccent)
-                ) {
-                    Text(stringResource(R.string.btn_enter_service), color = PrimaryAccent)
-                }
-            }
+                color = TextTertiary, fontSize = 11.sp, maxLines = 1)
+            Text(statusDisplay, color = if (service.status.uppercase() == "READY") Color(0xFF28A745) else if (service.status.uppercase() == "WAITING_FOR_START") Color(0xFFF39C12) else PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -418,7 +430,13 @@ private fun ServiceHistoryCard(service: ServiceResponse, onNavigateToServiceRead
     val isActive = service.status.uppercase() in setOf("WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = onNavigateToServiceReady != null) {
+                if (onNavigateToServiceReady != null) {
+                    onNavigateToServiceReady(service.serviceId)
+                }
+            },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         border = if (isActive && onNavigateToServiceReady != null) BorderStroke(2.dp, PrimaryAccent) else null

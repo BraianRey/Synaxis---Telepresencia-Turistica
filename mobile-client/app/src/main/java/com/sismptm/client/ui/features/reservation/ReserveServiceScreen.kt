@@ -25,6 +25,9 @@ import com.sismptm.client.ui.features.tour.ServiceViewModel
 import com.sismptm.client.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+import java.time.Instant
+import java.time.ZoneId
+import java.time.OffsetDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -243,8 +246,10 @@ fun ReserveServiceScreen(
 
         Button(
             onClick = {
-                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-                val scheduledAt = isoFormat.format(calendar.time)
+                val instant = Instant.ofEpochMilli(calendar.timeInMillis)
+                val zoneId = ZoneId.systemDefault()
+                val offsetDateTime = instant.atZone(zoneId).toOffsetDateTime()
+                val scheduledAt = offsetDateTime.toString()
                 serviceViewModel.createService(location, description, scheduledAt)
             },
             enabled = selectedDate != null && selectedTime != null && !isLoading,

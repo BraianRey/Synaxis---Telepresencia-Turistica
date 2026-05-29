@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -25,15 +25,9 @@ public class RegisterServiceRequest {
     private Integer agreedHours;
 
     /**
-     * Defaults to false when omitted.
-     * When true, scheduledFor must be provided and must be in the future.
+     * ISO 8601 formatted timestamp with timezone offset (e.g., "2026-05-28T15:00:00+09:00")
+     * When provided, the service is treated as scheduled.
+     * When null or empty, the service is treated as immediate.
      */
-    private Boolean scheduled;
-
-    /**
-     * Required only when scheduled = true.
-     * Must be a future date/time — validated in the service layer
-     * because the constraint is conditional on 'scheduled'.
-     */
-    private LocalDateTime scheduledFor;
+    private String scheduledAt;
 }

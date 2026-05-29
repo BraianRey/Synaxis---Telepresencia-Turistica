@@ -125,17 +125,23 @@ public class ServiceServiceImpl implements ServiceService {
             }
         }
 
-        // scheduling validation
-        boolean isScheduled = Boolean.TRUE.equals(request.getScheduled());
+        // Parse scheduledAt to determine if service is scheduled
+        boolean isScheduled = request.getScheduledAt() != null && !request.getScheduledAt().isBlank();
+        java.time.OffsetDateTime scheduledFor = null;
 
         if (isScheduled) {
-            if (request.getScheduledFor() == null) {
+            try {
+                // Parse ISO 8601 string with timezone (e.g., "2026-05-28T15:00:00+09:00")
+                scheduledFor = java.time.OffsetDateTime.parse(request.getScheduledAt());
+                
+                // Validate it's in the future
+                if (!scheduledFor.isAfter(java.time.OffsetDateTime.now())) {
+                    throw new BusinessRuleViolationException(
+                            "scheduledAt must be a future date/time");
+                }
+            } catch (java.time.format.DateTimeParseException e) {
                 throw new BusinessRuleViolationException(
-                        "scheduledFor is required when scheduled is true");
-            }
-            if (!request.getScheduledFor().isAfter(LocalDateTime.now())) {
-                throw new BusinessRuleViolationException(
-                        "scheduledFor must be a future date/time");
+                        "Invalid scheduledAt format. Expected ISO 8601 with timezone (e.g., 2026-05-28T15:00:00+09:00)");
             }
         }
 
@@ -150,11 +156,13 @@ public class ServiceServiceImpl implements ServiceService {
         service.setScheduled(isScheduled);
 
         if (isScheduled) {
-            service.setScheduledFor(request.getScheduledFor());
-            // scheduledEndAt = scheduledFor + agreedHours (only when agreedHours is set)
+            // Convert OffsetDateTime to UTC LocalDateTime for storage
+            java.time.Instant utcInstant = scheduledFor.toInstant();
+            LocalDateTime utcLocalDateTime = utcInstant.atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+            service.setScheduledFor(utcLocalDateTime);
+            
             if (request.getAgreedHours() != null) {
-                service.setScheduledEndAt(
-                        request.getScheduledFor().plusHours(request.getAgreedHours()));
+                service.setScheduledEndAt(utcLocalDateTime.plusHours(request.getAgreedHours()));
             }
         }
 
