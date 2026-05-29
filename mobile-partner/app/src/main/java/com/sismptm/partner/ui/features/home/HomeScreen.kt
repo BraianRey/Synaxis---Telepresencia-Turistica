@@ -54,6 +54,7 @@ import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.manager.location.LocationManager
 import com.sismptm.partner.ui.common.RequestCard
 import kotlinx.coroutines.delay
+import java.time.Instant
 
 /**
  * Main dashboard for the partner. Manages online availability, incoming tour requests,
@@ -156,6 +157,11 @@ private fun HomeContent(
     LaunchedEffect(Unit) {
         homeViewModel.loadPartnerServices()
         homeViewModel.loadPartnerRatings()
+        // Poll partner services silently to detect status changes without flickering
+        while (true) {
+            delay(5_000)
+            homeViewModel.loadPartnerServices(silent = true)
+        }
     }
 
     if (acceptErrorMessage != null) {
@@ -252,7 +258,7 @@ private fun RequestsTabContent(
                             val clientName = service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)
                             val elapsedLabel = if (service.scheduled == true && !service.scheduledAt.isNullOrBlank()) {
                                 try {
-                                    val instant = java.time.Instant.parse(service.scheduledAt)
+                                    val instant = Instant.parse(service.scheduledAt)
                                     val zoned = instant.atZone(java.time.ZoneId.systemDefault())
                                     val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm").withLocale(java.util.Locale.getDefault())
                                     "At ${fmt.format(zoned)}"
@@ -333,8 +339,8 @@ private fun UpcomingTabContent(
                 var isTimeToStart = false
                 if (!service.scheduledAt.isNullOrBlank()) {
                     try {
-                        val instant = java.time.Instant.parse(service.scheduledAt)
-                        isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
+                        val instant = Instant.parse(service.scheduledAt)
+                        isTimeToStart = instant.isBefore(Instant.now()) || instant.equals(Instant.now())
                     } catch (e: Exception) {}
                 }
                 isActive || isTimeToStart
@@ -342,21 +348,21 @@ private fun UpcomingTabContent(
 
             LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (upcomingServices.isNotEmpty()) {
-                    item { SectionHeader("Upcoming Reservations") }
+                    item { SectionHeader(stringResource(R.string.upcoming_reservations)) }
                     items(upcomingServices, key = { it.serviceId }) { service -> UpcomingServiceCard(service, onNavigateToServiceReady) }
                 } else {
-                    item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text("No upcoming reservations", color = Color.Gray) } }
+                    item { Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.no_upcoming_reservations), color = Color.Gray) } }
                 }
             }
 
             LaunchedEffect(upcomingServices) {
                 while (true) {
-                    delay(5000)
+                    delay(10000)
                     val hasWaitingServices = upcomingServices.any { 
                         it.status.uppercase() == "WAITING_FOR_START" 
                     }
                     if (hasWaitingServices) {
-                        homeViewModel.loadPartnerServices()
+                        homeViewModel.loadPartnerServices(silent = true)
                     }
                 }
             }
@@ -372,31 +378,31 @@ private fun UpcomingServiceCard(service: ServiceResponse, onNavigateToServiceRea
 
     val scheduledText = service.scheduledAt?.let {
         try {
-            val instant = java.time.Instant.parse(it)
-            isTimeToStart = instant.isBefore(java.time.Instant.now()) || instant.equals(java.time.Instant.now())
+            val instant = Instant.parse(it)
+            isTimeToStart = instant.isBefore(Instant.now()) || instant.equals(Instant.now())
             val zoned = instant.atZone(java.time.ZoneId.systemDefault())
             val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm").withLocale(java.util.Locale.getDefault())
             fmt.format(zoned)
         } catch (e: Exception) {
             it
         }
-    } ?: "Scheduled"
+    } ?: stringResource(R.string.status_new)
 
     val statusDisplay = when (service.status.uppercase()) {
-        "WAITING_FOR_START" -> "Starts at $scheduledText"
-        "READY" -> "Time arrived!"
-        "ACCEPTED" -> "Ready to start"
-        "IN_PROGRESS" -> "In progress"
+        "WAITING_FOR_START" -> stringResource(R.string.starts_at, scheduledText)
+        "READY" -> stringResource(R.string.time_arrived)
+        "ACCEPTED" -> stringResource(R.string.ready_to_start_label)
+        "IN_PROGRESS" -> stringResource(R.string.in_progress)
         else -> service.status
     }
 
     val backgroundColor = when (service.status.uppercase()) {
-        "WAITING_FOR_START" -> Color(0xFFFFF3CD)
-        "READY" -> Color(0xFFD4EDDA)
-        else -> Color.White
+        "WAITING_FOR_START" -> if (isTimeToStart) Color(0xFF2E3B2E) else Color(0xFF3B3B2E)
+        "READY", "STARTED", "IN_PROGRESS" -> Color(0xFF2E3B2E)
+        else -> CardBackground
     }
 
-    val isActive = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+    val isActive = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS") || (service.status.uppercase() == "WAITING_FOR_START" && isTimeToStart)
 
     Card(
         modifier = Modifier
@@ -408,14 +414,17 @@ private fun UpcomingServiceCard(service: ServiceResponse, onNavigateToServiceRea
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                ServiceStatusBadge(service.status)
+                val badgeStatus = if (service.status.uppercase() == "WAITING_FOR_START" && isTimeToStart) "READY" else service.status
+                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                ServiceStatusBadge(badgeStatus)
             }
             Text(service.startLocationDescription?.ifBlank { stringResource(R.string.not_specified) } ?: stringResource(R.string.not_specified),
-                color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             Text("${stringResource(R.string.label_client)}: ${service.clientName?.ifBlank { stringResource(R.string.unknown_client) } ?: stringResource(R.string.unknown_client)}",
-                color = TextTertiary, fontSize = 11.sp, maxLines = 1)
-            Text(statusDisplay, color = if (service.status.uppercase() == "READY") Color(0xFF28A745) else if (service.status.uppercase() == "WAITING_FOR_START") Color(0xFFF39C12) else PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                color = Color(0xFFCCCCCC), fontSize = 11.sp, maxLines = 1)
+            
+            val finalStatusDisplay = if (service.status.uppercase() == "WAITING_FOR_START" && isTimeToStart) stringResource(R.string.time_arrived) else statusDisplay
+            Text(finalStatusDisplay, color = if (isActive) Success else if (service.status.uppercase() == "WAITING_FOR_START") Color(0xFFF39C12) else PrimaryAccent, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -428,6 +437,15 @@ private fun SectionHeader(text: String) {
 @Composable
 private fun ServiceHistoryCard(service: ServiceResponse, onNavigateToServiceReady: ((Long) -> Unit)? = null) {
     val isActive = service.status.uppercase() in setOf("WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
+    val isWaitingToStart = service.status.uppercase() == "WAITING_FOR_START"
+    
+    // Determine border color based on status
+    val borderColor = when {
+        isWaitingToStart -> Color(0xFFFFB74D)  // Orange warning for WAITING_FOR_START
+        isActive && onNavigateToServiceReady != null -> PrimaryAccent  // Normal accent for active
+        else -> Color.Transparent
+    }
+    val borderWidth = if (isActive && onNavigateToServiceReady != null) 2.dp else 0.dp
 
     Card(
         modifier = Modifier
@@ -439,7 +457,7 @@ private fun ServiceHistoryCard(service: ServiceResponse, onNavigateToServiceRead
             },
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        border = if (isActive && onNavigateToServiceReady != null) BorderStroke(2.dp, PrimaryAccent) else null
+        border = BorderStroke(borderWidth, borderColor)
     ) {
         Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
             // Background image
@@ -809,4 +827,3 @@ private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
         }
     }
 }
-

@@ -47,6 +47,7 @@
     <string name="price_format">$%1$s COP</string>
     <string name="wants_tour">Wants a tour in %1$s</string>
     <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
 
     <!-- Actions -->
     <string name="send_location">Send Current Location</string>
@@ -74,7 +75,7 @@
     <string name="history">History</string>
     <string name="profile">Profile</string>
     <string name="permission_required">Location permission required</string>
-    <string name="default_partner_name">Socio</string>
+    <string name="default_partner_name">Partner</string>
     <string name="permission_description">The application needs location permission to transmit your
         status and receive requests.</string>
     <string name="request_permission">Request permission</string>
@@ -86,8 +87,7 @@
     <string name="login_error_invalid_credentials">Invalid credentials.</string>
     <string name="login_error_server">Server error. Please try again.</string>
 
-    <!-- Generic actions (referenced directly by name in post-merge screens) -->
-    <string name="accept">Accept</string>
+    <!-- Generic actions -->
     <string name="ok">OK</string>
     <string name="debug_streaming">Debug Streaming</string>
     <string name="error_accept_request">Could not accept request</string>
@@ -167,6 +167,13 @@
     <string name="btn_reenter_service">Re-enter Service</string>
     <string name="scheduled_for">Scheduled for: %1$s</string>
     <string name="time_to_start">Time to start!</string>
+    <string name="cancel_service">Cancel Service</string>
+    <string name="cancel_service_confirm">Are you sure you want to cancel service #%1$d? This action cannot be undone.</string>
+    <string name="yes_cancel">Yes, cancel</string>
+    <string name="go_back">Go back</string>
+    <string name="waiting_scheduled_time">Waiting for scheduled time. The button will enable automatically.</string>
+    <string name="its_time_ready">It\'s time! You can now start the transmission.</string>
+    <string name="error_notify_server">Could not notify server (%1$s). Please check your connection.</string>
 
     <!-- HomeScreen -->
     <string name="not_specified">Unspecified</string>
@@ -174,6 +181,17 @@
     <string name="status_new">New</string>
     <string name="service_prefix">#</string>
     <string name="rate_unit_suffix"> COP/h</string>
+    <string name="upcoming_reservations">Upcoming Reservations</string>
+    <string name="no_upcoming_reservations">No upcoming reservations</string>
+    <string name="starts_at">Starts at %1$s</string>
+    <string name="ready_to_start_label">Ready to start</string>
+    <string name="in_progress">In progress</string>
+    <string name="time_arrived">Time arrived!</string>
+
+    <!-- Notifications -->
+    <string name="notification_title_reminder">Service Reminder</string>
+    <string name="notification_msg_partner">Tour #%1$d starts now. Prepare your transmission!</string>
+    <string name="notification_msg_client">Your tour #%1$d is starting! Enter the session.</string>
 
     <!-- RequestDetailScreen -->
     <string name="incoming_request_title">Incoming Tour Request</string>
@@ -188,6 +206,7 @@
     <string name="per_hour_suffix">/hour</string>
     <string name="you_earned_label">You Earned</string>
     <string name="duration_label">Duration</string>
+
     <!-- ProfileScreen -->
     <string name="my_profile">My Profile</string>
     <string name="preferred_language">Preferred Language</string>
@@ -200,7 +219,7 @@
     <string name="navigate_back">Navigate back</string>
     <string name="request_description_tour">Description: 4-hour guided tour</string>
     <string name="route_historic_downtown_tour">Route: Historic Downtown Tour</string>
-    <string name="sample_client_name">María García</string>
-    <string name="sample_location_name">Puracé National Natural Park</string>
+    <string name="sample_client_name">Maria Garcia</string>
+    <string name="sample_location_name">Purace National Natural Park</string>
 
 </resources>

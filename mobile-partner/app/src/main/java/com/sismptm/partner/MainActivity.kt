@@ -6,20 +6,30 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.sismptm.partner.core.session.SessionManager
 import com.sismptm.partner.ui.navigation.PartnerNavGraph
 import com.sismptm.partner.ui.theme.SISPTMPartnerTheme
 import com.sismptm.partner.core.utils.LanguageContext
+import com.sismptm.partner.core.utils.NotificationHelper
+import com.sismptm.partner.manager.worker.ServiceReminderWorker
+import java.util.concurrent.TimeUnit
 
-/**
- * Main activity of the application. Sets up the theme and the navigation graph.
- */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Initialize notification channels
+        NotificationHelper.createNotificationChannel(this)
+        
+        // Schedule background service reminders
+        setupBackgroundWorkers()
+
         setContent {
-            // Observe language dynamically from SessionManager
             val userLanguage by SessionManager.languageFlow.collectAsState()
 
             LanguageContext(languageCode = userLanguage) {
@@ -28,5 +38,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun setupBackgroundWorkers() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val serviceCheckRequest = PeriodicWorkRequestBuilder<ServiceReminderWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "ServiceReminderWorker",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            serviceCheckRequest
+        )
     }
 }

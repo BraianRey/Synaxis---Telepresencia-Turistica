@@ -5,19 +5,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// ----------------------------------------------
-// 1. Read local.properties (if exists)
-// ----------------------------------------------
-
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
-// ----------------------------------------------
-// 2. Android Configuration
-// ----------------------------------------------
 android {
     namespace = "com.sismptm.client"
     compileSdk = 36
@@ -31,7 +24,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ----- Environment variables from local.properties -----
         val baseUrlApi: String = localProperties.getProperty("BASE_URL_API") ?: ""
         val baseUrlKeycloak: String = localProperties.getProperty("BASE_URL_KEYCLOAK") ?: ""
         val wsSignalingUrl: String = localProperties.getProperty("BASE_WEBRTC") ?: ""
@@ -60,9 +52,6 @@ android {
     }
 }
 
-// ----------------------------------------------
-// 3. Dependencies
-// ----------------------------------------------
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -84,19 +73,19 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
 
+    // WorkManager for background notifications
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
     // ViewModel
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
 
-    // Map
+    // Map & Utils
     implementation("org.maplibre.gl:android-sdk:13.0.2")
     implementation("org.maplibre.gl:android-plugin-annotation-v9:3.0.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.gms:play-services-location:21.2.0")
-    implementation("androidx.compose.material3:material3:1.2.1")
-    implementation("androidx.compose.material:material-icons-extended:1.6.7")
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     testImplementation(libs.junit)

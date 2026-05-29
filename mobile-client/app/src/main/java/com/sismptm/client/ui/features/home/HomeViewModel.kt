@@ -9,6 +9,7 @@ import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.domain.model.MapPin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,17 +70,27 @@ class HomeViewModel : ViewModel() {
         }
 
         loadClientServices()
+        startPollingServices()
     }
 
-    fun loadClientServices() {
+    private fun startPollingServices() {
+        viewModelScope.launch {
+            while (true) {
+                delay(5000) // Poll every 5 seconds
+                loadClientServices(silent = true)
+            }
+        }
+    }
+
+    fun loadClientServices(silent: Boolean = false) {
         val clientId = SessionManager.userId
         if (clientId == -1L) {
-            _servicesState.value = ClientServicesUiState.Error("Session expired. Please log in again.")
+            if (!silent) _servicesState.value = ClientServicesUiState.Error("Session expired. Please log in again.")
             return
         }
 
         viewModelScope.launch {
-            _servicesState.value = ClientServicesUiState.Loading
+            if (!silent) _servicesState.value = ClientServicesUiState.Loading
             runCatching {
                 RetrofitClient.apiService.getServicesByClient(clientId)
             }.onSuccess { response ->
@@ -88,14 +99,18 @@ class HomeViewModel : ViewModel() {
                         .sortedByDescending { it.serviceId }
                     _servicesState.value = ClientServicesUiState.Success(services)
                 } else {
-                    _servicesState.value = ClientServicesUiState.Error(
-                        parseBackendError(response.code(), response.errorBody()?.string())
-                    )
+                    if (!silent) {
+                        _servicesState.value = ClientServicesUiState.Error(
+                            parseBackendError(response.code(), response.errorBody()?.string())
+                        )
+                    }
                 }
             }.onFailure { ex ->
-                _servicesState.value = ClientServicesUiState.Error(
-                    ex.localizedMessage ?: "Connection error"
-                )
+                if (!silent) {
+                    _servicesState.value = ClientServicesUiState.Error(
+                        ex.localizedMessage ?: "Connection error"
+                    )
+                }
             }
         }
     }
@@ -115,4 +130,3 @@ class HomeViewModel : ViewModel() {
         }
     }
 }
-

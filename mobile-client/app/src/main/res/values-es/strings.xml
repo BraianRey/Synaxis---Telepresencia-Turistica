@@ -59,6 +59,8 @@
     <string name="home_services_no_active">No hay servicios activos</string>
     <string name="home_services_history">Historial de servicios</string>
     <string name="home_services_no_history">No hay servicios en el historial</string>
+    <string name="reserve_service_btn">Reservar servicio</string>
+    <string name="recent_places">Lugares recientes</string>
 
     <!-- Partner Search Screen - New Hardcoded Strings -->
     <string name="search_cancel">Cancelar</string>
@@ -77,6 +79,9 @@
     <string name="control_left">IZQUIERDA</string>
     <string name="control_right">DERECHA</string>
     <string name="end_session">Finalizar Sesión</string>
+    <string name="connection_status_connecting">Conectando…</string>
+    <string name="connection_status_closed">Cerrado</string>
+    <string name="connection_status_disconnected">Desconectado</string>
 
     <!-- Shared service/request screens -->
     <string name="gps_permission_required">Permiso de GPS requerido</string>
@@ -156,11 +161,8 @@
     <string name="checking_latest_status">Verificando el último estado…</string>
     <string name="connection_error_cancelling">Error de conexión al cancelar</string>
     <string name="connection_error_loading_service">Error de conexión al cargar el servicio</string>
-
-    <!-- StreamingScreen -->
-    <string name="connection_status_connecting">Conectando…</string>
-    <string name="connection_status_closed">Cerrado</string>
-    <string name="connection_status_disconnected">Desconectado</string>
+    <string name="time_arrived_msg">¡La hora programada ha llegado! El guía comenzará en breve.</string>
+    <string name="status_ready_to_start">LISTO / HORA LLEGADA</string>
 
     <!-- RequestScreen -->
     <string name="create_service_request">Crear solicitud de servicio</string>
@@ -207,6 +209,11 @@
     <string name="price_format">%1$s COP</string>
     <string name="currency_format">$%1$s COP</string>
     
+    <!-- Notifications -->
+    <string name="notification_title_reminder">Recordatorio de Tour</string>
+    <string name="notification_msg_client">¡Tu tour programado #%1$d está por comenzar!</string>
+    <string name="notification_msg_partner">Tienes un tour programado #%1$d comenzando ahora.</string>
+
     <!-- Profile additions -->
     <string name="my_profile">Mi Perfil</string>
     <string name="preferred_language">Idioma Preferido</string>

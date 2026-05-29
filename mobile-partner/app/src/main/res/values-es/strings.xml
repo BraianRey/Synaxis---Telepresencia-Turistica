@@ -82,7 +82,10 @@
     <string name="login_error_connection">Error de conexión. Inténtalo de nuevo.</string>
     <string name="login_error_invalid_credentials">Credenciales inválidas.</string>
     <string name="login_error_server">Error del servidor. Inténtalo de nuevo.</string>
+
+    <!-- Generic actions -->
     <string name="ok">Aceptar</string>
+    <string name="debug_streaming">Probar Streaming</string>
     <string name="error_accept_request">No se pudo aceptar la solicitud</string>
     <string name="tab_requests">Solicitudes</string>
     <string name="tab_my_services">Mis servicios</string>
@@ -114,15 +117,15 @@
 
     <!-- Streaming Screen -->
     <string name="streaming_title">Transmisión en Vivo</string>
-    <string name="debug_streaming">Probar Streaming</string>
+    <string name="camera_mic_permission_required">Cámara y Micrófono Requeridos</string>
+    <string name="camera_mic_permission_explanation">Esta aplicación requiere acceso a la cámara y al micrófono para iniciar la transmisión. Por favor, habilítalos para continuar.</string>
     <string name="connection_quality">Calidad de Conexión: %1$s</string>
+    <string name="waiting_instructions">Esperando instrucciones…</string>
     <string name="instruction_up">ADELANTE</string>
     <string name="instruction_down">RETROCEDE</string>
     <string name="instruction_left">IZQUIERDA</string>
     <string name="instruction_right">DERECHA</string>
-    <string name="waiting_instructions">Esperando instrucciones…</string>
-    <string name="camera_mic_permission_required">Cámara y Micrófono Requeridos</string>
-    <string name="camera_mic_permission_explanation">Esta aplicación requiere acceso a la cámara y al micrófono para iniciar la transmisión. Por favor, habilítalos para continuar.</string>
+
     <!-- Additional UI strings -->
     <string name="grant_access">Conceder Acceso</string>
     <string name="end_session">Finalizar Sesión</string>
@@ -158,6 +161,13 @@
     <string name="btn_reenter_service">Reingresar al Servicio</string>
     <string name="scheduled_for">Programado para: %1$s</string>
     <string name="time_to_start">¡Hora de iniciar!</string>
+    <string name="cancel_service">Cancelar servicio</string>
+    <string name="cancel_service_confirm">¿Estás seguro de que deseas cancelar el servicio #%1$d? Esta acción no se puede deshacer.</string>
+    <string name="yes_cancel">Sí, cancelar</string>
+    <string name="go_back">Volver</string>
+    <string name="waiting_scheduled_time">Esperando la hora programada. El botón se habilitará automáticamente.</string>
+    <string name="its_time_ready">¡Ya es hora! Ahora puedes iniciar la transmisión.</string>
+    <string name="error_notify_server">No se pudo notificar al servidor (%1$s). Por favor, verifica tu conexión.</string>
 
     <!-- HomeScreen -->
     <string name="not_specified">No especificado</string>
@@ -165,6 +175,17 @@
     <string name="status_new">Nuevo</string>
     <string name="service_prefix">#</string>
     <string name="rate_unit_suffix"> COP/h</string>
+    <string name="upcoming_reservations">Reservas próximas</string>
+    <string name="no_upcoming_reservations">No hay reservas próximas</string>
+    <string name="starts_at">Comienza a las %1$s</string>
+    <string name="ready_to_start_label">Listo para iniciar</string>
+    <string name="in_progress">En curso</string>
+    <string name="time_arrived">¡Llegó la hora!</string>
+
+    <!-- Notifications -->
+    <string name="notification_title_reminder">Recordatorio de servicio</string>
+    <string name="notification_msg_partner">El tour #%1$d comienza ahora. ¡Prepara tu transmisión!</string>
+    <string name="notification_msg_client">¡Tu tour #%1$d está comenzando! Entra a la sesión.</string>
 
     <!-- RequestDetailScreen -->
     <string name="incoming_request_title">Solicitud de tour entrante</string>
@@ -187,4 +208,11 @@
     <string name="edit">Editar</string>
     <string name="save_changes">Guardar Cambios</string>
     <string name="cancel">Cancelar</string>
+    <string name="check_server_status">Verificar estado del servidor</string>
+    <string name="toggle_password_visibility">Alternar visibilidad de la contraseña</string>
+    <string name="navigate_back">Volver atrás</string>
+    <string name="request_description_tour">Descripción: Tour guiado de 4 horas</string>
+    <string name="route_historic_downtown_tour">Ruta: Tour por el Centro Histórico</string>
+    <string name="sample_client_name">María García</string>
+    <string name="sample_location_name">Parque Nacional Natural Puracé</string>
 </resources>

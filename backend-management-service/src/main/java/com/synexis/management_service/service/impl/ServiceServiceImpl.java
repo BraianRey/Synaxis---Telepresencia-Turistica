@@ -2,6 +2,7 @@ package com.synexis.management_service.service.impl;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,14 +39,12 @@ import com.synexis.management_service.service.PaymentService;
 import com.synexis.management_service.service.ServiceHistoryService;
 import com.synexis.management_service.service.ServiceService;
 
+/**
+ * Service implementation for managing tours, assignments, and statuses.
+ */
 @Service
 public class ServiceServiceImpl implements ServiceService {
 
-    // -------------------------------------------------------------------------
-    // ACTIVE_SERVICE_STATUSES
-    // WAITING_FOR_START and READY added: a client must not open a second service
-    // while a scheduled (or transitioning) one is still live.
-    // -------------------------------------------------------------------------
     private static final Set<ServiceStatus> ACTIVE_SERVICE_STATUSES = Set.of(
             ServiceStatus.REQUESTED,
             ServiceStatus.ACCEPTED,
@@ -53,7 +52,6 @@ public class ServiceServiceImpl implements ServiceService {
             ServiceStatus.READY,
             ServiceStatus.IN_PROGRESS);
 
-    // Partner-side active statuses reused in acceptService to prevent double-booking.
     private static final Set<ServiceStatus> PARTNER_ACTIVE_STATUSES = Set.of(
             ServiceStatus.ACCEPTED,
             ServiceStatus.WAITING_FOR_START,
@@ -94,11 +92,13 @@ public class ServiceServiceImpl implements ServiceService {
         this.serviceIdempotencyKeyRepository = serviceIdempotencyKeyRepository;
     }
 
-    // -------------------------------------------------------------------------
-    // registerService()
-    // register service with or without scheduling. Scheduled services start in WAITING_FOR_START
-    // status and only transition to READY when the partner confirms they're ready at the scheduled time.
-    // -------------------------------------------------------------------------
+    /**
+     * Registers a new tour service, including scheduled reservations.
+     * @param request Tour data.
+     * @param authenticatedClientId Requesting client ID.
+     * @param idempotencyKey Key to prevent duplicates.
+     * @return Created service details.
+     */
     @Override
     @Transactional
     public ServiceResponse registerService(RegisterServiceRequest request, Long authenticatedClientId,
@@ -112,7 +112,6 @@ public class ServiceServiceImpl implements ServiceService {
             throw new BusinessRuleViolationException("Client account is not active");
         }
 
-        // Idempotency check: if a key is provided, look for an existing service linked to this client and key.
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             String key = idempotencyKey.trim();
             if (key.length() > 128) {
@@ -125,23 +124,19 @@ public class ServiceServiceImpl implements ServiceService {
             }
         }
 
-        // Parse scheduledAt to determine if service is scheduled
         boolean isScheduled = request.getScheduledAt() != null && !request.getScheduledAt().isBlank();
         java.time.OffsetDateTime scheduledFor = null;
 
         if (isScheduled) {
             try {
-                // Parse ISO 8601 string with timezone (e.g., "2026-05-28T15:00:00+09:00")
                 scheduledFor = java.time.OffsetDateTime.parse(request.getScheduledAt());
-                
-                // Validate it's in the future
                 if (!scheduledFor.isAfter(java.time.OffsetDateTime.now())) {
                     throw new BusinessRuleViolationException(
                             "scheduledAt must be a future date/time");
                 }
             } catch (java.time.format.DateTimeParseException e) {
                 throw new BusinessRuleViolationException(
-                        "Invalid scheduledAt format. Expected ISO 8601 with timezone (e.g., 2026-05-28T15:00:00+09:00)");
+                        "Invalid scheduledAt format. Expected ISO 8601 with timezone");
             }
         }
 
@@ -156,7 +151,6 @@ public class ServiceServiceImpl implements ServiceService {
         service.setScheduled(isScheduled);
 
         if (isScheduled) {
-            // Convert OffsetDateTime to UTC LocalDateTime for storage
             java.time.Instant utcInstant = scheduledFor.toInstant();
             LocalDateTime utcLocalDateTime = utcInstant.atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
             service.setScheduledFor(utcLocalDateTime);
@@ -168,7 +162,6 @@ public class ServiceServiceImpl implements ServiceService {
 
         ServiceEntity saved = serviceRepository.save(service);
 
-        // Idempotency key persistence
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             ServiceIdempotencyKey row = new ServiceIdempotencyKey();
             row.setClientId(authenticatedClientId);
@@ -180,9 +173,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
-    // -------------------------------------------------------------------------
-    // Read operations
-    // -------------------------------------------------------------------------
+    /**
+     * Retrieves all services associated with a client.
+     * @param clientId Client ID.
+     * @param authenticatedClientId Authenticated user ID for security.
+     * @return List of client services.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getServicesByClientIdForUser(Long clientId, Long authenticatedClientId) {
@@ -193,6 +189,12 @@ public class ServiceServiceImpl implements ServiceService {
         return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves all services assigned to a partner.
+     * @param partnerId Partner ID.
+     * @param authenticatedPartnerId Authenticated partner ID for security.
+     * @return List of partner services.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getServicesByPartnerIdForUser(Long partnerId, Long authenticatedPartnerId) {
@@ -203,14 +205,23 @@ public class ServiceServiceImpl implements ServiceService {
         return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Lists services available to be accepted by partners.
+     * @return List of services with REQUESTED status.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getAvailableServices() {
-        // Scheduled services are visible immediately (status=REQUESTED), so no change needed here.
         List<ServiceEntity> services = serviceRepository.findByStatus(ServiceStatus.REQUESTED);
         return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves a specific service, validating it belongs to the client.
+     * @param serviceId Service ID.
+     * @param clientId Requesting client ID.
+     * @return Service details response.
+     */
     @Override
     @Transactional(readOnly = true)
     public ServiceResponse getServiceForClient(Long serviceId, Long clientId) {
@@ -223,6 +234,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(service);
     }
 
+    /**
+     * Retrieves a specific service, validating it belongs to the partner.
+     * @param serviceId Service ID.
+     * @param partnerId Requesting partner ID.
+     * @return Service details response.
+     */
     @Override
     @Transactional(readOnly = true)
     public ServiceResponse getServiceForPartner(Long serviceId, Long partnerId) {
@@ -248,9 +265,11 @@ public class ServiceServiceImpl implements ServiceService {
         throw new ForbiddenAccessException("You are not allowed to access this service");
     }
 
-    // -------------------------------------------------------------------------
-    // Payment operations
-    // -------------------------------------------------------------------------
+    /**
+     * Generates a financial summary for a completed service.
+     * @param serviceId Service ID.
+     * @return Payment and duration summary.
+     */
     @Override
     @Transactional(readOnly = true)
     public PaymentSummaryResponse getPaymentSummary(Long serviceId) {
@@ -269,6 +288,11 @@ public class ServiceServiceImpl implements ServiceService {
                 payment.getConfirmed());
     }
 
+    /**
+     * Confirms the payment for a service.
+     * @param serviceId Service ID.
+     * @return Confirmed payment summary.
+     */
     @Override
     @Transactional
     public PaymentSummaryResponse confirmPayment(Long serviceId) {
@@ -292,11 +316,12 @@ public class ServiceServiceImpl implements ServiceService {
                 payment.getConfirmed());
     }
 
-    // -------------------------------------------------------------------------
-    // acceptService()
-    // Immediate:  REQUESTED → ACCEPTED
-    // Scheduled:  REQUESTED → WAITING_FOR_START
-    // -------------------------------------------------------------------------
+    /**
+     * Allows a partner to accept a requested service.
+     * @param serviceId Service ID to accept.
+     * @param partnerId Partner ID.
+     * @return Updated service with assigned partner.
+     */
     @Override
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -321,7 +346,6 @@ public class ServiceServiceImpl implements ServiceService {
             throw new BusinessRuleViolationException("Partner is not available to accept services");
         }
 
-        // Updated to cover all live partner-side statuses (includes WAITING_FOR_START, READY)
         boolean hasActiveService = serviceRepository.existsByPartner_IdAndStatusIn(
                 partnerId, PARTNER_ACTIVE_STATUSES);
 
@@ -332,7 +356,6 @@ public class ServiceServiceImpl implements ServiceService {
         service.setPartner(partner);
         service.setAcceptedAt(LocalDateTime.now());
 
-        // Branching: scheduled services hold in WAITING_FOR_START until their time window opens
         if (service.isScheduled()) {
             service.setStatus(ServiceStatus.WAITING_FOR_START);
         } else {
@@ -351,11 +374,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
-    // -------------------------------------------------------------------------
-    // readyService()
-    // Immediate:  ACCEPTED          → READY
-    // Scheduled:  WAITING_FOR_START → READY
-    // -------------------------------------------------------------------------
+    /**
+     * Sets the service to READY status.
+     * @param serviceId Service ID.
+     * @param partnerId Assigned partner ID.
+     * @return Updated service with READY status.
+     */
     @Override
     @Transactional
     public ServiceResponse readyService(Long serviceId, Long partnerId) {
@@ -369,13 +393,13 @@ public class ServiceServiceImpl implements ServiceService {
                     "Only ACCEPTED or WAITING_FOR_START services can be set to READY");
         }
 
-        // Scheduled time-gate: must not mark as ready before the reserved date/time
+        // IMPROVEMENT: Added 1-minute grace period to account for clock skew
         if (service.isScheduled()
                 && service.getScheduledFor() != null
-                && LocalDateTime.now().isBefore(service.getScheduledFor())) {
+                && LocalDateTime.now(ZoneOffset.UTC).isBefore(service.getScheduledFor().minusMinutes(1))) {
             throw new BusinessRuleViolationException(
-                    "Scheduled service cannot be set to READY before its scheduled time: "
-                            + service.getScheduledFor());
+                    "Scheduled service cannot be set to READY before its scheduled time (1-min grace allowed): "
+                            + service.getScheduledFor() + " UTC");
         }
 
         if (!partnerId.equals(service.getPartner().getId())) {
@@ -399,11 +423,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
-    // -------------------------------------------------------------------------
-    // startService()
-    // Both flows now enter from READY (not ACCEPTED).
-    // Scheduled services add a time-gate: now >= scheduledFor.
-    // -------------------------------------------------------------------------
+    /**
+     * Formally starts the tour (IN_PROGRESS status).
+     * @param serviceId Service ID.
+     * @param partnerId Assigned partner ID.
+     * @return Updated service with IN_PROGRESS status.
+     */
     @Override
     @Transactional
     public ServiceResponse startService(Long serviceId, Long partnerId) {
@@ -423,13 +448,13 @@ public class ServiceServiceImpl implements ServiceService {
             throw new BusinessRuleViolationException("Partner account is not active");
         }
 
-        // Scheduled time-gate: must not start before the reserved date/time
+        // IMPROVEMENT: Added 1-minute grace period to account for clock skew
         if (service.isScheduled()
                 && service.getScheduledFor() != null
-                && LocalDateTime.now().isBefore(service.getScheduledFor())) {
+                && LocalDateTime.now(ZoneOffset.UTC).isBefore(service.getScheduledFor().minusMinutes(1))) {
             throw new BusinessRuleViolationException(
-                    "Scheduled service cannot be started before its scheduled time: "
-                            + service.getScheduledFor());
+                    "Scheduled service cannot be started before its scheduled time (1-min grace allowed): "
+                            + service.getScheduledFor() + " UTC");
         }
 
         service.setStatus(ServiceStatus.IN_PROGRESS);
@@ -447,9 +472,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
-    // -------------------------------------------------------------------------
-    // Complete operations
-    // -------------------------------------------------------------------------
+    /**
+     * Completes a service from the partner side.
+     * @param serviceId Service ID.
+     * @param partnerId Assigned partner ID.
+     * @return Completed service details.
+     */
     @Override
     @Transactional
     public ServiceResponse completeService(Long serviceId, Long partnerId) {
@@ -494,6 +522,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Completes a service from the client side.
+     * @param serviceId Service ID.
+     * @param clientId Owner client ID.
+     * @return Completed service details.
+     */
     @Override
     @Transactional
     public ServiceResponse completeServiceByClient(Long serviceId, Long clientId) {
@@ -535,10 +569,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
-    // -------------------------------------------------------------------------
-    // cancelService()
-    // Added WAITING_FOR_START and READY to the cancellable set.
-    // -------------------------------------------------------------------------
+    /**
+     * Cancels a requested or accepted service from the client side.
+     * @param serviceId Service ID to cancel.
+     * @param clientId Owner client ID.
+     * @return Cancelled service details.
+     */
     @Override
     @Transactional
     public ServiceResponse cancelService(Long serviceId, Long clientId) {
@@ -569,7 +605,6 @@ public class ServiceServiceImpl implements ServiceService {
                     "In-progress services can only be cancelled by the system due to connection failures");
         }
 
-        // WAITING_FOR_START and READY added alongside the original REQUESTED / ACCEPTED
         if (!Set.of(
                 ServiceStatus.REQUESTED,
                 ServiceStatus.ACCEPTED,
@@ -603,10 +638,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
-    // -------------------------------------------------------------------------
-    // cancelServiceByPartner()
-    // Added WAITING_FOR_START and READY to the cancellable set.
-    // -------------------------------------------------------------------------
+    /**
+     * Cancels an accepted service from the assigned partner side.
+     * @param serviceId Service ID to cancel.
+     * @param partnerId Assigned partner ID.
+     * @return Cancelled service details.
+     */
     @Override
     @Transactional
     public ServiceResponse cancelServiceByPartner(Long serviceId, Long partnerId) {
@@ -627,7 +664,6 @@ public class ServiceServiceImpl implements ServiceService {
                     "In-progress services cannot be cancelled by the partner");
         }
 
-        // WAITING_FOR_START and READY added alongside the original ACCEPTED
         if (!Set.of(
                 ServiceStatus.ACCEPTED,
                 ServiceStatus.WAITING_FOR_START,

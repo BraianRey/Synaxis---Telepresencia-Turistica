@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import kotlinx.coroutines.delay
+import java.time.Instant
 
 /**
  * Screen that prepares the partner for the streaming session after accepting a tour.
@@ -48,19 +49,26 @@ fun ServiceReadyScreen(
         viewModel.fetchService(serviceId)
     }
     
-    // Immediate service (no scheduled time) can start immediately
+    // Improved time-gate logic to enable start button for scheduled services
     LaunchedEffect(serviceState) {
         serviceState?.let { service ->
-            if (service.scheduled == false) {
-                isTimeToStartEnabled = true
-            } else if (service.status.uppercase() in setOf("READY", "ACCEPTED")) {
+            if (service.scheduled == false || service.status.uppercase() in setOf("READY", "ACCEPTED")) {
                 isTimeToStartEnabled = true
             } else if (service.status.uppercase() == "WAITING_FOR_START") {
-                isTimeToStartEnabled = false
-                
+                // Periodically check if the scheduled time has arrived
                 while (true) {
-                    delay(5000)
-                    viewModel.fetchService(serviceId)
+                    val scheduledTime = service.scheduledAt?.let {
+                        try { Instant.parse(it) } catch (e: Exception) { null }
+                    }
+                    
+                    val now = Instant.now()
+                    if (scheduledTime == null || now.isAfter(scheduledTime) || now == scheduledTime) {
+                        isTimeToStartEnabled = true
+                        break 
+                    } else {
+                        isTimeToStartEnabled = false
+                    }
+                    delay(5000) // Re-check every 5 seconds
                 }
             }
         }
@@ -84,10 +92,10 @@ fun ServiceReadyScreen(
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text("Cancelar servicio", color = Color.White) },
+            title = { Text(stringResource(R.string.cancel_service), color = Color.White) },
             text = {
                 Text(
-                    "¿Estás seguro de que deseas cancelar el servicio #$serviceId? Esta acción no se puede deshacer.",
+                    stringResource(R.string.cancel_service_confirm, serviceId),
                     color = Color(0xFF9DA5B3)
                 )
             },
@@ -98,12 +106,12 @@ fun ServiceReadyScreen(
                         viewModel.cancelService(serviceId)
                     }
                 ) {
-                    Text("Sí, cancelar", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.yes_cancel), color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCancelDialog = false }) {
-                    Text("Volver", color = Color(0xFF9DA5B3))
+                    Text(stringResource(R.string.go_back), color = Color(0xFF9DA5B3))
                 }
             },
             containerColor = Color(0xFF1E2430)
@@ -194,13 +202,19 @@ fun ServiceReadyScreen(
 
             // Scheduled time info banner: show when waiting for time
             if (serviceState?.scheduled == true && serviceState?.status?.uppercase() == "WAITING_FOR_START") {
+                val bannerColor = if (isTimeToStartEnabled) Color(0xFF065F46) else Color(0xFF78350F)
+                val textColor = if (isTimeToStartEnabled) Color(0xFFD1FAE5) else Color(0xFFFBD34D)
+                val text = if (isTimeToStartEnabled) 
+                    stringResource(R.string.its_time_ready)
+                    else stringResource(R.string.waiting_scheduled_time)
+
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF78350F)),
+                    colors = CardDefaults.cardColors(containerColor = bannerColor),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        text = "Esperando la hora programada. Te notificaremos cuando puedas iniciar.",
-                        color = Color(0xFFFBD34D),
+                        text = text,
+                        color = textColor,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.SemiBold,
@@ -221,8 +235,6 @@ fun ServiceReadyScreen(
                     containerColor = Color(0xFF2563EB),
                     disabledContainerColor = Color(0xFF2563EB).copy(alpha = 0.4f)
                 ),
-                // SECURITY: Server must approve via WebSocket notification
-                // Local time validation removed to prevent manipulation
                 enabled = !isActionInProgress && isTimeToStartEnabled
             ) {
                 if (uiState is ServiceReadyViewModel.ReadyUiState.Loading) {
@@ -248,7 +260,7 @@ fun ServiceReadyScreen(
                 } else {
                     Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Cancelar servicio", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text(stringResource(R.string.cancel_service), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
             }
         }
