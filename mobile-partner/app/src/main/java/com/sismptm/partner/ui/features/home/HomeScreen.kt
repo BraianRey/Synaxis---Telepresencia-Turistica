@@ -132,6 +132,23 @@ private fun HomeContent(
     val partnerServicesState by homeViewModel.partnerServicesState.collectAsState()
     val averageRating by homeViewModel.averageRating.collectAsState()
     val ratingCount by homeViewModel.ratingCount.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(partnerServicesState) {
+        val state = partnerServicesState
+        if (state is HomeViewModel.PartnerServicesUiState.Success) {
+            val services = state.services
+            services.forEach { service ->
+                if (service.status.uppercase() == "WAITING_FOR_START" && !service.scheduledAt.isNullOrBlank()) {
+                    com.sismptm.partner.manager.notification.AlarmScheduler.scheduleServiceAlarm(
+                        context,
+                        service.serviceId,
+                        service.scheduledAt
+                    )
+                }
+            }
+        }
+    }
 
     LaunchedEffect(isOnline) {
         if (isOnline) {

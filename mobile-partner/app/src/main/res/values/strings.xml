@@ -222,4 +222,7 @@
     <string name="sample_client_name">Maria Garcia</string>
     <string name="sample_location_name">Purace National Natural Park</string>
 
+    <!-- Notification Permission -->
+    <string name="notification_permission_required">Notification Permission Required</string>
+    <string name="notification_permission_explanation">This app requires notification access to send you reminders when your scheduled tours are about to start. Please enable permissions to continue.</string>
 </resources>

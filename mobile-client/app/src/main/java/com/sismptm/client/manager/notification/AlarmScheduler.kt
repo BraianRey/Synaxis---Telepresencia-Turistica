@@ -4,12 +4,14 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.time.Instant
 
-/**
- * Utility to schedule exact alarms for tour start times on the client side.
- */
 object AlarmScheduler {
+
+    /**
+     * Schedules a tour reminder alarm at the exact scheduled time using AlarmManager, falling back to a non-exact alarm if exact scheduling is restricted.
+     */
     fun scheduleServiceAlarm(context: Context, serviceId: Long, scheduledAt: String) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, NotificationReceiver::class.java).apply {
@@ -25,20 +27,28 @@ object AlarmScheduler {
 
         try {
             val triggerTime = Instant.parse(scheduledAt).toEpochMilli()
-            
-            // For clients, we notify exactly at the scheduled time
             if (triggerTime > System.currentTimeMillis()) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerTime,
-                    pendingIntent
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
             }
-        } catch (e: Exception) {
-            // Invalid date format
+        } catch (_: Exception) {
         }
     }
 
+    /**
+     * Cancels any previously scheduled alarm for the specified service.
+     */
     fun cancelServiceAlarm(context: Context, serviceId: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, NotificationReceiver::class.java)

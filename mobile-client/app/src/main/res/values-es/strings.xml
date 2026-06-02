@@ -239,4 +239,8 @@
     <string name="rating_error">Error al enviar la calificación. Intenta de nuevo.</string>
     <string name="comment_too_long">El comentario no puede superar los 200 caracteres.</string>
     <string name="not_rated_yet">Sin calificar aún</string>
+
+    <!-- Notification Permission -->
+    <string name="notification_permission_required">Permiso de Notificación Requerido</string>
+    <string name="notification_permission_explanation">Esta aplicación requiere acceso a las notificaciones para enviarte recordatorios cuando tus tours programados estén a punto de comenzar. Por favor, habilita los permisos para continuar.</string>
 </resources>

@@ -215,4 +215,8 @@
     <string name="route_historic_downtown_tour">Ruta: Tour por el Centro Histórico</string>
     <string name="sample_client_name">María García</string>
     <string name="sample_location_name">Parque Nacional Natural Puracé</string>
+
+    <!-- Notification Permission -->
+    <string name="notification_permission_required">Permiso de Notificación Requerido</string>
+    <string name="notification_permission_explanation">Esta aplicación requiere acceso a las notificaciones para enviarte recordatorios cuando tus tours programados estén a punto de comenzar. Por favor, habilita los permisos para continuar.</string>
 </resources>

@@ -67,6 +67,22 @@ fun HomeScreen(
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+
+    LaunchedEffect(servicesState) {
+        val state = servicesState
+        if (state is HomeViewModel.ClientServicesUiState.Success) {
+            state.services.forEach { service ->
+                if (service.status.uppercase() in setOf("ACCEPTED", "WAITING_FOR_START") && !service.scheduledAt.isNullOrBlank()) {
+                    com.sismptm.client.manager.notification.AlarmScheduler.scheduleServiceAlarm(
+                        context,
+                        service.serviceId,
+                        service.scheduledAt
+                    )
+                }
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
