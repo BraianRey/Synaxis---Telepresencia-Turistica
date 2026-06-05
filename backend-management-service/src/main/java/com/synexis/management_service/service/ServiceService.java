@@ -20,6 +20,8 @@ public interface ServiceService {
 
     List<ServiceResponse> getAvailableServices();
 
+    List<ServiceResponse> getActiveServicesByClient(Long clientId);
+
     ServiceResponse getServiceForClient(Long serviceId, Long clientId);
 
     ServiceResponse getServiceForPartner(Long serviceId, Long partnerId);

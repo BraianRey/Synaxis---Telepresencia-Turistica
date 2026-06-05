@@ -25,6 +25,8 @@ public interface ServiceRepository extends JpaRepository<ServiceEntity, Long> {
 
     Optional<ServiceEntity> findById(Long serviceId);
 
+    List<ServiceEntity> findByClient_IdAndStatusIn(Long clientId, List<ServiceStatus> statuses);
+
     boolean existsByClient_IdAndStatusIn(Long authenticatedClientId, Set<ServiceStatus> activeServiceStatuses);
 
     boolean existsByPartner_IdAndStatusIn(Long partnerId, Set<ServiceStatus> activeServiceStatuses);
