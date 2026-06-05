@@ -11,16 +11,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ViewList
-import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,6 +31,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,19 +40,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
-import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
-import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.ui.features.tour.ServiceViewModel
+import com.sismptm.client.ui.features.profile.ProfileScreen
+import android.util.Log
 
 @Composable
 fun HomeScreen(
     onNavigateToPartnerSearch: () -> Unit,
     onOpenServiceWaiting: (Long) -> Unit,
-    onLogout: () -> Unit,
     onNavigateToMapService: () -> Unit,
+    onNavigateToReserveMap: () -> Unit,
+    onLogout: () -> Unit,
     homeViewModel: HomeViewModel = viewModel(),
+    @Suppress("UnusedParameter")
     serviceViewModel: ServiceViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -79,14 +80,16 @@ fun HomeScreen(
                     uiState = uiState,
                     servicesState = servicesState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
-                    onNavigateToMapService = onNavigateToMapService
+                    onNavigateToMapService = onNavigateToMapService,
+                    onNavigateToReserveMap = onNavigateToReserveMap,
+                    onAvatarClick = { selectedTab = 2 }
                 )
                 1 -> ToursTabContent(
                     servicesState = servicesState,
                     onRefresh = { homeViewModel.loadClientServices() },
                     onOpenWaiting = onOpenServiceWaiting
                 )
-                2 -> ProfileTab(onLogout)
+                2 -> ProfileScreen(onLogout)
             }
         }
     }
@@ -96,8 +99,11 @@ fun HomeScreen(
 private fun ExploreTabContent(
     uiState: HomeUiState,
     servicesState: HomeViewModel.ClientServicesUiState,
+    @Suppress("UnusedParameter")
     onNavigateToPartnerSearch: () -> Unit,
-    onNavigateToMapService: () -> Unit
+    onNavigateToMapService: () -> Unit,
+    onNavigateToReserveMap: () -> Unit,
+    onAvatarClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -105,7 +111,7 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        HomeHeader(uiState.userName)
+        HomeHeader(uiState.userName, uiState.picDirectory, onAvatarClick)
         SearchBar()
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -122,6 +128,25 @@ private fun ExploreTabContent(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = PrimaryAccent
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = onNavigateToReserveMap,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 20.dp)
+                .fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "Reserve service",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
             )
         }
 
@@ -143,7 +168,7 @@ private fun ExploreTabContent(
 }
 
 @Composable
-private fun HomeHeader(userName: String) {
+private fun HomeHeader(userName: String, picDirectory: String? = null, onAvatarClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -170,15 +195,32 @@ private fun HomeHeader(userName: String) {
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(CardBackground),
+                .background(CardBackground)
+                .clickable { onAvatarClick() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = "Avatar",
-                tint = TextTertiary,
-                modifier = Modifier.size(28.dp)
-            )
+            if (picDirectory != null) {
+                val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                android.util.Log.d("HomeDebug", "Loading profile image from: $imageUrl")
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .crossfade(300)
+                        .build(),
+                    contentDescription = "Profile picture",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Person,
+                    contentDescription = "Avatar",
+                    tint = TextTertiary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
@@ -223,136 +265,6 @@ private fun SearchBar() {
             focusedTextColor = TextPrimary
         )
     )
-}
-
-@Composable
-private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x4400CC44))
-            )
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Background)
-            )
-            Icon(
-                imageVector = Icons.Outlined.Videocam,
-                contentDescription = city,
-                tint = Color(0xFF00CC44),
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        Card(
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .wrapContentSize(),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xCC000000))
-        ) {
-            Text(
-                text = stringResource(R.string.home_city_guides, city, guides),
-                fontSize = 10.sp,
-                color = Color.White,
-                modifier = Modifier.padding(6.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun DestinationsSection(destinations: List<Destination>) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.home_destinations_title),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 1.2.sp,
-            color = TextPrimary
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(destinations) { destination ->
-                DestinationCard(destination)
-            }
-        }
-    }
-}
-
-@Composable
-private fun DestinationCard(destination: Destination) {
-    val gradientColors = when (destination.id % 4) {
-        0 -> listOf(Color(0xFF1B4332), Color(0xFF0D1F17))
-        1 -> listOf(Color(0xFF1A237E), Color(0xFF0D1129))
-        2 -> listOf(Color(0xFF4A148C), Color(0xFF1A0533))
-        3 -> listOf(Color(0xFF7B3F00), Color(0xFF2D1700))
-        else -> listOf(Color(0xFF1B4332), Color(0xFF0D1F17))
-    }
-
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .height(200.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(gradientColors))
-        ) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = destination.city,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = destination.country,
-                    fontSize = 12.sp,
-                    color = TextTertiary
-                )
-            }
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = destination.placeName,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = stringResource(R.string.home_active_partners, destination.activePartners),
-                    fontSize = 11.sp,
-                    color = Color(0xFF00CC44)
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -401,40 +313,88 @@ private fun ToursTabContent(
                         val activeServices = servicesState.services.filter { it.status.uppercase() in activeStatuses }
                         val historyServices = servicesState.services.filter { it.status.uppercase() !in activeStatuses }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text(
-                                text = stringResource(R.string.home_services_active),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            if (activeServices.isEmpty()) {
-                                Text(text = stringResource(R.string.home_services_no_active), color = TextSecondary)
-                            } else {
-                                activeServices.forEach { service ->
-                                    ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                text = stringResource(R.string.home_services_history),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            if (historyServices.isEmpty()) {
-                                Text(text = stringResource(R.string.home_services_no_history), color = TextSecondary)
-                            } else {
-                                historyServices.forEach { service ->
-                                    ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
-                                }
-                            }
-                        }
+                        ClientServicesSections(
+                            activeServices = activeServices,
+                            historyServices = historyServices,
+                            onOpenWaiting = onOpenWaiting
+                        )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ClientServicesSections(
+    activeServices: List<ServiceResponse>,
+    historyServices: List<ServiceResponse>,
+    onOpenWaiting: (Long) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.home_services_active),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        if (activeServices.isEmpty()) {
+            Text(text = stringResource(R.string.home_services_no_active), color = TextSecondary)
+        } else {
+            activeServices.forEach { service ->
+                ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(R.string.home_services_history),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        if (historyServices.isEmpty()) {
+            Text(text = stringResource(R.string.home_services_no_history), color = TextSecondary)
+        } else {
+            historyServices.forEach { service ->
+                ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+            }
+        }
+    }
+}
+
+@Composable
+private fun formatServiceDateText(service: ServiceResponse): String {
+    val iso = service.endedAt ?: service.startedAt
+    return if (iso == null) {
+        "${stringResource(R.string.service_prefix)}${service.serviceId}"
+    } else {
+        try {
+            val instant = java.time.Instant.parse(iso)
+            val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(java.util.Locale.getDefault())
+            fmt.format(zoned)
+        } catch (e: java.time.format.DateTimeParseException) {
+            Log.e("HomeScreen", "Failed to parse date", e)
+            "${stringResource(R.string.service_prefix)}${service.serviceId}"
+        }
+    }
+}
+
+@Composable
+private fun formatScheduledText(scheduledAt: String?): String? {
+    return if (scheduledAt.isNullOrBlank()) {
+        null
+    } else {
+        try {
+            val instant = java.time.Instant.parse(scheduledAt)
+            val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+            "Scheduled: ${fmt.format(zoned)}"
+        } catch (e: java.time.format.DateTimeParseException) {
+            Log.e("HomeScreen", "Failed to parse scheduled date", e)
+            "Scheduled"
         }
     }
 }
@@ -454,23 +414,11 @@ private fun ClientServiceCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val dateText = run {
-                val iso = service.endedAt ?: service.startedAt
-                if (iso == null) {
-                    "${stringResource(R.string.service_prefix)}${service.serviceId}"
-                } else {
-                    try {
-                        val instant = java.time.Instant.parse(iso)
-                        val zoned = instant.atZone(java.time.ZoneId.systemDefault())
-                        val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(java.util.Locale.getDefault())
-                        fmt.format(zoned)
-                    } catch (e: Exception) {
-                        "${stringResource(R.string.service_prefix)}${service.serviceId}"
-                    }
-                }
-            }
-            Text(dateText, color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(formatServiceDateText(service), color = Color.White, fontWeight = FontWeight.SemiBold)
             ServiceStatusBadge(status = service.status)
+            formatScheduledText(service.scheduledAt)?.let { scheduledText ->
+                Text(scheduledText, color = Color(0xFF7C3AED), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            }
             service.locationReferenceImageUrl?.let { imageUrl ->
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -526,59 +474,6 @@ private fun ServiceStatusBadge(status: String) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
         )
-    }
-}
-
-@Composable
-private fun ProfileTab(onLogout: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                tint = TextTertiary,
-                modifier = Modifier.size(64.dp)
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.home_profile),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-            Spacer(Modifier.height(32.dp))
-            OutlinedButton(
-                onClick = {
-                    SessionManager.clearSession()
-                    onLogout()
-                },
-                border = BorderStroke(1.dp, TextTertiary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .height(48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = null,
-                    tint = TextTertiary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.home_sign_out),
-                    color = TextTertiary
-                )
-            }
-        }
     }
 }
 
@@ -729,4 +624,3 @@ private fun BottomNavigationBar(
         )
     }
 }
-

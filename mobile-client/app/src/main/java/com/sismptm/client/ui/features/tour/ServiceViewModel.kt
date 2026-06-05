@@ -24,8 +24,8 @@ class ServiceViewModel : ViewModel() {
     private val _createServiceState = MutableStateFlow<CreateServiceUiState>(CreateServiceUiState.Idle)
     val createServiceState: StateFlow<CreateServiceUiState> = _createServiceState
 
-    fun createService(location: MapLocation, description: String) {
-        Log.d(TAG, "[START] createService() called | lat=${location.lat} lon=${location.lon} desc='$description'")
+    fun createService(location: MapLocation, description: String, scheduledAt: String? = null) {
+        Log.d(TAG, "[START] createService() called | lat=${location.lat} lon=${location.lon} desc='$description' scheduledAt=$scheduledAt")
         viewModelScope.launch {
             _createServiceState.value = CreateServiceUiState.Loading
             Log.d(TAG, "[STATE] Transition to Loading")
@@ -34,7 +34,8 @@ class ServiceViewModel : ViewModel() {
                 val request = CreateServiceRequest(
                     longitude = location.lon,
                     latitude = location.lat,
-                    startLocationDescription = description.takeIf { it.isNotBlank() }
+                    startLocationDescription = description.takeIf { it.isNotBlank() },
+                    scheduledAt = scheduledAt
                 )
                 Log.d(TAG, "[NETWORK] Sending request: $request")
 
@@ -43,7 +44,7 @@ class ServiceViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
                     val serviceId = response.body()?.serviceId
-                        ?: throw IllegalStateException("Empty response body")
+                        ?: error("Empty response body")
                     Log.d(TAG, "[SUCCESS] Service created! serviceId=$serviceId")
                     _createServiceState.value = CreateServiceUiState.Success(serviceId)
                 } else {
@@ -51,8 +52,9 @@ class ServiceViewModel : ViewModel() {
                     Log.e(TAG, "[ERROR] Code ${response.code()}: $errorBody")
                     _createServiceState.value = CreateServiceUiState.Error("Error: ${response.code()} - $errorBody")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "[EXCEPTION] in createService: ${e.javaClass.simpleName} - ${e.message}", e)
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error creating service
+                Log.e(TAG, "Error creating service", e)
                 _createServiceState.value = CreateServiceUiState.Error(e.message ?: "Unknown error")
             }
         }

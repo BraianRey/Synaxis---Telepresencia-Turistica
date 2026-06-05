@@ -92,7 +92,6 @@ fun RequestScreen(
     var hasNavigatedToWaiting by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        // Only check once per screen entry; skip if we already handled it.
         if (!hasNavigatedToWaiting) {
             viewModel.checkActiveServiceBeforeCreate()
         }
@@ -107,7 +106,6 @@ fun RequestScreen(
         }
     }
 
-    var areaExpanded by remember { mutableStateOf(false) }
     var selectedArea by remember { mutableStateOf<RequestAreaOption?>(null) }
     var meetingPointText by remember { mutableStateOf("") }
 
@@ -125,53 +123,25 @@ fun RequestScreen(
         unfocusedBorderColor = DividerBorder
     )
 
-    if (successState != null) {
-        RequestCreatedDialog(
-            service = successState.service,
-            areaName = successState.service.startLocationDescription ?: stringResource(R.string.not_specified),
-            onDismiss = { viewModel.resetState() },
-            onConfirm = {
-                viewModel.resetState()
-                onViewDetails(successState.service.serviceId)
-            }
-        )
-    }
-
-    if (activeServiceState != null) {
-        ActiveServiceDialog(
-            service = activeServiceState.service,
-            message = activeServiceState.message,
-            onDismiss = { viewModel.resetState() },
-            onConfirm = {
-                viewModel.resetState()
-                onViewDetails(activeServiceState.service.serviceId)
-            }
-        )
-    }
+    // Dialogs
+    RequestDialogs(
+        successState = successState,
+        activeServiceState = activeServiceState,
+        onDismissSuccess = { viewModel.resetState() },
+        onConfirmSuccess = {
+            viewModel.resetState()
+            onViewDetails(successState!!.service.serviceId)
+        },
+        onDismissActive = { viewModel.resetState() },
+        onConfirmActive = {
+            viewModel.resetState()
+            onViewDetails(activeServiceState!!.service.serviceId)
+        }
+    )
 
     Scaffold(
         containerColor = Background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.create_service_request),
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
-            )
-        }
+        topBar = { RequestTopBar(onBack = onBack) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -181,90 +151,16 @@ fun RequestScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.service_need_description),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = stringResource(R.string.tour_request_explanation),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
+            RequestFormCard(
+                selectedArea = selectedArea,
+                onAreaSelected = { selectedArea = it },
+                meetingPointText = meetingPointText,
+                onMeetingPointChange = { meetingPointText = it },
+                requestFieldColors = requestFieldColors
+            )
 
-                    ExposedDropdownMenuBox(
-                        expanded = areaExpanded,
-                        onExpandedChange = { areaExpanded = !areaExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedArea?.label.orEmpty(),
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.destination_area)) },
-                            placeholder = { Text(stringResource(R.string.select_city)) },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
-                            },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = requestFieldColors
-                        )
-                        DropdownMenu(
-                            expanded = areaExpanded,
-                            onDismissRequest = { areaExpanded = false }
-                        ) {
-                            requestAreaOptions.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option.label) },
-                                    onClick = {
-                                        selectedArea = option
-                                        areaExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-
-                    OutlinedTextField(
-                        value = meetingPointText,
-                        onValueChange = { meetingPointText = it.take(255) },
-                        label = { Text(stringResource(R.string.meeting_point_notes)) },
-                        placeholder = { Text(stringResource(R.string.meeting_point_placeholder)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = requestFieldColors
-                    )
-                }
-            }
-
-            if (errorState != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text(
-                        text = errorState.message,
-                        color = Color(0xFFC62828),
-                        modifier = Modifier.padding(14.dp)
-                    )
-                }
+            errorState?.let {
+                RequestErrorCard(message = it.message)
             }
 
             RequestSummaryCard(
@@ -272,35 +168,17 @@ fun RequestScreen(
                 meetingPoint = meetingPointText.ifBlank { stringResource(R.string.no_additional_notes) }
             )
 
-            Button(
+            RequestSubmitButton(
+                isLoading = isLoading,
+                enabled = canSubmit,
                 onClick = {
                     viewModel.requestTour(
                         longitude = selectedArea!!.longitude,
                         latitude = selectedArea!!.latitude,
                         locationDescription = meetingPointText
                     )
-                },
-                enabled = canSubmit,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                shape = RoundedCornerShape(28.dp),
-                contentPadding = PaddingValues(vertical = 14.dp)
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.height(20.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = stringResource(R.string.create_service),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
                 }
-            }
+            )
         }
     }
 }
@@ -333,6 +211,190 @@ private fun RequestSummaryCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RequestDialogs(
+    successState: RequestTourViewModel.RequestUiState.Success?,
+    activeServiceState: RequestTourViewModel.RequestUiState.ActiveService?,
+    onDismissSuccess: () -> Unit,
+    onConfirmSuccess: () -> Unit,
+    onDismissActive: () -> Unit,
+    onConfirmActive: () -> Unit
+) {
+    if (successState != null) {
+        RequestCreatedDialog(
+            service = successState.service,
+            areaName = successState.service.startLocationDescription ?: stringResource(R.string.not_specified),
+            onDismiss = onDismissSuccess,
+            onConfirm = onConfirmSuccess
+        )
+    }
+
+    if (activeServiceState != null) {
+        ActiveServiceDialog(
+            service = activeServiceState.service,
+            message = activeServiceState.message,
+            onDismiss = onDismissActive,
+            onConfirm = onConfirmActive
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RequestTopBar(onBack: () -> Unit) {
+    TopAppBar(
+        title = {
+            Text(
+                text = stringResource(R.string.create_service_request),
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
+                    tint = TextPrimary
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RequestFormCard(
+    selectedArea: RequestAreaOption?,
+    onAreaSelected: (RequestAreaOption) -> Unit,
+    meetingPointText: String,
+    onMeetingPointChange: (String) -> Unit,
+    requestFieldColors: androidx.compose.material3.TextFieldColors
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBackground)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.service_need_description),
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(R.string.tour_request_explanation),
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+
+            var areaExpanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = areaExpanded,
+                onExpandedChange = { areaExpanded = !areaExpanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedArea?.label.orEmpty(),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.destination_area)) },
+                    placeholder = { Text(stringResource(R.string.select_city)) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = areaExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = requestFieldColors
+                )
+                DropdownMenu(
+                    expanded = areaExpanded,
+                    onDismissRequest = { areaExpanded = false }
+                ) {
+                    requestAreaOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option.label) },
+                            onClick = {
+                                onAreaSelected(option)
+                                areaExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            OutlinedTextField(
+                value = meetingPointText,
+                onValueChange = { onMeetingPointChange(it.take(255)) },
+                label = { Text(stringResource(R.string.meeting_point_notes)) },
+                placeholder = { Text(stringResource(R.string.meeting_point_placeholder)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                shape = RoundedCornerShape(12.dp),
+                colors = requestFieldColors
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RequestErrorCard(message: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Text(
+            text = message,
+            color = Color(0xFFC62828),
+            modifier = Modifier.padding(14.dp)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RequestSubmitButton(
+    isLoading: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+        shape = RoundedCornerShape(28.dp),
+        contentPadding = PaddingValues(vertical = 14.dp)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.height(20.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.create_service),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+        }
+    }
+}
+
 @Composable
 private fun SummaryRow(label: String, value: String) {
     Row(
@@ -350,6 +412,7 @@ private fun SummaryRow(label: String, value: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RequestCreatedDialog(
     service: ServiceResponse,
@@ -381,6 +444,7 @@ private fun RequestCreatedDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActiveServiceDialog(
     service: ServiceResponse,

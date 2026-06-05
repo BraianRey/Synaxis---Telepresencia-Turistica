@@ -1,6 +1,5 @@
 package com.sismptm.client.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,12 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
+// Hex constants for Theme colors
+private const val HEX_DARK_SURFACE = 0xFF252525
+
 private val DarkColorScheme = darkColorScheme(
     primary = TourPresenceWhite,
     secondary = PurpleGrey80,
     tertiary = Pink80,
     background = DarkBackground,
-    surface = Color(0xFF252525),
+    surface = Color(HEX_DARK_SURFACE),
     surfaceVariant = TourPresenceBeige,
     onPrimary = TourPresenceBg,
     onBackground = TourPresenceWhite,

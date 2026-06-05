@@ -94,6 +94,20 @@ class StreamingViewModel(application: Application) :
         signalingClient?.connect()
     }
 
+    /**
+     * Pauses decoding/rendering of the remote view when the app goes to the background.
+     */
+    fun pauseDecoding() {
+        webRTCManager?.detachRemoteView()
+    }
+
+    /**
+     * Resumes rendering of the remote view when the app returns to the foreground.
+     */
+    fun resumeDecoding(surfaceViewRenderer: SurfaceViewRenderer) {
+        webRTCManager?.attachRemoteView(surfaceViewRenderer)
+    }
+
     fun onConnectionStateChanged(state: PeerConnection.PeerConnectionState) {
         Log.d(TAG, "PeerConnection State Changed: $state")
         _connectionState.value = state
@@ -145,7 +159,7 @@ class StreamingViewModel(application: Application) :
                 if (fps < 12.0 && framesDiff > 0) {
                     lowFpsCount++
                     if (lowFpsCount >= 4) {
-                        Log.w(TAG, "Persistent Low FPS ($fps), refreshing...")
+                        Log.w(TAG, "Persistent Low FPS ($fps), triggering network ICE restart/renegotiation...")
                         lowFpsCount = 0
                         refreshConnection()
                     }
@@ -158,6 +172,10 @@ class StreamingViewModel(application: Application) :
         }
     }
 
+    /**
+     * Sends a join message. Since the Partner no longer reboots the camera on join, 
+     * this effectively serves as a seamless network ICE restart / SDP renegotiation request.
+     */
     private fun refreshConnection() {
         signalingClient?.sendJoin(partnerId)
     }
@@ -199,7 +217,8 @@ class StreamingViewModel(application: Application) :
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error checking service status: ${e.message}")
+                // Generic exception kept: Network error checking service status
+                Log.e(TAG, "Error checking service status", e)
             }
         }
     }
@@ -214,7 +233,8 @@ class StreamingViewModel(application: Application) :
                 status == "COMPLETED"
             } else false
         } catch (e: Exception) {
-            Log.e(TAG, "Error in pre-reconnect status check: ${e.message}")
+            // Generic exception kept: Network error checking service status
+            Log.e(TAG, "Error in pre-reconnect status check", e)
             false
         }
     }
@@ -238,7 +258,8 @@ class StreamingViewModel(application: Application) :
                         "${completeResponse.code()}")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error calling client-complete: ${e.message}")
+                // Generic exception kept: Network error calling client-complete
+                Log.e(TAG, "Error calling client-complete", e)
             } finally {
                 // Close WebRTC and signaling after backend call attempt
                 signalingClient?.close()

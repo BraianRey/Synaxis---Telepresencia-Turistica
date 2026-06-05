@@ -3,8 +3,20 @@ package com.sismptm.client.ui.features.auth
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,8 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.R
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.sismptm.client.ui.theme.*
-
+import com.sismptm.client.ui.theme.Background
+import com.sismptm.client.ui.theme.PrimaryAccent
+import com.sismptm.client.ui.theme.TextPrimary
+import com.sismptm.client.ui.theme.TextTertiary
+import android.util.Log
 /**
  * Initial screen of the application that welcomes the user.
  * @param onGetStarted Callback to navigate to the registration screen.
@@ -115,8 +130,6 @@ fun WelcomeScreen(
                     )
                 }
             }
-        }
-
-        // Removed temporary test button for streaming (no longer needed)
+        }    
     }
 }

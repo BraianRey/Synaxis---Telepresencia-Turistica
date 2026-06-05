@@ -2,12 +2,27 @@ package com.sismptm.client.ui.features.map
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,10 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.R
+import java.util.Locale
 
 @Composable
 fun LocationDescriptionSheet(
     viewModel: MapViewModel,
+    reserveMode: Boolean = false,
     onConfirm: (location: MapLocation, description: String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -61,7 +78,8 @@ fun LocationDescriptionSheet(
 
         selectedLocation?.let {
             Text(
-                text = "Lat: ${String.format("%.4f", it.lat)} | Lon: ${String.format("%.4f", it.lon)}",
+                text = "Lat: ${String.format(Locale.US, "%.4f", it.lat)} | " +
+                    "Lon: ${String.format(Locale.US, "%.4f", it.lon)}",
                 fontSize = 12.sp,
                 color = Color(0xFFAAAAAA),
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -75,7 +93,12 @@ fun LocationDescriptionSheet(
                 .fillMaxWidth()
                 .heightIn(min = 100.dp)
                 .padding(bottom = 16.dp),
-            placeholder = { Text(stringResource(R.string.location_placeholder_example), color = Color(0xFF888888)) },
+            placeholder = {
+                Text(
+                    stringResource(R.string.location_placeholder_example),
+                    color = Color(0xFF888888)
+                )
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color(0xFF444444),
                 focusedBorderColor = Color(0xFF2196F3),
@@ -88,19 +111,32 @@ fun LocationDescriptionSheet(
 
         Button(
             onClick = {
-                Log.d("LocationSheet", "[UI] Confirm button clicked | location=$selectedLocation | desc='$description'")
+                Log.d(
+                "LocationSheet",
+                "[UI] Confirm button clicked | location=$selectedLocation | desc='$description'"
+            )
                 selectedLocation?.let { loc ->
                     Log.d("LocationSheet", "[ACTION] Calling onConfirm with loc=$loc")
                     onConfirm(loc, description)
-                } ?: Log.w("LocationSheet", "[WARNING] selectedLocation is NULL — button should be disabled")
+                } ?: Log.w(
+                    "LocationSheet",
+                    "[WARNING] selectedLocation is NULL — button should be disabled"
+                )
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (reserveMode) Color(0xFF7C3AED) else Color(0xFF2196F3)
+            ),
             enabled = selectedLocation != null
         ) {
-            Text(stringResource(R.string.confirm_location), color = Color.White, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (reserveMode) "Continue to Schedule"
+                else stringResource(R.string.confirm_location),
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

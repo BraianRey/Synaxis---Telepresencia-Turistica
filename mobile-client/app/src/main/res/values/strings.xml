@@ -205,6 +205,14 @@
     <string name="currency_suffix">COP</string>
     <string name="price_format">%1$s COP</string>
     <string name="currency_format">$%1$s COP</string>
+    
+    <!-- Profile additions -->
+    <string name="my_profile">My Profile</string>
+    <string name="preferred_language">Preferred Language</string>
+    <string name="edit">Edit</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="cancel">Cancel</string>
+    <string name="role">Role</string>
     <string name="search_placeholder_example">Bogotá, Colombia</string>
     <string name="location_placeholder_example">E.g., Coffee shop near the park...</string>
     <string name="describe_location_title">Describe the location</string>
@@ -213,4 +221,14 @@
     <string name="nav_favorites">Favorites</string>
     <string name="nav_messages">Messages</string>
     <string name="nav_account">Account</string>
+
+    <!-- Rating -->
+    <string name="rate_your_guide">Rate your guide</string>
+    <string name="leave_comment">Leave a comment (optional, max 200 characters)</string>
+    <string name="submit_rating">Submit Rating</string>
+    <string name="skip">Skip</string>
+    <string name="rating_submitted">Thank you! Your rating has been submitted.</string>
+    <string name="rating_error">Failed to submit rating. Try again.</string>
+    <string name="comment_too_long">Comment must not exceed 200 characters.</string>
+    <string name="not_rated_yet">Not rated yet</string>
 </resources>

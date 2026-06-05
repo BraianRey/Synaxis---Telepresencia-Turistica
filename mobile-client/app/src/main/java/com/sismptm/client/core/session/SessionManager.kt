@@ -24,12 +24,19 @@ object SessionManager {
     var userRole: String = ""
         private set
 
+    var picDirectory: String? = null
+        private set
+
     private val _languageFlow = MutableStateFlow("en")
     val languageFlow: StateFlow<String> = _languageFlow.asStateFlow()
 
     var language: String
         get() = _languageFlow.value
         private set(value) { _languageFlow.value = value }
+
+    fun updateLanguage(lang: String) {
+        language = lang
+    }
 
     /**
      * Checks if a user is currently logged in based on the presence of an access token.
@@ -39,13 +46,14 @@ object SessionManager {
     /**
      * Saves the user session data.
      */
-    fun saveSession(token: String, id: Long, name: String, email: String, role: String, lang: String? = "en") {
+    fun saveSession(token: String, id: Long, name: String, email: String, role: String, lang: String? = "en", picDirectory: String? = null) {
         accessToken = token
         userId = id
         userName = name
         userEmail = email
         userRole = role
         language = lang ?: "en"
+        this.picDirectory = picDirectory
     }
 
     /**
@@ -58,5 +66,6 @@ object SessionManager {
         userEmail = ""
         userRole = ""
         language = "en"
+        picDirectory = null
     }
 }

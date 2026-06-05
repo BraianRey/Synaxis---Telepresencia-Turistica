@@ -112,7 +112,7 @@ fun PartnerSearchScreen(
     val filteredPartners = remember(searchQuery, selectedFilter) {
         val normalizedQuery = searchQuery.normalizeSearchToken()
         val base = if (normalizedQuery.isBlank()) {
-            demoPartners // For demo, show all if empty
+            demoPartners
         } else {
             demoPartners.filter {
                 it.name.normalizeSearchToken().contains(normalizedQuery) ||
@@ -129,106 +129,8 @@ fun PartnerSearchScreen(
 
     Scaffold(
         containerColor = Background,
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Background)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text(stringResource(R.string.search_placeholder_example), color = TextSecondary, fontSize = 14.sp) },
-                        leadingIcon = {
-                            Box(
-                                modifier = Modifier
-                                    .clickable { onCancelSearch() }
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = stringResource(R.string.back),
-                                    tint = TextPrimary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        },
-                        trailingIcon = {
-                            Text(
-                                text = stringResource(R.string.search_cancel),
-                                color = PrimaryAccent,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(end = 16.dp)
-                            )
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(24.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = CardBackground,
-                            unfocusedContainerColor = CardBackground,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-                }
-            }
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = Color(0xFF1A1A1A),
-                modifier = Modifier.height(56.dp)
-            ) {
-                val items = listOf(
-                    stringResource(R.string.nav_explore),
-                    stringResource(R.string.nav_favorites),
-                    stringResource(R.string.nav_tours),
-                    stringResource(R.string.nav_messages),
-                    stringResource(R.string.nav_account)
-                )
-                val icons = listOf(
-                    Icons.Default.Home,
-                    Icons.Default.Favorite,
-                    Icons.Default.Star,
-                    Icons.Default.MailOutline,
-                    Icons.Default.Person
-                )
-                val selectedIndex = 0 // Explore is active
-                items.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = icons[index],
-                                contentDescription = item,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item,
-                                fontSize = 12.sp
-                            )
-                        },
-                        selected = index == selectedIndex,
-                        onClick = { /* Handle navigation */ },
-                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                            selectedIconColor = PrimaryAccent,
-                            selectedTextColor = PrimaryAccent,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary
-                        )
-                    )
-                }
-            }
-        }
+        topBar = { searchTopBar(searchQuery, { searchQuery = it }, onCancelSearch) },
+        bottomBar = { navigationBottomBar() }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -237,78 +139,185 @@ fun PartnerSearchScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Filter chips
-            item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(filterOptions) { option ->
-                        FilterChip(
-                            selected = selectedFilter == option,
-                            onClick = { selectedFilter = option },
-                            label = {
-                                Text(
-                                    text = option,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            },
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.height(32.dp),
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = if (selectedFilter == option) FilterChipActiveBg else FilterChipInactiveBg,
-                                labelColor = if (selectedFilter == option) TextPrimary else TextSecondary
-                            ),
-                            border = if (selectedFilter != option) androidx.compose.foundation.BorderStroke(1.dp, DividerBorder) else null
-                        )
-                    }
-                }
-            }
-
-            item {
-                Button(
-                    onClick = onRequestTour,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(vertical = 10.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.search_request_tour),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                }
-            }
-
-            // Results header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.search_partners_found, filteredPartners.size),
-                        color = TextSecondary,
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        text = stringResource(R.string.search_sort_by),
-                        color = PrimaryAccent,
-                        fontSize = 13.sp
-                    )
-                }
-            }
-
-            // Partner cards
+            item { filterSection(selectedFilter) { selectedFilter = it } }
+            item { requestTourButton(onRequestTour) }
+            item { resultsHeader(filteredPartners.size) }
             items(filteredPartners, key = { it.id }) { partner ->
                 PartnerCard(partner = partner)
             }
         }
+    }
+}
+
+@Composable
+private fun searchTopBar(searchQuery: String, onQueryChange: (String) -> Unit, onCancelSearch: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Background)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextField(
+                value = searchQuery,
+                onValueChange = onQueryChange,
+                modifier = Modifier.weight(1f),
+                placeholder = { Text(stringResource(R.string.search_placeholder_example), color = TextSecondary, fontSize = 14.sp) },
+                leadingIcon = {
+                    Box(
+                        modifier = Modifier
+                            .clickable { onCancelSearch() }
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = TextPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                trailingIcon = {
+                    Text(
+                        text = stringResource(R.string.search_cancel),
+                        color = PrimaryAccent,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(24.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = CardBackground,
+                    unfocusedContainerColor = CardBackground,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun navigationBottomBar() {
+    NavigationBar(
+        containerColor = Color(0xFF1A1A1A),
+        modifier = Modifier.height(56.dp)
+    ) {
+        val items = listOf(
+            stringResource(R.string.nav_explore),
+            stringResource(R.string.nav_favorites),
+            stringResource(R.string.nav_tours),
+            stringResource(R.string.nav_messages),
+            stringResource(R.string.nav_account)
+        )
+        val icons = listOf(
+            Icons.Default.Home,
+            Icons.Default.Favorite,
+            Icons.Default.Star,
+            Icons.Default.MailOutline,
+            Icons.Default.Person
+        )
+        val selectedIndex = 0
+        items.forEachIndexed { index, item ->
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = icons[index],
+                        contentDescription = item,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                label = {
+                    Text(
+                        text = item,
+                        fontSize = 12.sp
+                    )
+                },
+                selected = index == selectedIndex,
+                onClick = { /* Handle navigation */ },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryAccent,
+                    selectedTextColor = PrimaryAccent,
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun filterSection(selectedFilter: String, onFilterChange: (String) -> Unit) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(filterOptions) { option ->
+            FilterChip(
+                selected = selectedFilter == option,
+                onClick = { onFilterChange(option) },
+                label = {
+                    Text(
+                        text = option,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.height(32.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = if (selectedFilter == option) FilterChipActiveBg else FilterChipInactiveBg,
+                    labelColor = if (selectedFilter == option) TextPrimary else TextSecondary
+                ),
+                border = if (selectedFilter != option) androidx.compose.foundation.BorderStroke(1.dp, DividerBorder) else null
+            )
+        }
+    }
+}
+
+@Composable
+private fun requestTourButton(onRequestTour: () -> Unit) {
+    Button(
+        onClick = onRequestTour,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+        shape = RoundedCornerShape(14.dp),
+        contentPadding = PaddingValues(vertical = 10.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.search_request_tour),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+    }
+}
+
+@Composable
+private fun resultsHeader(count: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.search_partners_found, count),
+            color = TextSecondary,
+            fontSize = 13.sp
+        )
+        Text(
+            text = stringResource(R.string.search_sort_by),
+            color = PrimaryAccent,
+            fontSize = 13.sp
+        )
     }
 }
 

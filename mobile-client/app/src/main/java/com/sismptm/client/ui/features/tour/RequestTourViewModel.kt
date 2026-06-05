@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import android.util.Log
 
 class RequestTourViewModel : ViewModel() {
 
@@ -77,7 +78,9 @@ class RequestTourViewModel : ViewModel() {
                         )
                     }
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error requesting tour
+                Log.e("RequestTourViewModel", "Failed to request tour", e)
                 _uiState.value = RequestUiState.Error(
                     e.localizedMessage ?: "Connection error"
                 )
@@ -92,11 +95,10 @@ class RequestTourViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            runCatching {
-                RetrofitClient.apiService.getServicesByClient(clientId)
-            }.onSuccess { servicesResponse ->
+            try {
+                val servicesResponse = RetrofitClient.apiService.getServicesByClient(clientId)
                 if (!servicesResponse.isSuccessful) {
-                    return@onSuccess
+                    return@launch
                 }
 
                 val activeService = servicesResponse.body()
@@ -109,6 +111,9 @@ class RequestTourViewModel : ViewModel() {
                         "You already have an active service request."
                     )
                 }
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error checking active services
+                Log.e("RequestTourViewModel", "Error checking active services", e)
             }
         }
     }
@@ -128,9 +133,8 @@ class RequestTourViewModel : ViewModel() {
             return
         }
 
-        runCatching {
-            RetrofitClient.apiService.getServicesByClient(clientId)
-        }.onSuccess { servicesResponse ->
+        try {
+            val servicesResponse = RetrofitClient.apiService.getServicesByClient(clientId)
             if (!servicesResponse.isSuccessful) {
                 _uiState.value = RequestUiState.Error(message)
                 return
@@ -145,7 +149,9 @@ class RequestTourViewModel : ViewModel() {
             } else {
                 _uiState.value = RequestUiState.Error(message)
             }
-        }.onFailure {
+        } catch (e: java.io.IOException) {
+            // Generic exception kept: Network error resolving active service
+            Log.e("RequestTourViewModel", "Failed to resolve active service", e)
             _uiState.value = RequestUiState.Error(message)
         }
     }
@@ -154,8 +160,14 @@ class RequestTourViewModel : ViewModel() {
         _uiState.value = RequestUiState.Idle
     }
 
-    private fun parseBackendError(body: String): String = runCatching {
-        if (body.isBlank()) "" else JSONObject(body).optString("error", "")
-    }.getOrDefault("")
+    private fun parseBackendError(body: String): String {
+        if (body.isBlank()) return ""
+        return try {
+            JSONObject(body).optString("error", "")
+        } catch (e: org.json.JSONException) {
+            Log.e("RequestTourViewModel", "Error parsing JSON", e)
+            ""
+        }
+    }
 }
 

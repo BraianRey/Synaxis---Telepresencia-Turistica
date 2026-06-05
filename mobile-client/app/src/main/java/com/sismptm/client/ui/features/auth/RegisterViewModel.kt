@@ -31,7 +31,8 @@ class RegisterViewModel : ViewModel() {
         name: String,
         email: String,
         password: String,
-        termsAccepted: Boolean
+        termsAccepted: Boolean,
+        picDirectory: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = RegisterUiState.Loading
@@ -42,7 +43,8 @@ class RegisterViewModel : ViewModel() {
                     password = password,
                     name = name.trim(),
                     termsAccepted = termsAccepted,
-                    language = language
+                    language = language,
+                    picDirectory = picDirectory
                 )
                 val response = RetrofitClient.apiService.registerClient(request)
                 if (response.isSuccessful) {
@@ -53,7 +55,9 @@ class RegisterViewModel : ViewModel() {
                         parseErrorMessage(response.code(), errorBody)
                     )
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error during registration
+                android.util.Log.e("RegisterViewModel", "Failed to register user", e)
                 _uiState.value = RegisterUiState.Error(
                     parseErrorMessage(e)
                 )
@@ -89,4 +93,3 @@ class RegisterViewModel : ViewModel() {
         }
     }
 }
-

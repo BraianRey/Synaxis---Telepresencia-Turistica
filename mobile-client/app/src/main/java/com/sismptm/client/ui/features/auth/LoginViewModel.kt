@@ -1,5 +1,6 @@
 package com.sismptm.client.ui.features.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.client.core.network.NetworkConfig
@@ -40,6 +41,7 @@ class LoginViewModel : ViewModel() {
                 )
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
+                        Log.d("LoginDebug", "Login response: id=${loginResponse.id}, name=${loginResponse.name}, picDirectory=${loginResponse.picDirectory}")
                         // Using the new unified SessionManager
                         SessionManager.saveSession(
                             token = loginResponse.accessToken,
@@ -47,8 +49,10 @@ class LoginViewModel : ViewModel() {
                             name = loginResponse.name,
                             email = loginResponse.email,
                             role = loginResponse.role,
-                            lang = loginResponse.language
+                            lang = loginResponse.language,
+                            picDirectory = loginResponse.picDirectory
                         )
+                        Log.d("LoginDebug", "SessionManager saved: picDirectory=${SessionManager.picDirectory}")
                     }
                     _uiState.value = LoginUiState.Success
                 } else {
@@ -56,7 +60,7 @@ class LoginViewModel : ViewModel() {
                         parseError(response.code(), response.errorBody()?.string())
                     )
                 }
-            } catch (ex: Exception) {
+            } catch (ex: java.io.IOException) {
                 _uiState.value = LoginUiState.Error(parseConnectionError(ex))
             }
         }

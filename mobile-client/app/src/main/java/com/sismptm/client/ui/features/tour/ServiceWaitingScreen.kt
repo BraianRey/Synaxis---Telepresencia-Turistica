@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.font.FontWeight as TextFontWeight
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
@@ -208,14 +209,12 @@ fun ServiceWaitingScreen(
         viewModel.load(serviceId)
     }
 
-    // Auto-navigate to streaming when status is STARTED
     LaunchedEffect(status) {
         if (status == "STARTED") {
             onNavigateToStreaming(serviceId)
         }
     }
 
-    // Navigate to summary when service is COMPLETED
     LaunchedEffect(status) {
         if (status == "COMPLETED") {
             onNavigateToSummary(serviceId)
@@ -238,110 +237,133 @@ fun ServiceWaitingScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(color = PrimaryAccent)
-                Text(stringResource(R.string.loading_active_request), color = TextSecondary)
-            }
+            loadingSection(uiState.isLoading)
+            errorCard(uiState.error)
+            infoCard(uiState.infoMessage)
+            serviceDetailsCard(service, status)
+            cancelButton(canCancel, isTerminal, uiState.isCancelling) { viewModel.cancelService() }
+            refreshButton(uiState.isRefreshing, uiState.isLoading) { viewModel.manualRefresh() }
+            backToHomeButton(onBackHome)
+        }
+    }
+}
 
-            uiState.error?.let { message ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
-                ) {
-                    Text(
-                        text = message,
-                        color = Color(0xFFC62828),
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
+@Composable
+private fun loadingSection(isLoading: Boolean) {
+    if (isLoading) {
+        CircularProgressIndicator(color = PrimaryAccent)
+        Text(stringResource(R.string.loading_active_request), color = TextSecondary)
+    }
+}
 
-            uiState.infoMessage?.let { message ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
-                ) {
-                    Text(
-                        text = message,
-                        color = Color(0xFF2E7D32),
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-            }
+@Composable
+private fun errorCard(error: String?) {
+    error?.let { message ->
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+        ) {
+            Text(text = message, color = Color(0xFFC62828), modifier = Modifier.padding(12.dp))
+        }
+    }
+}
 
-            if (service != null) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = CardBackground)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        StatusBadge(status = service.status)
-                        Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            text = when (status) {
-                                "REQUESTED" -> stringResource(R.string.waiting_for_partner_accept)
-                                "ACCEPTED" -> stringResource(R.string.partner_accepted_waiting_start)
-                                "READY" -> stringResource(R.string.ready_for_tour_start)
-                                "STARTED" -> stringResource(R.string.partner_ready_streaming)
-                                "COMPLETED" -> stringResource(R.string.tour_finished_successfully)
-                                "CANCELLED" -> stringResource(R.string.tour_cancelled)
-                                else -> stringResource(R.string.checking_latest_status)
-                            },
-                            color = TextSecondary
-                        )
-                        Text("${stringResource(R.string.location_prefix)}${service.startLocationDescription ?: stringResource(R.string.not_specified)}", color = TextSecondary)
-                    }
-                }
-            }
+@Composable
+private fun infoCard(infoMessage: String?) {
+    infoMessage?.let { message ->
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+        ) {
+            Text(text = message, color = Color(0xFF2E7D32), modifier = Modifier.padding(12.dp))
+        }
+    }
+}
 
-            if (canCancel && !isTerminal) {
-                OutlinedButton(
-                    onClick = { viewModel.cancelService() },
-                    enabled = !uiState.isCancelling,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (uiState.isCancelling) {
-                        CircularProgressIndicator(color = Color(0xFFC62828))
-                    } else {
-                        Text(stringResource(R.string.cancel_tour), color = Color(0xFFC62828))
-                    }
-                }
-            }
-
-            OutlinedButton(
-                onClick = { viewModel.manualRefresh() },
-                enabled = !uiState.isRefreshing && !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth()
+@Composable
+private fun serviceDetailsCard(service: ServiceResponse?, status: String) {
+    if (service != null) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = CardBackground)
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(if (uiState.isRefreshing) stringResource(R.string.refreshing) else stringResource(R.string.refresh_status))
-            }
-
-            Button(
-                onClick = onBackHome,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.back_to_home))
+                statusBadge(status = service.status)
+                Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = when (status) {
+                        "REQUESTED" -> stringResource(R.string.waiting_for_partner_accept)
+                        "ACCEPTED" -> stringResource(R.string.partner_accepted_waiting_start)
+                        "READY" -> stringResource(R.string.ready_for_tour_start)
+                        "STARTED" -> stringResource(R.string.partner_ready_streaming)
+                        "COMPLETED" -> stringResource(R.string.tour_finished_successfully)
+                        "CANCELLED" -> stringResource(R.string.tour_cancelled)
+                        else -> stringResource(R.string.checking_latest_status)
+                    },
+                    color = TextSecondary
+                )
+                Text("${stringResource(R.string.location_prefix)}${service.startLocationDescription ?: stringResource(R.string.not_specified)}", color = TextSecondary)
             }
         }
     }
 }
 
 @Composable
-private fun StatusBadge(status: String) {
+private fun cancelButton(canCancel: Boolean, isTerminal: Boolean, isCancelling: Boolean, onCancel: () -> Unit) {
+    if (canCancel && !isTerminal) {
+        OutlinedButton(
+            onClick = onCancel,
+            enabled = !isCancelling,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isCancelling) {
+                CircularProgressIndicator(color = Color(0xFFC62828))
+            } else {
+                Text(stringResource(R.string.cancel_tour), color = Color(0xFFC62828))
+            }
+        }
+    }
+}
+
+@Composable
+private fun refreshButton(isRefreshing: Boolean, isLoading: Boolean, onRefresh: () -> Unit) {
+    OutlinedButton(
+        onClick = onRefresh,
+        enabled = !isRefreshing && !isLoading,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(if (isRefreshing) stringResource(R.string.refreshing) else stringResource(R.string.refresh_status))
+    }
+}
+
+@Composable
+private fun backToHomeButton(onBackHome: () -> Unit) {
+    Button(
+        onClick = onBackHome,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.back_to_home))
+    }
+}
+
+private fun getStatusColors(status: String): Pair<Color, Color> = when (status.uppercase()) {
+    "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
+    "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+    "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
+    "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+    "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
+    "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
+    else -> Color(0xFF37474F) to Color(0xFFECEFF1)
+}
+
+@Composable
+private fun statusBadge(status: String) {
     val normalized = status.uppercase()
     val label = if (normalized == "REQUESTED") "CREATED" else normalized
-    val (bg, fg) = when (normalized) {
-        "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
-        "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
-        "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
-        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
-        "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
-        "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
-        else -> Color(0xFF37474F) to Color(0xFFECEFF1)
-    }
+    val (bg, fg) = getStatusColors(normalized)
 
     Card(colors = CardDefaults.cardColors(containerColor = bg)) {
         Text(
