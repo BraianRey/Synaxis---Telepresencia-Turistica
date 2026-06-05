@@ -15,10 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.Color
@@ -43,8 +40,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.time.Instant
 
-private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED")
+private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY")
 private val terminalStatuses = setOf("COMPLETED", "CANCELLED")
 
 data class ServiceWaitingUiState(
@@ -204,13 +202,32 @@ fun ServiceWaitingScreen(
     val canCancel = status in cancellableStatuses
     val isTerminal = status in terminalStatuses
 
+    // Added: local time check to sync status visually when reservation time arrives
+    var isTimeToStart by remember { mutableStateOf(false) }
+    LaunchedEffect(service?.scheduledAt) {
+        val scheduledAt = service?.scheduledAt
+        if (!scheduledAt.isNullOrBlank()) {
+            while (true) {
+                try {
+                    val scheduled = Instant.parse(scheduledAt)
+                    val now = Instant.now()
+                    isTimeToStart = !now.isBefore(scheduled)
+                    if (isTimeToStart) break
+                } catch (e: Exception) {}
+                delay(5000)
+            }
+        } else {
+            isTimeToStart = false
+        }
+    }
+
     LaunchedEffect(serviceId) {
         viewModel.load(serviceId)
     }
 
-    // Auto-navigate to streaming when status is STARTED
+    // Auto-navigate to streaming when status is READY or IN_PROGRESS or STARTED
     LaunchedEffect(status) {
-        if (status == "STARTED") {
+        if (status == "READY" || status == "STARTED" || status == "IN_PROGRESS") {
             onNavigateToStreaming(serviceId)
         }
     }
@@ -278,16 +295,21 @@ fun ServiceWaitingScreen(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        StatusBadge(status = service.status)
+                        // Badge updated to reflect time arrived
+                        val badgeStatus = if (status == "WAITING_FOR_START" && isTimeToStart) "READY" else service.status
+                        StatusBadge(status = badgeStatus)
+
                         Text("${stringResource(R.string.service_prefix)}${service.serviceId}", color = TextPrimary, fontWeight = FontWeight.SemiBold)
                         Text(
-                            text = when (status) {
-                                "REQUESTED" -> stringResource(R.string.waiting_for_partner_accept)
-                                "ACCEPTED" -> stringResource(R.string.partner_accepted_waiting_start)
-                                "READY" -> stringResource(R.string.ready_for_tour_start)
-                                "STARTED" -> stringResource(R.string.partner_ready_streaming)
-                                "COMPLETED" -> stringResource(R.string.tour_finished_successfully)
-                                "CANCELLED" -> stringResource(R.string.tour_cancelled)
+                            text = when {
+                                status == "WAITING_FOR_START" && isTimeToStart -> "The scheduled time has arrived! The guide will start shortly."
+                                status == "REQUESTED" -> stringResource(R.string.waiting_for_partner_accept)
+                                status == "ACCEPTED" -> stringResource(R.string.partner_accepted_waiting_start)
+                                status == "WAITING_FOR_START" -> stringResource(R.string.partner_accepted_waiting_start)
+                                status == "READY" -> stringResource(R.string.ready_for_tour_start)
+                                status == "STARTED" || status == "IN_PROGRESS" -> stringResource(R.string.partner_ready_streaming)
+                                status == "COMPLETED" -> stringResource(R.string.tour_finished_successfully)
+                                status == "CANCELLED" -> stringResource(R.string.tour_cancelled)
                                 else -> stringResource(R.string.checking_latest_status)
                             },
                             color = TextSecondary
@@ -336,8 +358,9 @@ private fun StatusBadge(status: String) {
     val (bg, fg) = when (normalized) {
         "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
         "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        "WAITING_FOR_START" -> Color(0xFFF9A825) to Color(0xFFFFFDE7)
         "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
-        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        "STARTED", "IN_PROGRESS" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
         "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
         "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)
@@ -352,4 +375,3 @@ private fun StatusBadge(status: String) {
         )
     }
 }
-

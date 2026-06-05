@@ -41,6 +41,8 @@ public class ServiceResponse {
 
     private Instant endedAt;
     private String locationReferenceImageUrl;
+    private Boolean scheduled;
+    private Instant scheduledAt;
 
 
     /**

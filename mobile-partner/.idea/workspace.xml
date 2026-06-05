@@ -10,15 +10,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2849943-eb40-415f-8ccb-81a8ccc70ff6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/api/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/data/remote/api/ApiService.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceSummaryScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceSummaryScreen.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-en/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-en/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../backend-management-service/src/main/java/com/synexis/management_service/service/impl/ServiceServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/home/HomeViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/map/MapServiceScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/map/MapServiceScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceWaitingScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/features/tour/ServiceWaitingScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/java/com/sismptm/client/ui/theme/Color.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values-es/strings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../mobile-client/app/src/test/java/com/sismptm/client/domain/validation/RegisterValidatorTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../mobile-client/app/src/test/java/com/sismptm/client/domain/validation/RegisterValidatorTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/api/ApiService.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/data/remote/api/ApiService.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/MainActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeScreen.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/home/HomeViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyScreen.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyScreen.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/features/tour/ServiceReadyViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/sismptm/partner/ui/theme/Color.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-en/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-en/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-es/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/libs.versions.toml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,7 +50,7 @@
       <entry key="_C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner" value="3C8UADKCGKXxXzWFWBdybxy2d9a" />
     </persistenceIdMap>
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\David\.android\avd\Medium_Phone_API_36.1_2_2.avd]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[PhysicalDevice::serial=M7T4NRSGHY65PZSK]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -79,7 +96,7 @@
     &quot;accountId&quot;: &quot;cd5502d4-d496-442f-89c2-ae7c104d5f2f&quot;
   }
 }</component>
-  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\David\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\Janus\.gradle\wrapper\dists\gradle-9.3.1-bin\23ovyewtku6u96viwx3xl3oks\gradle-9.3.1" javaHome="C:\Program Files\Android\Android Studio\jbr" gradleVersion="9.3.1" />
   <component name="ProjectColorInfo">{
     &quot;associatedIndex&quot;: 3
     }</component>
@@ -105,7 +122,7 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;David&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;BRey&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/David/Documents/Proyecto/Synaxis---Telepresencia-Turistica/mobile-partner&quot;,
@@ -139,6 +156,8 @@
       <option name="CLEAR_LOGCAT" value="false" />
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
       <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
       <option name="DEBUGGER_TYPE" value="Auto" />
       <Auto>
         <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
@@ -212,12 +231,12 @@
       <map>
         <entry key="com.sismptm.partner">
           <value>
-            <CheckInfo lastCheckTimestamp="1779393736473" />
+            <CheckInfo lastCheckTimestamp="1780088916958" />
           </value>
         </entry>
         <entry key="com.sismptm.partner.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1779393736476" />
+            <CheckInfo lastCheckTimestamp="1780088916956" />
           </value>
         </entry>
       </map>

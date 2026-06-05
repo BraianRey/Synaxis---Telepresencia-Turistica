@@ -117,7 +117,7 @@ class ServiceServiceImplTest {
     /** Minimal immediate-service request. */
     private RegisterServiceRequest buildImmediateRequest() {
         RegisterServiceRequest req = new RegisterServiceRequest();
-        req.setScheduled(false);
+        req.setScheduledAt(null);  // No scheduled time means immediate
         req.setAgreedHours(2);
         req.setLongitude(-76.5);
         req.setLatitude(2.4);
@@ -127,8 +127,11 @@ class ServiceServiceImplTest {
     /** Scheduled-service request for the given future time. */
     private RegisterServiceRequest buildScheduledRequest(LocalDateTime scheduledFor) {
         RegisterServiceRequest req = new RegisterServiceRequest();
-        req.setScheduled(true);
-        req.setScheduledFor(scheduledFor);
+        // Convert LocalDateTime to OffsetDateTime using system default timezone, then format as ISO string
+        java.time.ZoneId zoneId = java.time.ZoneId.systemDefault();
+        java.time.ZonedDateTime zoned = scheduledFor.atZone(zoneId);
+        java.time.OffsetDateTime offsetDateTime = zoned.toOffsetDateTime();
+        req.setScheduledAt(offsetDateTime.toString());  // ISO 8601 format with timezone
         req.setAgreedHours(2);
         req.setLongitude(-76.5);
         req.setLatitude(2.4);
@@ -250,13 +253,15 @@ class ServiceServiceImplTest {
     }
 
     @Test
-    void shouldRejectScheduledServiceWithNullScheduledFor() {
+    void shouldRejectScheduledServiceWithInvalidScheduledAtFormat() {
         // Arrange
         Long clientId = 1L;
         Client client = buildClient(clientId, UserStatus.active);
         RegisterServiceRequest request = new RegisterServiceRequest();
-        request.setScheduled(true);
-        request.setScheduledFor(null);
+        request.setScheduledAt("not-a-valid-date");  // Invalid format
+        request.setAgreedHours(2);
+        request.setLongitude(-76.5);
+        request.setLatitude(2.4);
 
         when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
 
@@ -264,11 +269,11 @@ class ServiceServiceImplTest {
         assertThatThrownBy(() ->
                 serviceService.registerService(request, clientId, null))
                 .isInstanceOf(BusinessRuleViolationException.class)
-                .hasMessageContaining("scheduledFor is required");
+                .hasMessageContaining("Invalid scheduledAt format");
     }
 
     @Test
-    void shouldRejectScheduledServiceWhenScheduledForIsInThePast() {
+    void shouldRejectScheduledServiceWhenScheduledAtIsInThePast() {
         // Arrange
         Long clientId = 1L;
         Client client = buildClient(clientId, UserStatus.active);
@@ -284,7 +289,7 @@ class ServiceServiceImplTest {
     }
 
     @Test
-    void shouldRejectScheduledServiceWhenScheduledForIsNow() {
+    void shouldRejectScheduledServiceWhenScheduledAtIsNow() {
         // Arrange
         Long clientId = 1L;
         Client client = buildClient(clientId, UserStatus.active);

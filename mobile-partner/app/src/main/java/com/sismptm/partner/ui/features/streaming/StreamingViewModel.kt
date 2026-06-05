@@ -85,6 +85,8 @@ class StreamingViewModel(application: Application) :
 
         signalingClient = SignalingClient(signalingUrl, this)
         signalingClient?.connect()
+
+        startServiceOnBackend()
     }
 
     /**
@@ -265,6 +267,22 @@ class StreamingViewModel(application: Application) :
                 Log.e(TAG, errorMsg, e)
             } finally {
                 _isCompletingService.value = false
+            }
+        }
+    }
+
+    private fun startServiceOnBackend() {
+        if (serviceId == 0L) return
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.startService(serviceId)
+                if (response.isSuccessful) {
+                    Log.i(TAG, "Service $serviceId started (IN_PROGRESS) successfully")
+                } else {
+                    Log.e(TAG, "Failed to start service on backend: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error starting service on backend: ${e.message}")
             }
         }
     }

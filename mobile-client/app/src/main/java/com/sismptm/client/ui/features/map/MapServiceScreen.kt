@@ -109,15 +109,15 @@ fun MapServiceScreen(
             }
         }
 
-        // Sheet anclada al fondo del Box
+        // Sheet anchored to the bottom of the Box
         if (showDescriptionSheet) {
-            // Fondo semi-transparente
+            // Semi-transparent background
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0x80000000))
             )
-            // Contenido del sheet en la parte inferior
+            // Sheet content at the bottom
             Box(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -151,7 +151,7 @@ fun MapServiceScreen(
             }
         }
 
-        // Snackbar para mostrar errores al usuario
+        // Snackbar to show errors to the user
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -187,7 +187,7 @@ fun rememberMapViewForService(
                         .zoom(13.0)
                         .build()
 
-                    // Cargar drawable como bitmap para el pin
+                    // Load drawable as bitmap for the pin
                     val drawable = androidx.core.content.ContextCompat.getDrawable(
                         context,
                         com.sismptm.client.R.drawable.service_location_icon
@@ -202,7 +202,7 @@ fun rememberMapViewForService(
                     drawable.draw(canvas)
                     style.addImage("service-pin", bitmap)
 
-                    // SymbolManager para manejar el pin
+                    // SymbolManager to handle the pin
                     val symbolManager = org.maplibre.android.plugins.annotation.SymbolManager(
                         this, map, style
                     )
@@ -212,7 +212,7 @@ fun rememberMapViewForService(
                     map.addOnMapClickListener { latLng ->
                         mapViewModel.onLocationSelected(latLng.latitude, latLng.longitude)
 
-                        // Reemplazar pin anterior
+                        // Replace previous pin
                         if (currentSymbol != null) {
                             symbolManager.delete(currentSymbol)
                         }

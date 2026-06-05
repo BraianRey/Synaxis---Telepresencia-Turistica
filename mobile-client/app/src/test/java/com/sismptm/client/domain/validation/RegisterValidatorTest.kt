@@ -4,7 +4,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-//Pruebas unitarias para el RegisterValidator
+// Unit tests for RegisterValidator
 
 class RegisterValidatorTest {
 
@@ -113,5 +113,3 @@ class RegisterValidatorTest {
         assertFalse(isValid)
     }
 }
-
-

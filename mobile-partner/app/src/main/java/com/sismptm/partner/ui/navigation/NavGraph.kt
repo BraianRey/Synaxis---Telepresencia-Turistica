@@ -113,7 +113,13 @@ fun PartnerNavGraph() {
                         popUpTo(Screen.Home.route)
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onServiceCancelled = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

@@ -93,6 +93,9 @@ class HomeViewModel(
                         )
                     }
                     _acceptedTour.value = acceptedService
+                    
+                    // Refresh partner services to show the accepted service in "My Services"
+                    loadPartnerServices()
                 } else {
                     _acceptErrorMessage.value = parseError(response.code(), response.errorBody()?.string())
                 }
@@ -104,7 +107,7 @@ class HomeViewModel(
         }
     }
 
-    fun loadPartnerServices() {
+    fun loadPartnerServices(silent: Boolean = false) {
         val partnerId = SessionManager.partnerId
         if (partnerId == 0L) {
             _partnerServicesState.value = PartnerServicesUiState.Error("Session expired. Please log in again.")
@@ -112,7 +115,7 @@ class HomeViewModel(
         }
 
         viewModelScope.launch {
-            _partnerServicesState.value = PartnerServicesUiState.Loading
+            if (!silent) _partnerServicesState.value = PartnerServicesUiState.Loading
             try {
                 val response = getPartnerServicesUseCase(partnerId)
                 if (response.isSuccessful) {
@@ -169,4 +172,3 @@ class HomeViewModel(
     fun clearAcceptedTour() { _acceptedTour.value = null }
     fun clearAcceptError() { _acceptErrorMessage.value = null }
 }
-

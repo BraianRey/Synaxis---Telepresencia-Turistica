@@ -8,44 +8,44 @@ import androidx.compose.ui.graphics.Color
  */
 
 // Primary Brand Colors
-val PrimaryAccent = Color(0xFF2563EB)      // Azul vibrante - Botones principales
-val PrimaryHover = Color(0xFF3B82F6)       // Azul más claro para estados hover
-val PrimaryDark = Color(0xFF1D4ED8)        // Azul oscuro para pressed states
+val PrimaryAccent = Color(0xFF2563EB)      // Vibrant blue - Main buttons
+val PrimaryHover = Color(0xFF3B82F6)       // Lighter blue for hover states
+val PrimaryDark = Color(0xFF1D4ED8)        // Dark blue for pressed states
 
 // Background Colors
-val Background = Color(0xFF121826)         // Fondo general - casi negro azulado
-val BackgroundElevated = Color(0xFF1A2332) // Fondo ligeramente elevado
-val Surface = Color(0xFF121826)            // Superficie base
+val Background = Color(0xFF121826)         // General background - dark blue-black
+val BackgroundElevated = Color(0xFF1A2332) // Slightly elevated background
+val Surface = Color(0xFF121826)            // Base surface
 
 // Card/Container Colors
-val CardBackground = Color(0xFF1C2533)     // Contenedores/cards
-val CardBackgroundHover = Color(0xFF232D3D)// Cards en hover
-val InputBackground = Color(0xFF1C2533)    // Inputs y campos de texto
+val CardBackground = Color(0xFF1C2533)     // Containers/cards
+val CardBackgroundHover = Color(0xFF232D3D)// Cards on hover
+val InputBackground = Color(0xFF1C2533)    // Inputs and text fields
 
 // Text Colors
-val TextPrimary = Color(0xFFFFFFFF)        // Títulos principales - blanco puro
-val TextSecondary = Color(0xFFE5E7EB)      // Cuerpo y datos - blanco suave
-val TextTertiary = Color(0xFF9CA3AF)       // Etiquetas secundarias - gris medio
-val TextDisabled = Color(0xFF6B7280)       // Texto deshabilitado
+val TextPrimary = Color(0xFFFFFFFF)        // Primary titles - pure white
+val TextSecondary = Color(0xFFE5E7EB)      // Body and data - soft white
+val TextTertiary = Color(0xFF9CA3AF)       // Secondary labels - medium gray
+val TextDisabled = Color(0xFF6B7280)       // Disabled text
 
 // Border & Divider Colors
-val BorderSubtle = Color(0xFF374151)       // Bordes y separadores sutiles
-val BorderFocus = Color(0xFF2563EB)        // Bordes en focus
-val Divider = Color(0xFF374151)            // Divisores
+val BorderSubtle = Color(0xFF374151)       // Subtle borders and separators
+val BorderFocus = Color(0xFF2563EB)        // Focus borders
+val Divider = Color(0xFF374151)            // Dividers
 
 // Status Colors
-val Success = Color(0xFF10B981)            // Verde éxito
-val SuccessLight = Color(0xFF34D399)       // Verde claro
-val Error = Color(0xFFEF4444)              // Rojo error
-val ErrorLight = Color(0xFFF87171)         // Rojo claro
-val Warning = Color(0xFFF59E0B)            // Amarillo advertencia
-val Info = Color(0xFF3B82F6)               // Azul información
+val Success = Color(0xFF10B981)            // Success green
+val SuccessLight = Color(0xFF34D399)       // Light green
+val Error = Color(0xFFEF4444)              // Error red
+val ErrorLight = Color(0xFFF87171)         // Light red
+val Warning = Color(0xFFF59E0B)            // Warning yellow
+val Info = Color(0xFF3B82F6)               // Info blue
 
 // Misc Colors
-val StarColor = Color(0xFFFFC107)          // Estrellas de rating
-val AvatarBackground = Color(0xFF9CA3AF)   // Fondo avatar genérico
-val OnlineIndicator = Color(0xFF10B981)    // Indicador online
-val OfflineIndicator = Color(0xFF6B7280)   // Indicador offline
+val StarColor = Color(0xFFFFC107)          // Rating stars
+val AvatarBackground = Color(0xFF9CA3AF)   // Generic avatar background
+val OnlineIndicator = Color(0xFF10B981)    // Online indicator
+val OfflineIndicator = Color(0xFF6B7280)   // Offline indicator
 
 // Legacy UI Components (ServiceDetailScreen, PartnerSearchScreen)
 val AvailableBadgeBg = Color(0xFF1B3A1B)
