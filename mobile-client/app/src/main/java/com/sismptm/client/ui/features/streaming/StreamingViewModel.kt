@@ -217,7 +217,8 @@ class StreamingViewModel(application: Application) :
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error checking service status: ${e.message}")
+                // Generic exception kept: Network error checking service status
+                Log.e(TAG, "Error checking service status", e)
             }
         }
     }
@@ -232,7 +233,8 @@ class StreamingViewModel(application: Application) :
                 status == "COMPLETED"
             } else false
         } catch (e: Exception) {
-            Log.e(TAG, "Error in pre-reconnect status check: ${e.message}")
+            // Generic exception kept: Network error checking service status
+            Log.e(TAG, "Error in pre-reconnect status check", e)
             false
         }
     }
@@ -256,7 +258,8 @@ class StreamingViewModel(application: Application) :
                         "${completeResponse.code()}")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error calling client-complete: ${e.message}")
+                // Generic exception kept: Network error calling client-complete
+                Log.e(TAG, "Error calling client-complete", e)
             } finally {
                 // Close WebRTC and signaling after backend call attempt
                 signalingClient?.close()

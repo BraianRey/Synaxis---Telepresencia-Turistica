@@ -128,7 +128,7 @@ class SignalingClient(
                     listener.onIceCandidateReceived(candidateSdp, sdpMid, sdpMLineIndex)
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: com.google.gson.JsonSyntaxException) {
             Log.e(TAG, "Error handling message: ${e.message}")
         }
     }

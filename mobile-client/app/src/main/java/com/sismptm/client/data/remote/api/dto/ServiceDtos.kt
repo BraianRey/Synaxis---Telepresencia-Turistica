@@ -1,5 +1,7 @@
 package com.sismptm.client.data.remote.api.dto
 
+import java.util.Locale
+
 /**
  * Data classes for service and tour-related requests and responses.
  */
@@ -42,7 +44,11 @@ data class ServiceResponse(
             val start = java.time.Instant.parse(startedAt)
             val end = java.time.Instant.parse(endedAt)
             java.time.Duration.between(start, end).toMinutes()
-        } catch (e: Exception) {
+        } catch (e: java.time.format.DateTimeParseException) {
+            android.util.Log.e("ServiceDtos", "Failed to parse date", e)
+            null
+        } catch (e: ArithmeticException) {
+            android.util.Log.e("ServiceDtos", "Duration overflow", e)
             null
         }
     }
@@ -71,7 +77,7 @@ data class ServiceResponse(
      */
     fun getFormattedCost(): String {
         val cost = getTotalCost() ?: return "N/A"
-        return String.format("$%.2f USD", cost)
+        return String.format(Locale.US, "$%.2f USD", cost)
     }
 }
 

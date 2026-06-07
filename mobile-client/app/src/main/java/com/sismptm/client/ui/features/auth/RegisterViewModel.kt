@@ -55,7 +55,9 @@ class RegisterViewModel : ViewModel() {
                         parseErrorMessage(response.code(), errorBody)
                     )
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error during registration
+                android.util.Log.e("RegisterViewModel", "Failed to register user", e)
                 _uiState.value = RegisterUiState.Error(
                     parseErrorMessage(e)
                 )

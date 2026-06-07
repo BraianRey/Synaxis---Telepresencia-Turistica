@@ -44,7 +44,7 @@ class ServiceViewModel : ViewModel() {
 
                 if (response.isSuccessful) {
                     val serviceId = response.body()?.serviceId
-                        ?: throw IllegalStateException("Empty response body")
+                        ?: error("Empty response body")
                     Log.d(TAG, "[SUCCESS] Service created! serviceId=$serviceId")
                     _createServiceState.value = CreateServiceUiState.Success(serviceId)
                 } else {
@@ -52,8 +52,9 @@ class ServiceViewModel : ViewModel() {
                     Log.e(TAG, "[ERROR] Code ${response.code()}: $errorBody")
                     _createServiceState.value = CreateServiceUiState.Error("Error: ${response.code()} - $errorBody")
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "[EXCEPTION] in createService: ${e.javaClass.simpleName} - ${e.message}", e)
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error creating service
+                Log.e(TAG, "Error creating service", e)
                 _createServiceState.value = CreateServiceUiState.Error(e.message ?: "Unknown error")
             }
         }

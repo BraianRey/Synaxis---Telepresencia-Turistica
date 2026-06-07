@@ -3,7 +3,18 @@ package com.sismptm.client.ui.features.profile
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +25,21 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Work
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,133 +87,165 @@ fun ProfileScreen(onLogout: () -> Unit) {
             modifier = Modifier.padding(bottom = 24.dp)
         )
         
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-                .background(PrimaryAccent.copy(alpha = 0.2f)),
-            contentAlignment = Alignment.Center
-        ) {
-            val picDirectory = SessionManager.picDirectory
-            if (picDirectory != null) {
-                val imageUrl = NetworkConfig.BASE_URL + picDirectory
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .crossfade(300)
-                        .build(),
-                    contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Text(
-                    text = initial,
-                    color = PrimaryAccent,
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        
+        avatarSection(initial)
         Spacer(modifier = Modifier.height(32.dp))
-        
-        // Info Cards
-        ProfileInfoCard(icon = Icons.Default.Person, label = stringResource(R.string.full_name), value = name)
-        Spacer(modifier = Modifier.height(12.dp))
-        ProfileInfoCard(icon = Icons.Default.Email, label = stringResource(R.string.email), value = email)
-        Spacer(modifier = Modifier.height(12.dp))
-        ProfileInfoCard(icon = Icons.Default.Work, label = stringResource(R.string.role), value = role)
+        infoCardsSection(name, email, role)
         Spacer(modifier = Modifier.height(12.dp))
         
         if (isEditing) {
-            EditableLanguageCard(
+            editModeSection(
                 selectedLanguage = selectedLanguage,
-                onLanguageSelected = { selectedLanguage = it }
+                onLanguageSelected = { selectedLanguage = it },
+                onCancel = {
+                    selectedLanguage = SessionManager.language
+                    isEditing = false
+                },
+                onSave = {
+                    SessionManager.updateLanguage(selectedLanguage)
+                    isEditing = false
+                }
             )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        selectedLanguage = SessionManager.language
-                        isEditing = false
-                    },
-                    modifier = Modifier.weight(1f),
-                    border = BorderStroke(1.dp, TextTertiary)
-                ) {
-                    Text(stringResource(R.string.cancel), color = TextPrimary)
-                }
-                
-                Button(
-                    onClick = {
-                        // TODO: API CALL
-                        // Make a REST API call to /api/clients/profile to update the preferred language on the backend
-                        
-                        SessionManager.updateLanguage(selectedLanguage)
-                        isEditing = false
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
-                ) {
-                    Text(stringResource(R.string.save_changes), color = TextPrimary)
-                }
-            }
         } else {
-            ProfileInfoCard(
-                icon = Icons.Default.Settings, 
-                label = stringResource(R.string.preferred_language), 
-                value = SessionManager.language.uppercase()
+            viewModeSection(
+                onEditClick = { isEditing = true }
             )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            Button(
-                onClick = { isEditing = true },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
-            ) {
-                Text(stringResource(R.string.edit), color = TextPrimary)
-            }
         }
         
         Spacer(modifier = Modifier.height(48.dp))
-        
-        OutlinedButton(
-            onClick = {
-                SessionManager.clearSession()
-                onLogout()
-            },
-            border = BorderStroke(1.dp, TextTertiary),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Logout,
-                contentDescription = null,
-                tint = TextTertiary,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.home_sign_out),
-                color = TextTertiary
-            )
-        }
-        
+        logoutButton(onLogout)
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun ProfileInfoCard(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
+private fun avatarSection(initial: String) {
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .clip(CircleShape)
+            .background(PrimaryAccent.copy(alpha = 0.2f)),
+        contentAlignment = Alignment.Center
+    ) {
+        val picDirectory = SessionManager.picDirectory
+        if (picDirectory != null) {
+            val imageUrl = NetworkConfig.BASE_URL + picDirectory
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(300)
+                    .build(),
+                contentDescription = "Profile picture",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                text = initial,
+                color = PrimaryAccent,
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun infoCardsSection(name: String, email: String, role: String) {
+    profileInfoCard(icon = Icons.Default.Person, label = stringResource(R.string.full_name), value = name)
+    Spacer(modifier = Modifier.height(12.dp))
+    profileInfoCard(icon = Icons.Default.Email, label = stringResource(R.string.email), value = email)
+    Spacer(modifier = Modifier.height(12.dp))
+    profileInfoCard(icon = Icons.Default.Work, label = stringResource(R.string.role), value = role)
+}
+
+@Composable
+private fun editModeSection(
+    selectedLanguage: String,
+    onLanguageSelected: (String) -> Unit,
+    onCancel: () -> Unit,
+    onSave: () -> Unit
+) {
+    editableLanguageCard(
+        selectedLanguage = selectedLanguage,
+        onLanguageSelected = onLanguageSelected
+    )
+    
+    Spacer(modifier = Modifier.height(32.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier.weight(1f),
+            border = BorderStroke(1.dp, TextTertiary)
+        ) {
+            Text(stringResource(R.string.cancel), color = TextPrimary)
+        }
+        
+        Button(
+            onClick = onSave,
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
+        ) {
+            Text(stringResource(R.string.save_changes), color = TextPrimary)
+        }
+    }
+}
+
+@Composable
+private fun viewModeSection(onEditClick: () -> Unit) {
+    profileInfoCard(
+        icon = Icons.Default.Settings, 
+        label = stringResource(R.string.preferred_language), 
+        value = SessionManager.language.uppercase()
+    )
+    
+    Spacer(modifier = Modifier.height(32.dp))
+    Button(
+        onClick = onEditClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
+    ) {
+        Text(stringResource(R.string.edit), color = TextPrimary)
+    }
+}
+
+@Composable
+private fun logoutButton(onLogout: () -> Unit) {
+    OutlinedButton(
+        onClick = {
+            SessionManager.clearSession()
+            onLogout()
+        },
+        border = BorderStroke(1.dp, TextTertiary),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth(0.6f)
+            .height(48.dp)
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.Logout,
+            contentDescription = null,
+            tint = TextTertiary,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = stringResource(R.string.home_sign_out),
+            color = TextTertiary
+        )
+    }
+}
+
+@Composable
+private fun profileInfoCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -225,7 +281,7 @@ private fun ProfileInfoCard(icon: androidx.compose.ui.graphics.vector.ImageVecto
 }
 
 @Composable
-private fun EditableLanguageCard(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
+private fun editableLanguageCard(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val languages = listOf("en" to "English", "es" to "Español")
     val selectedLabel = languages.find { it.first == selectedLanguage }?.second ?: selectedLanguage
@@ -259,8 +315,17 @@ private fun EditableLanguageCard(selectedLanguage: String, onLanguageSelected: (
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(text = stringResource(R.string.preferred_language), style = MaterialTheme.typography.bodySmall, color = TextTertiary)
-                    Text(text = selectedLabel, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = stringResource(R.string.preferred_language),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary
+                    )
+                    Text(
+                        text = selectedLabel,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
             

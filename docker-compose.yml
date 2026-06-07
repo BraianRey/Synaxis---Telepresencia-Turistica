@@ -34,7 +34,6 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_DB: dev-file
     volumes:
-      - keycloak_data:/opt/keycloak/data
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     depends_on:
       postgres:
@@ -54,4 +53,3 @@ networks:
 
 volumes:
   postgres_data:
-  keycloak_data:

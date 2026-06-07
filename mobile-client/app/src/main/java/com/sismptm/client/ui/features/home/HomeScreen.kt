@@ -23,11 +23,9 @@ import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ViewList
-import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -38,6 +36,7 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.sismptm.client.core.network.NetworkConfig
+import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,12 +45,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
-import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
-import com.sismptm.client.domain.model.Destination
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.ui.features.tour.ServiceViewModel
-import com.sismptm.client.ui.features.profile.ProfileScreen
 import java.time.Instant
 
 @Composable
@@ -62,6 +58,7 @@ fun HomeScreen(
     onNavigateToReserveMap: () -> Unit,
     onLogout: () -> Unit,
     homeViewModel: HomeViewModel = viewModel(),
+    @Suppress("UnusedParameter")
     serviceViewModel: ServiceViewModel = viewModel()
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -112,7 +109,7 @@ fun HomeScreen(
                     onRefresh = { homeViewModel.loadClientServices() },
                     onOpenWaiting = onOpenServiceWaiting
                 )
-                2 -> ProfileScreen(onLogout)
+                2 -> ProfileTab(onLogout, uiState.picDirectory)
             }
         }
     }
@@ -122,6 +119,7 @@ fun HomeScreen(
 private fun ExploreTabContent(
     uiState: HomeUiState,
     servicesState: HomeViewModel.ClientServicesUiState,
+    @Suppress("UnusedParameter")
     onNavigateToPartnerSearch: () -> Unit,
     onNavigateToMapService: () -> Unit,
     onNavigateToReserveMap: () -> Unit,
@@ -161,7 +159,7 @@ private fun ExploreTabContent(
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 20.dp)
                 .fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+            colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
@@ -280,143 +278,13 @@ private fun SearchBar() {
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedBorderColor = Color.Transparent,
-            focusedBorderColor = Color(0xFF444444),
+            focusedBorderColor = InputBorderFocused,
             unfocusedContainerColor = CardBackground,
-            focusedContainerColor = Color(0xFF333333),
-            unfocusedTextColor = Color(0xFFDDDDDD),
+            focusedContainerColor = InputBackgroundFocused,
+            unfocusedTextColor = InputTextActive,
             focusedTextColor = TextPrimary
         )
     )
-}
-
-@Composable
-private fun PinIndicator(city: String, guides: Int, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x4400CC44))
-            )
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Background)
-            )
-            Icon(
-                imageVector = Icons.Outlined.Videocam,
-                contentDescription = city,
-                tint = Color(0xFF00CC44),
-                modifier = Modifier.size(16.dp)
-            )
-        }
-        Card(
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .wrapContentSize(),
-            shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xCC000000))
-        ) {
-            Text(
-                text = stringResource(R.string.home_city_guides, city, guides),
-                fontSize = 10.sp,
-                color = Color.White,
-                modifier = Modifier.padding(6.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun DestinationsSection(destinations: List<Destination>) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.home_destinations_title),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 1.2.sp,
-            color = TextPrimary
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(destinations) { destination ->
-                DestinationCard(destination)
-            }
-        }
-    }
-}
-
-@Composable
-private fun DestinationCard(destination: Destination) {
-    val gradientColors = when (destination.id % 4) {
-        0 -> listOf(Color(0xFF1B4332), Color(0xFF0D1F17))
-        1 -> listOf(Color(0xFF1A237E), Color(0xFF0D1129))
-        2 -> listOf(Color(0xFF4A148C), Color(0xFF1A0533))
-        3 -> listOf(Color(0xFF7B3F00), Color(0xFF2D1700))
-        else -> listOf(Color(0xFF1B4332), Color(0xFF0D1F17))
-    }
-
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .height(200.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(gradientColors))
-        ) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = destination.city,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = destination.country,
-                    fontSize = 12.sp,
-                    color = TextTertiary
-                )
-            }
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = destination.placeName,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = stringResource(R.string.home_active_partners, destination.activePartners),
-                    fontSize = 11.sp,
-                    color = Color(0xFF00CC44)
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -455,7 +323,7 @@ private fun ToursTabContent(
                     modifier = Modifier
                         .width(100.dp)
                         .height(40.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+                    colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Refresh", fontSize = 12.sp)
@@ -469,7 +337,7 @@ private fun ToursTabContent(
                     Text(stringResource(R.string.loading_services), color = TextSecondary)
                 }
                 is HomeViewModel.ClientServicesUiState.Error -> {
-                    Text(text = servicesState.message, color = Color(0xFFFF8A80))
+                    Text(text = servicesState.message, color = ErrorLight)
                 }
                 is HomeViewModel.ClientServicesUiState.Success -> {
                     if (servicesState.services.isEmpty()) {
@@ -490,39 +358,52 @@ private fun ToursTabContent(
                             }.thenBy { it.scheduledAt ?: "ZZZZ" })
                         val historyServices = servicesState.services.filter { it.status.uppercase() !in activeStatuses }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text(
-                                text = stringResource(R.string.home_services_active),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            if (activeServices.isEmpty()) {
-                                Text(text = stringResource(R.string.home_services_no_active), color = TextSecondary)
-                            } else {
-                                activeServices.forEach { service ->
-                                    ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                text = stringResource(R.string.home_services_history),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            if (historyServices.isEmpty()) {
-                                Text(text = stringResource(R.string.home_services_no_history), color = TextSecondary)
-                            } else {
-                                historyServices.forEach { service ->
-                                    ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
-                                }
-                            }
-                        }
+                        ClientServicesSections(
+                            activeServices = activeServices,
+                            historyServices = historyServices,
+                            onOpenWaiting = onOpenWaiting
+                        )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClientServicesSections(
+    activeServices: List<ServiceResponse>,
+    historyServices: List<ServiceResponse>,
+    onOpenWaiting: (Long) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = stringResource(R.string.home_services_active),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        if (activeServices.isEmpty()) {
+            Text(text = stringResource(R.string.home_services_no_active), color = TextSecondary)
+        } else {
+            activeServices.forEach { service ->
+                ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(R.string.home_services_history),
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        if (historyServices.isEmpty()) {
+            Text(text = stringResource(R.string.home_services_no_history), color = TextSecondary)
+        } else {
+            historyServices.forEach { service ->
+                ClientServiceCard(service = service, onOpenWaiting = onOpenWaiting)
             }
         }
     }
@@ -548,7 +429,7 @@ private fun ClientServiceCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = if (shouldHighlight) Color(0xFF2D3748) else Color(0xFF1E2430)),
+        colors = CardDefaults.cardColors(containerColor = if (shouldHighlight) CardBackgroundLight else CardBackgroundDark),
         shape = RoundedCornerShape(14.dp),
         border = if (shouldHighlight) BorderStroke(2.dp, PrimaryAccent) else null
     ) {
@@ -586,7 +467,7 @@ private fun ClientServiceCard(
                 } catch (e: Exception) {
                     "Scheduled"
                 }
-                Text(scheduledText, color = Color(0xFF7C3AED), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                Text(scheduledText, color = PurpleAccent, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
             }
             service.locationReferenceImageUrl?.let { imageUrl ->
                 AsyncImage(
@@ -612,7 +493,7 @@ private fun ClientServiceCard(
                 Button(
                     onClick = { onOpenWaiting(service.serviceId) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
                 ) {
                     Text(stringResource(R.string.open_waiting_screen))
                 }
@@ -630,7 +511,7 @@ private fun ServiceStatusBadge(status: String) {
         normalized == "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
         normalized == "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
         normalized == "WAITING_FOR_START" -> Color(0xFFF9A825) to Color(0xFFFFFDE7)
-        normalized == "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
+        normalized == "READY" -> Success to SuccessBackground
         normalized == "STARTED" || normalized == "IN_PROGRESS" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
         normalized == "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
         normalized == "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
@@ -811,7 +692,7 @@ private fun BottomNavigationBar(
     onTabSelected: (Int) -> Unit
 ) {
     NavigationBar(
-        containerColor = Color(0xFF1E1E1E),
+        containerColor = Background,
         tonalElevation = 0.dp
     ) {
         NavigationBarItem(
