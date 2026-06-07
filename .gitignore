@@ -71,3 +71,12 @@ backend-management-service/picProfile/*
 *.db
 *.mv.db
 *.trace.db
+# IntelliJ IDEA
+.idea/*
+*.iws
+*.ipr
+
+# OpenCode Agent Context
+CONTEXTO.MD
+mobile-client/gradle.properties
+mobile-partner/gradle.properties

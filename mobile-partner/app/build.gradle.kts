@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// Leer local.properties al nivel global
+// Read local.properties globally
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -83,6 +83,9 @@ dependencies {
     // Google Play Services Location
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // WorkManager for background tasks
+    implementation(libs.androidx.work.runtime.ktx)
 
     // ViewModel
     implementation(libs.lifecycle.viewmodel.compose)

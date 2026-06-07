@@ -10,10 +10,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.sismptm.partner.R
+import com.sismptm.partner.core.network.NetworkConfig
 
 /**
  * Reusable component to display a tour request.
@@ -25,6 +30,7 @@ fun RequestCard(
     elapsedTime: String,
     duration: String,
     price: String,
+    clientPicDirectory: String? = null,
     onDecline: () -> Unit,
     onAccept: () -> Unit,
     isAccepting: Boolean = false,
@@ -48,12 +54,27 @@ fun RequestCard(
                     modifier = Modifier.size(42.dp).clip(CircleShape).background(Color(0xFF374151)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = clientName.take(1).uppercase(),
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (clientPicDirectory != null) {
+                        val imageUrl = NetworkConfig.BASE_URL + clientPicDirectory
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(300)
+                                .build(),
+                            contentDescription = "Client picture",
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Text(
+                            text = clientName.take(1).uppercase(),
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
@@ -62,7 +83,17 @@ fun RequestCard(
                     Text(text = stringResource(id = R.string.wants_tour, location), style = MaterialTheme.typography.bodyMedium, color = Color(0xFFB9C0CB))
                 }
 
-                Text(text = elapsedTime, style = MaterialTheme.typography.labelMedium, color = Color(0xFF9DA5B3))
+                if (clientPicDirectory != null) {
+                    val isScheduled = elapsedTime.startsWith("Reserved")
+                    Text(
+                        text = elapsedTime,
+                        style = if (isScheduled) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
+                        color = if (isScheduled) Color(0xFF7C3AED) else Color(0xFF9DA5B3),
+                        fontWeight = if (isScheduled) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                } else {
+                    Text(text = elapsedTime, style = MaterialTheme.typography.labelMedium, color = Color(0xFF9DA5B3))
+                }
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

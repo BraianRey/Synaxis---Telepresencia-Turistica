@@ -80,8 +80,11 @@ import com.sismptm.client.data.remote.api.dto.RatingResponse
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.ui.theme.Background
 import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.Error
 import com.sismptm.client.ui.theme.PrimaryAccent
 import com.sismptm.client.ui.theme.StarColor
+import com.sismptm.client.ui.theme.Success
+import com.sismptm.client.ui.theme.SuccessLight
 import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
 import com.sismptm.client.ui.theme.TextTertiary
@@ -526,7 +529,7 @@ private fun ErrorView(
             imageVector = Icons.Default.Error,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = Color(0xFFE53935)
+            tint = Error
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -571,7 +574,7 @@ private fun ServiceSummaryContent(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50)
+                    containerColor = Success
                 )
             ) {
                 Icon(
@@ -597,7 +600,7 @@ private fun ServiceSummaryContent(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = Color(0xFF4CAF50),
+                    tint = Success,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -605,7 +608,7 @@ private fun ServiceSummaryContent(
                     stringResource(R.string.payment_confirmed),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4CAF50)
+                    color = Success
                 )
             }
         }
@@ -650,7 +653,7 @@ private fun ServiceSummaryContent(
 private fun SuccessHeaderCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B5E20)),
+        colors = CardDefaults.cardColors(containerColor = SuccessLight),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
@@ -662,7 +665,7 @@ private fun SuccessHeaderCard() {
             Surface(
                 modifier = Modifier.size(64.dp),
                 shape = CircleShape,
-                color = Color(0xFF4CAF50)
+                color = Success
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
@@ -686,7 +689,7 @@ private fun SuccessHeaderCard() {
             Text(
                 text = stringResource(R.string.thank_you_synexis),
                 fontSize = 14.sp,
-                color = Color(0xFFA5D6A7),
+                color = SuccessLight,
                 textAlign = TextAlign.Center
             )
         }
@@ -730,7 +733,7 @@ private fun ServiceStatsCard(service: ServiceResponse, payment: PaymentSummaryRe
                     value = payment?.let {
                         stringResource(R.string.currency_format, "%.2f".format(it.totalAmount))
                     } ?: service.getFormattedCost(),
-                    color = Color(0xFF4CAF50)
+                    color = Success
                 )
             }
         }

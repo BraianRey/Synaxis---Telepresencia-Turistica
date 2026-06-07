@@ -19,6 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontWeight as TextFontWeight
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -33,7 +36,10 @@ import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.ui.theme.Background
 import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.ErrorDark
 import com.sismptm.client.ui.theme.PrimaryAccent
+import com.sismptm.client.ui.theme.Success
+import com.sismptm.client.ui.theme.SuccessBackground
 import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
 import kotlinx.coroutines.Job
@@ -44,8 +50,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.time.Instant
 
-private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED")
+private val cancellableStatuses = setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY")
 private val terminalStatuses = setOf("COMPLETED", "CANCELLED")
 
 data class ServiceWaitingUiState(
@@ -205,12 +212,32 @@ fun ServiceWaitingScreen(
     val canCancel = status in cancellableStatuses
     val isTerminal = status in terminalStatuses
 
+    // Added: local time check to sync status visually when reservation time arrives
+    var isTimeToStart by remember { mutableStateOf(false) }
+    LaunchedEffect(service?.scheduledAt) {
+        val scheduledAt = service?.scheduledAt
+        if (!scheduledAt.isNullOrBlank()) {
+            while (true) {
+                try {
+                    val scheduled = Instant.parse(scheduledAt)
+                    val now = Instant.now()
+                    isTimeToStart = !now.isBefore(scheduled)
+                    if (isTimeToStart) break
+                } catch (e: Exception) {}
+                delay(5000)
+            }
+        } else {
+            isTimeToStart = false
+        }
+    }
+
     LaunchedEffect(serviceId) {
         viewModel.load(serviceId)
     }
 
+    // Auto-navigate to streaming when status is READY or IN_PROGRESS or STARTED
     LaunchedEffect(status) {
-        if (status == "STARTED") {
+        if (status == "READY" || status == "STARTED" || status == "IN_PROGRESS") {
             onNavigateToStreaming(serviceId)
         }
     }
@@ -273,7 +300,7 @@ private fun infoCard(infoMessage: String?) {
     infoMessage?.let { message ->
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+            colors = CardDefaults.cardColors(containerColor = SuccessBackground)
         ) {
             Text(text = message, color = Color(0xFF2E7D32), modifier = Modifier.padding(12.dp))
         }
@@ -320,9 +347,9 @@ private fun cancelButton(canCancel: Boolean, isTerminal: Boolean, isCancelling: 
             modifier = Modifier.fillMaxWidth()
         ) {
             if (isCancelling) {
-                CircularProgressIndicator(color = Color(0xFFC62828))
+                CircularProgressIndicator(color = ErrorDark)
             } else {
-                Text(stringResource(R.string.cancel_tour), color = Color(0xFFC62828))
+                Text(stringResource(R.string.cancel_tour), color = ErrorDark)
             }
         }
     }
@@ -352,7 +379,7 @@ private fun backToHomeButton(onBackHome: () -> Unit) {
 private fun getStatusColors(status: String): Pair<Color, Color> = when (status.uppercase()) {
     "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
     "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
-    "READY" -> Color(0xFF4CAF50) to Color(0xFFE8F5E9)
+    "READY" -> Success to SuccessBackground
     "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
     "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
     "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
@@ -374,4 +401,3 @@ private fun statusBadge(status: String) {
         )
     }
 }
-

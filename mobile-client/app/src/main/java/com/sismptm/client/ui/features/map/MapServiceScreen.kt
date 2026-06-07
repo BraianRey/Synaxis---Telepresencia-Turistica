@@ -45,6 +45,7 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
 import com.sismptm.client.ui.features.tour.ServiceViewModel
 import com.sismptm.client.ui.features.tour.CreateServiceUiState
+import com.sismptm.client.ui.theme.BlueSecondary
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -184,7 +185,7 @@ private fun MapServiceConfirmButton(
         modifier = modifier
             .navigationBarsPadding()
             .padding(16.dp),
-        containerColor = Color(0xFF2196F3)
+        containerColor = BlueSecondary
     ) {
         Icon(
             imageVector = Icons.Filled.Check,
@@ -245,7 +246,7 @@ private fun MapServiceLoadingOverlay(isLoading: Boolean) {
             .background(Color(0x80000000)),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color(0xFF2196F3))
+        CircularProgressIndicator(color = BlueSecondary)
     }
 }
 
@@ -275,7 +276,7 @@ fun rememberMapViewForService(
                         .zoom(13.0)
                         .build()
 
-                    // Cargar drawable como bitmap para el pin
+                    // Load drawable as bitmap for the pin
                     val drawable = androidx.core.content.ContextCompat.getDrawable(
                         context,
                         com.sismptm.client.R.drawable.service_location_icon
@@ -290,7 +291,7 @@ fun rememberMapViewForService(
                     drawable.draw(canvas)
                     style.addImage("service-pin", bitmap)
 
-                    // SymbolManager para manejar el pin
+                    // SymbolManager to handle the pin
                     val symbolManager = org.maplibre.android.plugins.annotation.SymbolManager(
                         this, map, style
                     )
@@ -300,7 +301,7 @@ fun rememberMapViewForService(
                     map.addOnMapClickListener { latLng ->
                         mapViewModel.onLocationSelected(latLng.latitude, latLng.longitude)
 
-                        // Reemplazar pin anterior
+                        // Replace previous pin
                         if (currentSymbol != null) {
                             symbolManager.delete(currentSymbol)
                         }

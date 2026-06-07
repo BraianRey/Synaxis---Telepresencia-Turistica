@@ -54,6 +54,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
+import com.sismptm.client.ui.theme.OfflineStatusColor
+import com.sismptm.client.ui.theme.Success
 import org.webrtc.PeerConnection
 import org.webrtc.RendererCommon
 import org.webrtc.SurfaceViewRenderer
@@ -187,7 +189,7 @@ fun ConnectionStatusChip(isConnected: Boolean, state: PeerConnection.PeerConnect
             Icon(
                 imageVector = if (isConnected) Icons.Default.Wifi else Icons.Default.WifiOff,
                 contentDescription = null,
-                tint = if (isConnected) Color(0xFF4CAF50) else Color(0xFFFF5722),
+                tint = if (isConnected) Success else OfflineStatusColor,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))

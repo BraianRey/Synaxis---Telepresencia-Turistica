@@ -1,35 +1,50 @@
 package com.synexis.management_service.dto.response;
 
+import com.synexis.management_service.payment.PaymentPricing;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.Instant;
 
 /**
  * Service response DTO with comprehensive information about the service,
  * including client and partner details for summary display.
  */
-public record ServiceResponse(
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ServiceResponse {
 
-        Long serviceId,
+    private Long serviceId;
 
-        String clientName,
-        String clientEmail,
+    private String clientName;
+    private String clientEmail;
+    private String clientPicDirectory;
 
-        String partnerName,
-        String partnerEmail,
+    private String partnerName;
+    private String partnerEmail;
+    private String partnerPicDirectory;
 
-        String startLocationDescription,
+    private String startLocationDescription;
 
-        Integer agreedHours,
+    private Integer agreedHours;
 
-        Double hourlyRate,
+    private Double hourlyRate;
 
-        String status,
+    private String status;
 
-        Instant startedAt,
+    private Instant startedAt;
 
-        Instant endedAt,
-        String locationReferenceImageUrl
+    private Instant endedAt;
+    private String locationReferenceImageUrl;
+    private Boolean scheduled;
+    private Instant scheduledAt;
 
-) {
+
     /**
      * Calculates the service duration in minutes.
      * Returns null if the service hasn't started or ended.
@@ -42,20 +57,15 @@ public record ServiceResponse(
     }
 
     /**
-     * Calculates the total cost based on duration and hourly rate.
-     * Returns null if duration cannot be calculated.
+     * Estimates total cost: minimum {@link PaymentPricing#MIN_BILLING_MINUTES} minutes
+     * at {@link PaymentPricing#MIN_PACKAGE_PRICE_USD} USD, then per minute.
      */
     public Double getTotalCost() {
         Long durationMinutes = getDurationMinutes();
-        if (durationMinutes == null || hourlyRate == null) {
+        if (durationMinutes == null) {
             return null;
         }
-        if (durationMinutes <= 60) {
-            return hourlyRate;
-        }
-        long excessMinutes = durationMinutes - 60;
-        double excessCost = (excessMinutes / 60.0) * hourlyRate;
-        return Math.round((hourlyRate + excessCost) * 100.0) / 100.0;
+        return PaymentPricing.estimateTotalFromActualMinutes(durationMinutes.intValue()).doubleValue();
     }
 
     /**
@@ -85,6 +95,6 @@ public record ServiceResponse(
         if (cost == null) {
             return "N/A";
         }
-        return String.format("$%,.0f COP", cost);
+        return String.format("$%.2f USD", cost);
     }
 }

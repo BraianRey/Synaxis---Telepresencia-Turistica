@@ -11,7 +11,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.outlined.Explore
@@ -32,6 +36,7 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.sismptm.client.core.network.NetworkConfig
+import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,8 +48,7 @@ import com.sismptm.client.R
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.ui.features.tour.ServiceViewModel
-import com.sismptm.client.ui.features.profile.ProfileScreen
-import android.util.Log
+import java.time.Instant
 
 @Composable
 fun HomeScreen(
@@ -60,6 +64,22 @@ fun HomeScreen(
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+
+    LaunchedEffect(servicesState) {
+        val state = servicesState
+        if (state is HomeViewModel.ClientServicesUiState.Success) {
+            state.services.forEach { service ->
+                if (service.status.uppercase() in setOf("ACCEPTED", "WAITING_FOR_START") && !service.scheduledAt.isNullOrBlank()) {
+                    com.sismptm.client.manager.notification.AlarmScheduler.scheduleServiceAlarm(
+                        context,
+                        service.serviceId,
+                        service.scheduledAt
+                    )
+                }
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -89,7 +109,7 @@ fun HomeScreen(
                     onRefresh = { homeViewModel.loadClientServices() },
                     onOpenWaiting = onOpenServiceWaiting
                 )
-                2 -> ProfileScreen(onLogout)
+                2 -> ProfileTab(onLogout, uiState.picDirectory)
             }
         }
     }
@@ -139,11 +159,11 @@ private fun ExploreTabContent(
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 20.dp)
                 .fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
+            colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(
-                text = "Reserve service",
+                text = stringResource(R.string.reserve_service_btn),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
@@ -258,10 +278,10 @@ private fun SearchBar() {
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedBorderColor = Color.Transparent,
-            focusedBorderColor = Color(0xFF444444),
+            focusedBorderColor = InputBorderFocused,
             unfocusedContainerColor = CardBackground,
-            focusedContainerColor = Color(0xFF333333),
-            unfocusedTextColor = Color(0xFFDDDDDD),
+            focusedContainerColor = InputBackgroundFocused,
+            unfocusedTextColor = InputTextActive,
             focusedTextColor = TextPrimary
         )
     )
@@ -286,14 +306,28 @@ private fun ToursTabContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = stringResource(R.string.my_services),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-            OutlinedButton(onClick = onRefresh, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.refresh), color = Color.White)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.my_services),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                )
+                Button(
+                    onClick = { onRefresh() },
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(40.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Refresh", fontSize = 12.sp)
+                }
             }
 
             when (servicesState) {
@@ -303,14 +337,25 @@ private fun ToursTabContent(
                     Text(stringResource(R.string.loading_services), color = TextSecondary)
                 }
                 is HomeViewModel.ClientServicesUiState.Error -> {
-                    Text(text = servicesState.message, color = Color(0xFFFF8A80))
+                    Text(text = servicesState.message, color = ErrorLight)
                 }
                 is HomeViewModel.ClientServicesUiState.Success -> {
                     if (servicesState.services.isEmpty()) {
                         Text(text = stringResource(R.string.no_service_requests_yet), color = TextSecondary)
                     } else {
-                        val activeStatuses = setOf("REQUESTED", "ACCEPTED", "STARTED")
+                        val activeStatuses = setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
                         val activeServices = servicesState.services.filter { it.status.uppercase() in activeStatuses }
+                            .sortedWith(compareByDescending<ServiceResponse> { service ->
+                                val isReady = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+                                var isTimeToStart = false
+                                if (!service.scheduledAt.isNullOrBlank()) {
+                                    try {
+                                        val instant = Instant.parse(service.scheduledAt)
+                                        isTimeToStart = instant.isBefore(Instant.now()) || instant.equals(Instant.now())
+                                    } catch (e: Exception) {}
+                                }
+                                isReady || isTimeToStart
+                            }.thenBy { it.scheduledAt ?: "ZZZZ" })
                         val historyServices = servicesState.services.filter { it.status.uppercase() !in activeStatuses }
 
                         ClientServicesSections(
@@ -365,59 +410,64 @@ private fun ClientServicesSections(
 }
 
 @Composable
-private fun formatServiceDateText(service: ServiceResponse): String {
-    val iso = service.endedAt ?: service.startedAt
-    return if (iso == null) {
-        "${stringResource(R.string.service_prefix)}${service.serviceId}"
-    } else {
-        try {
-            val instant = java.time.Instant.parse(iso)
-            val zoned = instant.atZone(java.time.ZoneId.systemDefault())
-            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(java.util.Locale.getDefault())
-            fmt.format(zoned)
-        } catch (e: java.time.format.DateTimeParseException) {
-            Log.e("HomeScreen", "Failed to parse date", e)
-            "${stringResource(R.string.service_prefix)}${service.serviceId}"
-        }
-    }
-}
-
-@Composable
-private fun formatScheduledText(scheduledAt: String?): String? {
-    return if (scheduledAt.isNullOrBlank()) {
-        null
-    } else {
-        try {
-            val instant = java.time.Instant.parse(scheduledAt)
-            val zoned = instant.atZone(java.time.ZoneId.systemDefault())
-            val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
-            "Scheduled: ${fmt.format(zoned)}"
-        } catch (e: java.time.format.DateTimeParseException) {
-            Log.e("HomeScreen", "Failed to parse scheduled date", e)
-            "Scheduled"
-        }
-    }
-}
-
-@Composable
 private fun ClientServiceCard(
     service: ServiceResponse,
     onOpenWaiting: (Long) -> Unit
 ) {
-    val isActive = service.status.uppercase() in setOf("REQUESTED", "ACCEPTED", "STARTED")
+    val isActive = service.status.uppercase() in setOf("REQUESTED", "ACCEPTED", "WAITING_FOR_START", "READY", "STARTED", "IN_PROGRESS")
+    
+    var isTimeToStart by remember { mutableStateOf(false) }
+    if (!service.scheduledAt.isNullOrBlank()) {
+        try {
+            val instant = Instant.parse(service.scheduledAt)
+            isTimeToStart = instant.isBefore(Instant.now()) || instant.equals(Instant.now())
+        } catch (e: Exception) {}
+    }
+
+    val isReady = service.status.uppercase() in setOf("READY", "STARTED", "IN_PROGRESS")
+    val shouldHighlight = isTimeToStart || isReady
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E2430)),
-        shape = RoundedCornerShape(14.dp)
+        colors = CardDefaults.cardColors(containerColor = if (shouldHighlight) CardBackgroundLight else CardBackgroundDark),
+        shape = RoundedCornerShape(14.dp),
+        border = if (shouldHighlight) BorderStroke(2.dp, PrimaryAccent) else null
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(formatServiceDateText(service), color = Color.White, fontWeight = FontWeight.SemiBold)
-            ServiceStatusBadge(status = service.status)
-            formatScheduledText(service.scheduledAt)?.let { scheduledText ->
-                Text(scheduledText, color = Color(0xFF7C3AED), fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            val dateText = run {
+                val iso = service.endedAt ?: service.startedAt
+                if (iso == null) {
+                    "${stringResource(R.string.service_prefix)}${service.serviceId}"
+                } else {
+                    try {
+                        val instant = java.time.Instant.parse(iso)
+                        val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                        val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy").withLocale(java.util.Locale.getDefault())
+                        fmt.format(zoned)
+                    } catch (e: Exception) {
+                        "${stringResource(R.string.service_prefix)}${service.serviceId}"
+                    }
+                }
+            }
+            Text(dateText, color = Color.White, fontWeight = FontWeight.SemiBold)
+            
+            // LOGIC: Show READY if time arrived but server still in WAITING_FOR_START
+            val displayStatus = if (service.status.uppercase() == "WAITING_FOR_START" && isTimeToStart) "READY / TIME ARRIVED" else service.status
+            ServiceStatusBadge(status = displayStatus)
+
+            if (!service.scheduledAt.isNullOrBlank()) {
+                val scheduledText = try {
+                    val instant = java.time.Instant.parse(service.scheduledAt)
+                    val zoned = instant.atZone(java.time.ZoneId.systemDefault())
+                    val fmt = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm").withLocale(java.util.Locale.getDefault())
+                    "Scheduled: ${fmt.format(zoned)}"
+                } catch (e: Exception) {
+                    "Scheduled"
+                }
+                Text(scheduledText, color = PurpleAccent, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
             }
             service.locationReferenceImageUrl?.let { imageUrl ->
                 AsyncImage(
@@ -443,7 +493,7 @@ private fun ClientServiceCard(
                 Button(
                     onClick = { onOpenWaiting(service.serviceId) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB))
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
                 ) {
                     Text(stringResource(R.string.open_waiting_screen))
                 }
@@ -456,12 +506,15 @@ private fun ClientServiceCard(
 private fun ServiceStatusBadge(status: String) {
     val normalized = status.uppercase()
     val label = if (normalized == "REQUESTED") "CREATED" else normalized
-    val (bg, fg) = when (normalized) {
-        "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
-        "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
-        "STARTED" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
-        "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
-        "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
+    val (bg, fg) = when {
+        normalized.contains("READY") || normalized.contains("ARRIVED") -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        normalized == "REQUESTED" -> Color(0xFF263238) to Color(0xFF90CAF9)
+        normalized == "ACCEPTED" -> Color(0xFF1B5E20) to Color(0xFFA5D6A7)
+        normalized == "WAITING_FOR_START" -> Color(0xFFF9A825) to Color(0xFFFFFDE7)
+        normalized == "READY" -> Success to SuccessBackground
+        normalized == "STARTED" || normalized == "IN_PROGRESS" -> Color(0xFF4E342E) to Color(0xFFFFCC80)
+        normalized == "COMPLETED" -> Color(0xFF0D47A1) to Color(0xFFBBDEFB)
+        normalized == "CANCELLED" -> Color(0xFFB71C1C) to Color(0xFFFFCDD2)
         else -> Color(0xFF37474F) to Color(0xFFECEFF1)
     }
     Card(
@@ -478,6 +531,82 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
+private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Background),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(CardBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                if (picDirectory != null) {
+                    val imageUrl = NetworkConfig.BASE_URL + picDirectory
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(300)
+                            .build(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.home_profile),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(Modifier.height(32.dp))
+            OutlinedButton(
+                onClick = {
+                    SessionManager.clearSession()
+                    onLogout()
+                },
+                border = BorderStroke(1.dp, TextTertiary),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = TextTertiary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_sign_out),
+                    color = TextTertiary
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun RecentPlacesSection(
     services: List<ServiceResponse>,
     onServiceClick: () -> Unit
@@ -488,7 +617,7 @@ private fun RecentPlacesSection(
             .padding(horizontal = 20.dp)
     ) {
         Text(
-            text = "Lugares recientes",
+            text = stringResource(R.string.recent_places),
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.2.sp,
@@ -563,7 +692,7 @@ private fun BottomNavigationBar(
     onTabSelected: (Int) -> Unit
 ) {
     NavigationBar(
-        containerColor = Color(0xFF1E1E1E),
+        containerColor = Background,
         tonalElevation = 0.dp
     ) {
         NavigationBarItem(

@@ -67,6 +67,7 @@ import com.sismptm.client.ui.theme.FilterChipActiveBg
 import com.sismptm.client.ui.theme.FilterChipInactiveBg
 import com.sismptm.client.ui.theme.PrimaryAccent
 import com.sismptm.client.ui.theme.StarColor
+import com.sismptm.client.ui.theme.Success
 import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
 import java.text.Normalizer
@@ -207,7 +208,7 @@ private fun searchTopBar(searchQuery: String, onQueryChange: (String) -> Unit, o
 @Composable
 private fun navigationBottomBar() {
     NavigationBar(
-        containerColor = Color(0xFF1A1A1A),
+        containerColor = Background,
         modifier = Modifier.height(56.dp)
     ) {
         val items = listOf(
@@ -365,7 +366,7 @@ private fun PartnerCard(partner: PartnerUi) {
                             .size(8.dp)
                             .align(Alignment.BottomEnd)
                             .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
+                            .background(Success)
                     )
                 }
 

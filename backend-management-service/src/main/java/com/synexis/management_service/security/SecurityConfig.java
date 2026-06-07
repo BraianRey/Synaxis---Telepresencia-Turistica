@@ -49,7 +49,9 @@ public class SecurityConfig {
                                                 "/api/availability/ping",
                                                 "/api/auth/**",
                                                 "/api/clients/register",
-                                                "/api/partners/register");
+                                                "/api/partners/register",
+                                                "/api/upload/**",
+                                                "/picProfile/**");
         }
 
         @Bean
@@ -67,7 +69,9 @@ public class SecurityConfig {
                                                                                 "/api/availability/ping",
                                                                                 "/api/auth/**",
                                                                                 "/api/clients/register",
-                                                                                "/api/partners/register")
+                                                                                "/api/partners/register",
+                                                                                "/api/upload/**",
+                                                                                "/picProfile/**")
                                                                 .permitAll()
                                                                 .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2

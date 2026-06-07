@@ -31,6 +31,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sismptm.client.R
+import com.sismptm.client.ui.theme.BlueSecondary
+import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.InputBackground
+import com.sismptm.client.ui.theme.InputBackgroundFocused
+import com.sismptm.client.ui.theme.InputBorderFocused
+import com.sismptm.client.ui.theme.InputTextActive
+import com.sismptm.client.ui.theme.PurpleAccent
+import com.sismptm.client.ui.theme.TextTertiary
 import java.util.Locale
 
 @Composable
@@ -48,7 +56,7 @@ fun LocationDescriptionSheet(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFF1A1A1A),
+                color = TextTertiary,
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
             )
             .padding(20.dp)
@@ -81,7 +89,7 @@ fun LocationDescriptionSheet(
                 text = "Lat: ${String.format(Locale.US, "%.4f", it.lat)} | " +
                     "Lon: ${String.format(Locale.US, "%.4f", it.lon)}",
                 fontSize = 12.sp,
-                color = Color(0xFFAAAAAA),
+                color = TextTertiary,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
         }
@@ -96,15 +104,15 @@ fun LocationDescriptionSheet(
             placeholder = {
                 Text(
                     stringResource(R.string.location_placeholder_example),
-                    color = Color(0xFF888888)
+                    color = TextTertiary
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color(0xFF444444),
-                focusedBorderColor = Color(0xFF2196F3),
-                unfocusedContainerColor = Color(0xFF2C2C2C),
-                focusedContainerColor = Color(0xFF333333),
-                unfocusedTextColor = Color(0xFFDDDDDD),
+                unfocusedBorderColor = InputBorderFocused,
+                focusedBorderColor = BlueSecondary,
+                unfocusedContainerColor = CardBackground,
+                focusedContainerColor = InputBackgroundFocused,
+                unfocusedTextColor = InputTextActive,
                 focusedTextColor = Color.White
             )
         )
@@ -127,7 +135,7 @@ fun LocationDescriptionSheet(
                 .fillMaxWidth()
                 .height(48.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (reserveMode) Color(0xFF7C3AED) else Color(0xFF2196F3)
+                containerColor = if (reserveMode) PurpleAccent else BlueSecondary
             ),
             enabled = selectedLocation != null
         ) {

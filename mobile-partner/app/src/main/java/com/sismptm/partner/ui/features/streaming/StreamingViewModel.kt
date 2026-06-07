@@ -85,6 +85,23 @@ class StreamingViewModel(application: Application) :
 
         signalingClient = SignalingClient(signalingUrl, this)
         signalingClient?.connect()
+
+        startServiceOnBackend()
+    }
+
+    /**
+     * Pauses the local preview to save GPU memory when the app goes to the background.
+     * The stream continues sending to the remote client.
+     */
+    fun pauseStream() {
+        webRTCManager.detachLocalPreview()
+    }
+
+    /**
+     * Resumes the local preview when the app returns to the foreground.
+     */
+    fun resumeStream(surfaceViewRenderer: SurfaceViewRenderer) {
+        webRTCManager.attachLocalPreview(surfaceViewRenderer)
     }
 
     override fun onConnected() {
@@ -94,7 +111,7 @@ class StreamingViewModel(application: Application) :
 
     override fun onJoinReceived(senderId: String) {
         if (senderId.isBlank()) return
-        Log.i(TAG, "Join request from client: $senderId. Performing proactive hardware reset.")
+        Log.i(TAG, "Join request from client: $senderId. Triggering network ICE restart/renegotiation.")
         this.targetClientId = senderId
 
         connectionTimeout?.cancel()
@@ -105,8 +122,8 @@ class StreamingViewModel(application: Application) :
             }
         }
 
-        // Proactive reset: Clear all hardware and network buffers to ensure clean recovery
-        webRTCManager.restartCapture()
+        // Trigger an SDP renegotiation without rebooting the physical camera hardware.
+        // This resolves the sudden black screen issue.
         webRTCManager.createOffer()
     }
 
@@ -250,6 +267,22 @@ class StreamingViewModel(application: Application) :
                 Log.e(TAG, errorMsg, e)
             } finally {
                 _isCompletingService.value = false
+            }
+        }
+    }
+
+    private fun startServiceOnBackend() {
+        if (serviceId == 0L) return
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.startService(serviceId)
+                if (response.isSuccessful) {
+                    Log.i(TAG, "Service $serviceId started (IN_PROGRESS) successfully")
+                } else {
+                    Log.e(TAG, "Failed to start service on backend: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error starting service on backend: ${e.message}")
             }
         }
     }

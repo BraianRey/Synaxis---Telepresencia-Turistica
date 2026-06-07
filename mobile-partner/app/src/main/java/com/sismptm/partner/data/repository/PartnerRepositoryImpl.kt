@@ -34,4 +34,7 @@ class PartnerRepositoryImpl : PartnerRepository {
 
     override suspend fun startService(serviceId: Long): Response<ServiceResponse> =
         api.startService(serviceId)
+
+    override suspend fun cancelServiceByPartner(serviceId: Long): Response<ServiceResponse> =
+        api.cancelServiceByPartner(serviceId)
 }

@@ -50,44 +50,58 @@ private const val HEX_PURPLE_GREY_40 = 0xFF625b71
 private const val HEX_PINK_40 = 0xFF7D5260
 
 // Primary Brand Colors
-val PrimaryAccent = Color(HEX_PRIMARY_ACCENT)      // Azul vibrante - Botones principales
-val PrimaryHover = Color(HEX_PRIMARY_HOVER)       // Azul más claro para estados hover
-val PrimaryDark = Color(HEX_PRIMARY_DARK)        // Azul oscuro para pressed states
+val PrimaryAccent = Color(0xFF2563EB)      // Vibrant blue - Main buttons
+val PrimaryHover = Color(0xFF3B82F6)       // Lighter blue for hover states
+val PrimaryDark = Color(0xFF1D4ED8)        // Dark blue for pressed states
 
 // Background Colors
-val Background = Color(HEX_BACKGROUND)         // Fondo general - casi negro azulado
-val BackgroundElevated = Color(HEX_BACKGROUND_ELEVATED) // Fondo ligeramente elevado
-val Surface = Color(HEX_BACKGROUND)            // Superficie base
+val Background = Color(0xFF121826)         // General background - dark blue-black
+val BackgroundElevated = Color(0xFF1A2332) // Slightly elevated background
+val Surface = Color(0xFF121826)            // Base surface
 
 // Card/Container Colors
-val CardBackground = Color(HEX_CARD_BACKGROUND)     // Contenedores/cards
-val CardBackgroundHover = Color(HEX_CARD_BACKGROUND_HOVER)// Cards en hover
-val InputBackground = Color(HEX_CARD_BACKGROUND)    // Inputs y campos de texto
+val CardBackground = Color(0xFF1C2533)     // Containers/cards
+val CardBackgroundHover = Color(0xFF232D3D)// Cards on hover
+val InputBackground = Color(0xFF1C2533)    // Inputs and text fields
 
 // Text Colors
-val TextPrimary = Color(HEX_TEXT_PRIMARY)        // Títulos principales - blanco puro
-val TextSecondary = Color(HEX_TEXT_SECONDARY)      // Cuerpo y datos - blanco suave
-val TextTertiary = Color(HEX_TEXT_TERTIARY)       // Etiquetas secundarias - gris medio
-val TextDisabled = Color(HEX_TEXT_DISABLED)       // Texto deshabilitado
+val TextPrimary = Color(0xFFFFFFFF)        // Primary titles - pure white
+val TextSecondary = Color(0xFFE5E7EB)      // Body and data - soft white
+val TextTertiary = Color(0xFF9CA3AF)       // Secondary labels - medium gray
+val TextDisabled = Color(0xFF6B7280)       // Disabled text
 
 // Border & Divider Colors
-val BorderSubtle = Color(HEX_BORDER_SUBTLE)       // Bordes y separadores sutiles
-val BorderFocus = Color(HEX_PRIMARY_ACCENT)        // Bordes en focus
-val Divider = Color(HEX_BORDER_SUBTLE)            // Divisores
+val BorderSubtle = Color(0xFF374151)       // Subtle borders and separators
+val BorderFocus = Color(0xFF2563EB)        // Focus borders
+val Divider = Color(0xFF374151)            // Dividers
 
 // Status Colors
-val Success = Color(HEX_SUCCESS)            // Verde éxito
-val SuccessLight = Color(HEX_SUCCESS_LIGHT)       // Verde claro
-val Error = Color(HEX_ERROR)              // Rojo error
-val ErrorLight = Color(HEX_ERROR_LIGHT)         // Rojo claro
-val Warning = Color(HEX_WARNING)            // Amarillo advertencia
-val Info = Color(HEX_PRIMARY_HOVER)               // Azul información
+val Success = Color(0xFF10B981)            // Success green
+val SuccessLight = Color(0xFF34D399)       // Light green
+val Error = Color(0xFFEF4444)              // Error red
+val ErrorLight = Color(0xFFF87171)         // Light red
+val Warning = Color(0xFFF59E0B)            // Warning yellow
+val Info = Color(0xFF3B82F6)               // Info blue
 
 // Misc Colors
-val StarColor = Color(HEX_STAR_COLOR)          // Estrellas de rating
-val AvatarBackground = Color(HEX_AVATAR_BACKGROUND)   // Fondo avatar genérico
-val OnlineIndicator = Color(HEX_ONLINE_INDICATOR)    // Indicador online
-val OfflineIndicator = Color(HEX_OFFLINE_INDICATOR)   // Indicador offline
+val StarColor = Color(0xFFFFC107)          // Rating stars
+val AvatarBackground = Color(0xFF9CA3AF)   // Generic avatar background
+val OnlineIndicator = Color(0xFF10B981)    // Online indicator
+val OfflineIndicator = Color(0xFF6B7280)   // Offline indicator
+val OfflineStatusColor = Color(0xFFFF5722) // Offline/disconnected status indicator
+val SuccessBackground = Color(0xFFE8F5E9)  // Light green background for success states
+
+// Action & Accent Variants
+val PurpleAccent = Color(0xFF7C3AED)       // Purple accent for alternative actions
+val BlueSecondary = Color(0xFF2196F3)      // Secondary blue for specific features
+val ErrorDark = Color(0xFFC62828)          // Dark error red
+
+// Background Variants
+val CardBackgroundDark = Color(0xFF1E2430) // Dark card variant
+val CardBackgroundLight = Color(0xFF2D3748)// Light card variant
+val InputBorderFocused = Color(0xFF444444) // Input border when focused
+val InputBackgroundFocused = Color(0xFF333333) // Input background when focused
+val InputTextActive = Color(0xFFDDDDDD)    // Active input text color
 
 // Legacy UI Components (ServiceDetailScreen, PartnerSearchScreen)
 val AvailableBadgeBg = Color(HEX_AVAILABLE_BADGE_BG)

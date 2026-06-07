@@ -2,6 +2,7 @@ package com.synexis.management_service.service.impl;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,13 +39,24 @@ import com.synexis.management_service.service.PaymentService;
 import com.synexis.management_service.service.ServiceHistoryService;
 import com.synexis.management_service.service.ServiceService;
 
+/**
+ * Service implementation for managing tours, assignments, and statuses.
+ */
 @Service
 public class ServiceServiceImpl implements ServiceService {
 
     private static final Set<ServiceStatus> ACTIVE_SERVICE_STATUSES = Set.of(
             ServiceStatus.REQUESTED,
             ServiceStatus.ACCEPTED,
-            ServiceStatus.STARTED);
+            ServiceStatus.WAITING_FOR_START,
+            ServiceStatus.READY,
+            ServiceStatus.IN_PROGRESS);
+
+    private static final Set<ServiceStatus> PARTNER_ACTIVE_STATUSES = Set.of(
+            ServiceStatus.ACCEPTED,
+            ServiceStatus.WAITING_FOR_START,
+            ServiceStatus.READY,
+            ServiceStatus.IN_PROGRESS);
 
     private final ServiceRepository serviceRepository;
     private final ServiceMapper serviceMapper;
@@ -80,12 +92,21 @@ public class ServiceServiceImpl implements ServiceService {
         this.serviceIdempotencyKeyRepository = serviceIdempotencyKeyRepository;
     }
 
+    /**
+     * Registers a new tour service, including scheduled reservations.
+     * @param request Tour data.
+     * @param authenticatedClientId Requesting client ID.
+     * @param idempotencyKey Key to prevent duplicates.
+     * @return Created service details.
+     */
     @Override
     @Transactional
     public ServiceResponse registerService(RegisterServiceRequest request, Long authenticatedClientId,
             String idempotencyKey) {
+
         Client client = clientRepository.findById(authenticatedClientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + authenticatedClientId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Client not found with id: " + authenticatedClientId));
 
         if (client.getStatus() != UserStatus.active) {
             throw new BusinessRuleViolationException("Client account is not active");
@@ -103,6 +124,22 @@ public class ServiceServiceImpl implements ServiceService {
             }
         }
 
+        boolean isScheduled = request.getScheduledAt() != null && !request.getScheduledAt().isBlank();
+        java.time.OffsetDateTime scheduledFor = null;
+
+        if (isScheduled) {
+            try {
+                scheduledFor = java.time.OffsetDateTime.parse(request.getScheduledAt());
+                if (!scheduledFor.isAfter(java.time.OffsetDateTime.now())) {
+                    throw new BusinessRuleViolationException(
+                            "scheduledAt must be a future date/time");
+                }
+            } catch (java.time.format.DateTimeParseException e) {
+                throw new BusinessRuleViolationException(
+                        "Invalid scheduledAt format. Expected ISO 8601 with timezone");
+            }
+        }
+
         if (serviceRepository.existsByClient_IdAndStatusIn(authenticatedClientId, ACTIVE_SERVICE_STATUSES)) {
             throw new BusinessRuleViolationException(
                     "You already have an active service request. Finish or cancel it before creating another.");
@@ -111,6 +148,17 @@ public class ServiceServiceImpl implements ServiceService {
         ServiceEntity service = serviceMapper.toEntity(request, client);
         service.setRequestedAt(LocalDateTime.now());
         service.setStatus(ServiceStatus.REQUESTED);
+        service.setScheduled(isScheduled);
+
+        if (isScheduled) {
+            java.time.Instant utcInstant = scheduledFor.toInstant();
+            LocalDateTime utcLocalDateTime = utcInstant.atZone(java.time.ZoneOffset.UTC).toLocalDateTime();
+            service.setScheduledFor(utcLocalDateTime);
+            
+            if (request.getAgreedHours() != null) {
+                service.setScheduledEndAt(utcLocalDateTime.plusHours(request.getAgreedHours()));
+            }
+        }
 
         ServiceEntity saved = serviceRepository.save(service);
 
@@ -125,6 +173,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Retrieves all services associated with a client.
+     * @param clientId Client ID.
+     * @param authenticatedClientId Authenticated user ID for security.
+     * @return List of client services.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getServicesByClientIdForUser(Long clientId, Long authenticatedClientId) {
@@ -135,6 +189,12 @@ public class ServiceServiceImpl implements ServiceService {
         return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves all services assigned to a partner.
+     * @param partnerId Partner ID.
+     * @param authenticatedPartnerId Authenticated partner ID for security.
+     * @return List of partner services.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getServicesByPartnerIdForUser(Long partnerId, Long authenticatedPartnerId) {
@@ -145,6 +205,10 @@ public class ServiceServiceImpl implements ServiceService {
         return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Lists services available to be accepted by partners.
+     * @return List of services with REQUESTED status.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<ServiceResponse> getAvailableServices() {
@@ -152,24 +216,60 @@ public class ServiceServiceImpl implements ServiceService {
         return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Retrieves a specific service, validating it belongs to the client.
+     * @param serviceId Service ID.
+     * @param clientId Requesting client ID.
+     * @return Service details response.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<ServiceResponse> getActiveServicesByClient(Long clientId) {
+        clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Client not found with id: " + clientId
+                ));
+
+        List<ServiceEntity> services = serviceRepository.findByClient_IdAndStatusIn(
+                clientId,
+                List.of(
+                        ServiceStatus.ACCEPTED,
+                        ServiceStatus.WAITING_FOR_START,
+                        ServiceStatus.READY,
+                        ServiceStatus.IN_PROGRESS
+                )
+        );
+
+        return services.stream().map(serviceMapper::toResponse).collect(Collectors.toList());
+    }
+
     @Override
     @Transactional(readOnly = true)
     public ServiceResponse getServiceForClient(Long serviceId, Long clientId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
         if (!service.getClient().getId().equals(clientId)) {
             throw new ForbiddenAccessException("You are not allowed to access this service");
         }
         return serviceMapper.toResponse(service);
     }
 
+    /**
+     * Retrieves a specific service, validating it belongs to the partner.
+     * @param serviceId Service ID.
+     * @param partnerId Requesting partner ID.
+     * @return Service details response.
+     */
     @Override
     @Transactional(readOnly = true)
     public ServiceResponse getServiceForPartner(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
         Partner partner = partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Partner not found with id: " + partnerId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Partner not found with id: " + partnerId));
 
         if (partner.getStatus() != UserStatus.active) {
             throw new BusinessRuleViolationException("Partner account is not active");
@@ -186,29 +286,41 @@ public class ServiceServiceImpl implements ServiceService {
         throw new ForbiddenAccessException("You are not allowed to access this service");
     }
 
+    /**
+     * Generates a financial summary for a completed service.
+     * @param serviceId Service ID.
+     * @return Payment and duration summary.
+     */
     @Override
     @Transactional(readOnly = true)
     public PaymentSummaryResponse getPaymentSummary(Long serviceId) {
         com.synexis.management_service.entity.ServicePayment payment = servicePaymentRepository
                 .findByService_IdService(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for service: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Payment not found for service: " + serviceId));
 
         return new PaymentSummaryResponse(
                 payment.getService().getIdService(),
                 payment.getActualDurationMin(),
-                payment.getBilledHours(),
+                payment.getBilledMinutes(),
                 payment.getTotalAmount(),
-                payment.getHourlyRate(),
+                payment.getRatePerMinute(),
                 payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 payment.getConfirmed());
     }
 
+    /**
+     * Confirms the payment for a service.
+     * @param serviceId Service ID.
+     * @return Confirmed payment summary.
+     */
     @Override
     @Transactional
     public PaymentSummaryResponse confirmPayment(Long serviceId) {
         com.synexis.management_service.entity.ServicePayment payment = servicePaymentRepository
                 .findByService_IdService(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for service: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Payment not found for service: " + serviceId));
 
         if (!Boolean.TRUE.equals(payment.getConfirmed())) {
             payment.setConfirmed(true);
@@ -218,26 +330,34 @@ public class ServiceServiceImpl implements ServiceService {
         return new PaymentSummaryResponse(
                 payment.getService().getIdService(),
                 payment.getActualDurationMin(),
-                payment.getBilledHours(),
+                payment.getBilledMinutes(),
                 payment.getTotalAmount(),
-                payment.getHourlyRate(),
+                payment.getRatePerMinute(),
                 payment.getCalculatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 payment.getConfirmed());
     }
 
+    /**
+     * Allows a partner to accept a requested service.
+     * @param serviceId Service ID to accept.
+     * @param partnerId Partner ID.
+     * @return Updated service with assigned partner.
+     */
     @Override
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     public ServiceResponse acceptService(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
 
         if (service.getStatus() != ServiceStatus.REQUESTED) {
             throw new BusinessRuleViolationException("Only REQUESTED services can be accepted");
         }
 
         Partner partner = partnerRepository.findById(partnerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Partner not found with id: " + partnerId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Partner not found with id: " + partnerId));
 
         if (partner.getStatus() != UserStatus.active) {
             throw new BusinessRuleViolationException("Partner account is not active");
@@ -248,16 +368,20 @@ public class ServiceServiceImpl implements ServiceService {
         }
 
         boolean hasActiveService = serviceRepository.existsByPartner_IdAndStatusIn(
-                partnerId,
-                Set.of(ServiceStatus.ACCEPTED, ServiceStatus.STARTED));
+                partnerId, PARTNER_ACTIVE_STATUSES);
 
         if (hasActiveService) {
             throw new BusinessRuleViolationException("Partner already has an active service");
         }
 
         service.setPartner(partner);
-        service.setStatus(ServiceStatus.ACCEPTED);
         service.setAcceptedAt(LocalDateTime.now());
+
+        if (service.isScheduled()) {
+            service.setStatus(ServiceStatus.WAITING_FOR_START);
+        } else {
+            service.setStatus(ServiceStatus.ACCEPTED);
+        }
 
         ServiceEntity saved = serviceRepository.save(service);
 
@@ -271,14 +395,32 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Sets the service to READY status.
+     * @param serviceId Service ID.
+     * @param partnerId Assigned partner ID.
+     * @return Updated service with READY status.
+     */
     @Override
     @Transactional
     public ServiceResponse readyService(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
 
-        if (service.getStatus() != ServiceStatus.ACCEPTED) {
-            throw new BusinessRuleViolationException("Only ACCEPTED services can be set to READY");
+        if (service.getStatus() != ServiceStatus.ACCEPTED
+                && service.getStatus() != ServiceStatus.WAITING_FOR_START) {
+            throw new BusinessRuleViolationException(
+                    "Only ACCEPTED or WAITING_FOR_START services can be set to READY");
+        }
+
+        // IMPROVEMENT: Added 1-minute grace period to account for clock skew
+        if (service.isScheduled()
+                && service.getScheduledFor() != null
+                && LocalDateTime.now(ZoneOffset.UTC).isBefore(service.getScheduledFor().minusMinutes(1))) {
+            throw new BusinessRuleViolationException(
+                    "Scheduled service cannot be set to READY before its scheduled time (1-min grace allowed): "
+                            + service.getScheduledFor() + " UTC");
         }
 
         if (!partnerId.equals(service.getPartner().getId())) {
@@ -286,7 +428,7 @@ public class ServiceServiceImpl implements ServiceService {
         }
 
         service.setStatus(ServiceStatus.READY);
-        service.setStartedAt(LocalDateTime.now()); // Assuming started_at is used for ready
+        service.setStartedAt(LocalDateTime.now());
 
         ServiceEntity saved = serviceRepository.save(service);
 
@@ -302,14 +444,21 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Formally starts the tour (IN_PROGRESS status).
+     * @param serviceId Service ID.
+     * @param partnerId Assigned partner ID.
+     * @return Updated service with IN_PROGRESS status.
+     */
     @Override
     @Transactional
     public ServiceResponse startService(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
 
-        if (service.getStatus() != ServiceStatus.ACCEPTED) {
-            throw new BusinessRuleViolationException("Only ACCEPTED services can be started");
+        if (service.getStatus() != ServiceStatus.READY) {
+            throw new BusinessRuleViolationException("Only READY services can be started");
         }
 
         Partner partner = service.getPartner();
@@ -320,7 +469,16 @@ public class ServiceServiceImpl implements ServiceService {
             throw new BusinessRuleViolationException("Partner account is not active");
         }
 
-        service.setStatus(ServiceStatus.STARTED);
+        // IMPROVEMENT: Added 1-minute grace period to account for clock skew
+        if (service.isScheduled()
+                && service.getScheduledFor() != null
+                && LocalDateTime.now(ZoneOffset.UTC).isBefore(service.getScheduledFor().minusMinutes(1))) {
+            throw new BusinessRuleViolationException(
+                    "Scheduled service cannot be started before its scheduled time (1-min grace allowed): "
+                            + service.getScheduledFor() + " UTC");
+        }
+
+        service.setStatus(ServiceStatus.IN_PROGRESS);
         service.setStartedAt(LocalDateTime.now());
 
         ServiceEntity saved = serviceRepository.save(service);
@@ -335,14 +493,21 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Completes a service from the partner side.
+     * @param serviceId Service ID.
+     * @param partnerId Assigned partner ID.
+     * @return Completed service details.
+     */
     @Override
     @Transactional
     public ServiceResponse completeService(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
 
-        if (service.getStatus() != ServiceStatus.STARTED) {
-            throw new BusinessRuleViolationException("Only STARTED services can be completed");
+        if (service.getStatus() != ServiceStatus.IN_PROGRESS) {
+            throw new BusinessRuleViolationException("Only IN_PROGRESS services can be completed");
         }
 
         Partner partner = service.getPartner();
@@ -359,7 +524,8 @@ public class ServiceServiceImpl implements ServiceService {
         service.setEndedAt(LocalDateTime.now());
 
         Partner assignedPartner = service.getPartner();
-        if (assignedPartner != null && assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
+        if (assignedPartner != null
+                && assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
             assignedPartner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
             partnerRepository.save(assignedPartner);
         }
@@ -377,6 +543,12 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Completes a service from the client side.
+     * @param serviceId Service ID.
+     * @param clientId Owner client ID.
+     * @return Completed service details.
+     */
     @Override
     @Transactional
     public ServiceResponse completeServiceByClient(Long serviceId, Long clientId) {
@@ -384,15 +556,13 @@ public class ServiceServiceImpl implements ServiceService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Service not found with id: " + serviceId));
 
-        if (service.getStatus() != ServiceStatus.STARTED) {
-            throw new BusinessRuleViolationException(
-                    "Only STARTED services can be completed");
+        if (service.getStatus() != ServiceStatus.IN_PROGRESS) {
+            throw new BusinessRuleViolationException("Only IN_PROGRESS services can be completed");
         }
 
         Client client = service.getClient();
         if (client == null || !client.getId().equals(clientId)) {
-            throw new ForbiddenAccessException(
-                    "Client is not the owner of this service");
+            throw new ForbiddenAccessException("Client is not the owner of this service");
         }
 
         service.setStatus(ServiceStatus.COMPLETED);
@@ -401,8 +571,8 @@ public class ServiceServiceImpl implements ServiceService {
         service.setEndedAt(LocalDateTime.now());
 
         Partner assignedPartner = service.getPartner();
-        if (assignedPartner != null &&
-                assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
+        if (assignedPartner != null
+                && assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
             assignedPartner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
             partnerRepository.save(assignedPartner);
         }
@@ -420,14 +590,22 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Cancels a requested or accepted service from the client side.
+     * @param serviceId Service ID to cancel.
+     * @param clientId Owner client ID.
+     * @return Cancelled service details.
+     */
     @Override
     @Transactional
     public ServiceResponse cancelService(Long serviceId, Long clientId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
 
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Client not found with id: " + clientId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Client not found with id: " + clientId));
 
         if (client.getStatus() != UserStatus.active) {
             throw new BusinessRuleViolationException("Client account is not active");
@@ -437,30 +615,36 @@ public class ServiceServiceImpl implements ServiceService {
             throw new BusinessRuleViolationException("Client is not the owner of this service");
         }
 
-        if (service.getStatus() == ServiceStatus.COMPLETED || service.getStatus() == ServiceStatus.CANCELLED) {
-            throw new BusinessRuleViolationException("Completed or cancelled services cannot be cancelled again");
+        if (service.getStatus() == ServiceStatus.COMPLETED
+                || service.getStatus() == ServiceStatus.CANCELLED) {
+            throw new BusinessRuleViolationException(
+                    "Completed or cancelled services cannot be cancelled again");
         }
 
-        if (service.getStatus() == ServiceStatus.STARTED) {
+        if (service.getStatus() == ServiceStatus.IN_PROGRESS) {
             throw new BusinessRuleViolationException(
                     "In-progress services can only be cancelled by the system due to connection failures");
         }
 
-        if (service.getStatus() != ServiceStatus.REQUESTED && service.getStatus() != ServiceStatus.ACCEPTED) {
+        if (!Set.of(
+                ServiceStatus.REQUESTED,
+                ServiceStatus.ACCEPTED,
+                ServiceStatus.WAITING_FOR_START,
+                ServiceStatus.READY).contains(service.getStatus())) {
             throw new BusinessRuleViolationException("Service is not in a cancellable state");
         }
 
         paymentService.cancelPreAuthorization(serviceId);
 
         Partner assignedPartner = service.getPartner();
-        if (assignedPartner != null && assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
+        if (assignedPartner != null
+                && assignedPartner.getAvailabilityStatus() == PartnerAvailabilityStatus.busy) {
             assignedPartner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
             partnerRepository.save(assignedPartner);
         }
 
         service.setStatus(ServiceStatus.CANCELLED);
         service.setEndedAt(LocalDateTime.now());
-
         service.setPartner(null);
 
         ServiceEntity saved = serviceRepository.save(service);
@@ -475,11 +659,18 @@ public class ServiceServiceImpl implements ServiceService {
         return serviceMapper.toResponse(saved);
     }
 
+    /**
+     * Cancels an accepted service from the assigned partner side.
+     * @param serviceId Service ID to cancel.
+     * @param partnerId Assigned partner ID.
+     * @return Cancelled service details.
+     */
     @Override
     @Transactional
     public ServiceResponse cancelServiceByPartner(Long serviceId, Long partnerId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Service not found with id: " + serviceId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Service not found with id: " + serviceId));
 
         Partner partner = service.getPartner();
         if (partner == null || !partner.getId().equals(partnerId)) {
@@ -489,13 +680,17 @@ public class ServiceServiceImpl implements ServiceService {
             throw new BusinessRuleViolationException("Partner account is not active");
         }
 
-        if (service.getStatus() == ServiceStatus.STARTED) {
+        if (service.getStatus() == ServiceStatus.IN_PROGRESS) {
             throw new BusinessRuleViolationException(
                     "In-progress services cannot be cancelled by the partner");
         }
 
-        if (service.getStatus() != ServiceStatus.ACCEPTED) {
-            throw new BusinessRuleViolationException("Only ACCEPTED services can be cancelled by the partner");
+        if (!Set.of(
+                ServiceStatus.ACCEPTED,
+                ServiceStatus.WAITING_FOR_START,
+                ServiceStatus.READY).contains(service.getStatus())) {
+            throw new BusinessRuleViolationException(
+                    "Only ACCEPTED, WAITING_FOR_START, or READY services can be cancelled by the partner");
         }
 
         service.setStatus(ServiceStatus.CANCELLED);
@@ -514,5 +709,4 @@ public class ServiceServiceImpl implements ServiceService {
 
         return serviceMapper.toResponse(saved);
     }
-
 }

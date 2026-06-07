@@ -1,7 +1,8 @@
 package com.synexis.management_service.controller;
 
-import com.synexis.management_service.dto.response.UserProfileResponse;
+import com.synexis.management_service.dto.response.usersProfile.UserProfileResponse;
 import com.synexis.management_service.service.UserProfileService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

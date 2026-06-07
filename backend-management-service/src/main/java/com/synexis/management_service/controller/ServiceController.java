@@ -130,6 +130,27 @@ public class ServiceController {
     }
 
     /**
+     * Lists active services for a given client.
+     *
+     * <p>
+     * Active services are those in {@code WAITING_FOR_START}, {@code READY}, 
+     * {@code ACCEPTED} or {@code IN_PROGRESS} status. This endpoint is used 
+     * by the client application to show the current in-progress service (if any) 
+     * at the top of the home screen, with summary information and quick access 
+     * to the service details.
+     * </p>
+     */
+    @GetMapping("/client/{clientId}/active")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('CLIENT')")
+    public List<ServiceResponse> getActiveServicesByClient(@PathVariable Long clientId, Authentication authentication) {
+        String keycloakId = extractKeycloakId(authentication);
+        Client client = clientRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found for current user"));
+        return serviceService.getActiveServicesByClient(client.getId());
+    }
+
+    /**
      * Accepts a service request by a partner.
      *
      * <p>

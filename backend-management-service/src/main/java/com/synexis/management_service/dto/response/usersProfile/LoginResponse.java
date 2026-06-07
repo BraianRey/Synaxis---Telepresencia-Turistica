@@ -1,4 +1,4 @@
-package com.synexis.management_service.dto.response;
+package com.synexis.management_service.dto.response.usersProfile;
 
 /** Successful login response with Keycloak tokens and local profile data. */
 public record LoginResponse(
@@ -10,5 +10,6 @@ public record LoginResponse(
                 String email,
                 String name,
                 String role,
-                String language) {
+                String language,
+                String picDirectory) {
 }

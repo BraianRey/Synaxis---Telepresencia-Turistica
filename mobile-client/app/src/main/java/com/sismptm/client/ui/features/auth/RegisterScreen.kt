@@ -133,6 +133,16 @@ fun RegisterScreen(
             uploadError = uploadError
         )
 
+        if (uploadError != null) {
+            Text(
+                text = uploadError!!,
+                color = Error,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
         RegisterForm(

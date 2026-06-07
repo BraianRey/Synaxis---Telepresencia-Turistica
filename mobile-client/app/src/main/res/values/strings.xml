@@ -45,7 +45,7 @@
     <string name="no_tours_available">No tours available at the moment.</string>
     <string name="search_placeholder">Search for a destination...</string>
 
-    <!-- Home Screen - New Hardcoded Strings -->
+    <!-- Home Screen - New Strings -->
     <string name="home_greeting">Hello, %1$s!</string>
     <string name="home_subtitle">Where do you want to travel today?</string>
     <string name="home_search_hint">Search city or destination...</string>
@@ -60,8 +60,10 @@
     <string name="home_services_no_active">No active services</string>
     <string name="home_services_history">Service history</string>
     <string name="home_services_no_history">No services in history</string>
+    <string name="reserve_service_btn">Reserve service</string>
+    <string name="recent_places">Recent places</string>
 
-    <!-- Partner Search Screen - New Hardcoded Strings -->
+    <!-- Partner Search Screen -->
     <string name="search_cancel">Cancel</string>
     <string name="search_partners_found">%1$d partners found</string>
     <string name="search_sort_by">Sort by</string>
@@ -78,6 +80,9 @@
     <string name="control_left">LEFT</string>
     <string name="control_right">RIGHT</string>
     <string name="end_session">End Session</string>
+    <string name="connection_status_connecting">Connecting…</string>
+    <string name="connection_status_closed">Closed</string>
+    <string name="connection_status_disconnected">Disconnected</string>
 
     <!-- Shared service/request screens -->
     <string name="gps_permission_required">GPS Permission Required</string>
@@ -156,11 +161,8 @@
     <string name="checking_latest_status">Checking latest status…</string>
     <string name="connection_error_cancelling">Connection error while cancelling</string>
     <string name="connection_error_loading_service">Connection error while loading service</string>
-
-    <!-- StreamingScreen -->
-    <string name="connection_status_connecting">Connecting…</string>
-    <string name="connection_status_closed">Closed</string>
-    <string name="connection_status_disconnected">Disconnected</string>
+    <string name="time_arrived_msg">The scheduled time has arrived! The guide will start shortly.</string>
+    <string name="status_ready_to_start">READY / TIME ARRIVED</string>
 
     <!-- RequestScreen -->
     <string name="create_service_request">Create service request</string>
@@ -205,8 +207,13 @@
     <string name="currency_suffix">COP</string>
     <string name="price_format">%1$s COP</string>
     <string name="currency_format">$%1$s COP</string>
-    
-    <!-- Profile additions -->
+
+    <!-- Notifications -->
+    <string name="notification_title_reminder">Tour Reminder</string>
+    <string name="notification_msg_client">Your scheduled tour #%1$d is about to start!</string>
+    <string name="notification_msg_partner">You have a scheduled tour #%1$d starting now.</string>
+
+    <!-- Profile -->
     <string name="my_profile">My Profile</string>
     <string name="preferred_language">Preferred Language</string>
     <string name="edit">Edit</string>
@@ -231,4 +238,8 @@
     <string name="rating_error">Failed to submit rating. Try again.</string>
     <string name="comment_too_long">Comment must not exceed 200 characters.</string>
     <string name="not_rated_yet">Not rated yet</string>
+
+    <!-- Notification Permission -->
+    <string name="notification_permission_required">Notification Permission Required</string>
+    <string name="notification_permission_explanation">This app requires notification access to send you reminders when your scheduled tours are about to start. Please enable permissions to continue.</string>
 </resources>

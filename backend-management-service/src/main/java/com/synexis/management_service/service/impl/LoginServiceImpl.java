@@ -2,7 +2,7 @@ package com.synexis.management_service.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.synexis.management_service.dto.response.LoginResponse;
+import com.synexis.management_service.dto.response.usersProfile.LoginResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.exception.InvalidCredentialsException;
@@ -47,6 +47,8 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(InvalidCredentialsException::new);
 
         TokenResult token = requestToken(normalizedEmail, password);
+        String picDir = client.getPicDirectory();
+        System.out.println("[LoginDebug] Client login: email=" + normalizedEmail + ", picDirectory=" + picDir);
         return new LoginResponse(
                 token.accessToken,
                 token.refreshToken,
@@ -56,7 +58,8 @@ public class LoginServiceImpl implements LoginService {
                 client.getEmail(),
                 client.getName(),
                 client.getRole().name(),
-                client.getLanguage().name());
+                client.getLanguage().name(),
+                picDir);
     }
 
     @Override
@@ -66,6 +69,8 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(InvalidCredentialsException::new);
 
         TokenResult token = requestToken(normalizedEmail, password);
+        String picDir = partner.getPicDirectory();
+        System.out.println("[LoginDebug] Partner login: email=" + normalizedEmail + ", picDirectory=" + picDir);
         return new LoginResponse(
                 token.accessToken,
                 token.refreshToken,
@@ -75,7 +80,8 @@ public class LoginServiceImpl implements LoginService {
                 partner.getEmail(),
                 partner.getName(),
                 partner.getRole().name(),
-                partner.getLanguage().name());
+                partner.getLanguage().name(),
+                picDir);
     }
 
     private TokenResult requestToken(String email, String password) {
@@ -105,12 +111,12 @@ public class LoginServiceImpl implements LoginService {
                 throw new WrongPasswordException();
             }
             throw new KeycloakUserCreationException(
-                    "Error de autenticacion en Keycloak. Status: " + response.statusCode());
+                    "Keycloak authentication error. Status: " + response.statusCode());
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            throw new KeycloakUserCreationException("No se pudo validar el login con Keycloak: " + ex.getMessage());
+            throw new KeycloakUserCreationException("Unable to validate login with Keycloak: " + ex.getMessage());
         } catch (IOException ex) {
-            throw new KeycloakUserCreationException("No se pudo validar el login con Keycloak: " + ex.getMessage());
+            throw new KeycloakUserCreationException("Unable to validate login with Keycloak: " + ex.getMessage());
         }
     }
 

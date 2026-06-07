@@ -52,7 +52,7 @@ fun ServiceDetailScreen(
 @Composable
 private fun ServiceDetailBottomBar() {
     NavigationBar(
-        containerColor = Color(0xFF1A1A1A),
+        containerColor = Background,
         modifier = Modifier.height(56.dp)
     ) {
         val items = listOf("Explore", "Favorites", "Tours", "Messages", "Account")
@@ -159,7 +159,7 @@ private fun ServiceDetailHeroSection() {
                     .size(12.dp)
                     .align(Alignment.BottomEnd)
                     .clip(CircleShape)
-                    .background(Color(0xFF4CAF50))
+                    .background(Success)
             )
         }
     }

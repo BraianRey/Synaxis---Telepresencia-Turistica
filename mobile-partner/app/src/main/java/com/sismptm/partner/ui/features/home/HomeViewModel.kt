@@ -2,6 +2,7 @@ package com.sismptm.partner.ui.features.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.core.session.SessionManager
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.data.repository.PartnerRepositoryImpl
@@ -52,6 +53,15 @@ class HomeViewModel(
     private val _acceptErrorMessage = MutableStateFlow<String?>(null)
     val acceptErrorMessage: StateFlow<String?> = _acceptErrorMessage.asStateFlow()
 
+    private val _averageRating = MutableStateFlow<String>("-")
+    val averageRating: StateFlow<String> = _averageRating.asStateFlow()
+
+    private val _ratingCount = MutableStateFlow(0)
+    val ratingCount: StateFlow<Int> = _ratingCount.asStateFlow()
+
+    private val _isLoadingRatings = MutableStateFlow(false)
+    val isLoadingRatings: StateFlow<Boolean> = _isLoadingRatings.asStateFlow()
+
     fun loadAvailableRequests(silent: Boolean = false) {
         viewModelScope.launch {
             if (!silent) _requestsState.value = RequestsUiState.Loading
@@ -83,6 +93,9 @@ class HomeViewModel(
                         )
                     }
                     _acceptedTour.value = acceptedService
+                    
+                    // Refresh partner services to show the accepted service in "My Services"
+                    loadPartnerServices()
                 } else {
                     _acceptErrorMessage.value = parseError(response.code(), response.errorBody()?.string())
                 }
@@ -94,7 +107,7 @@ class HomeViewModel(
         }
     }
 
-    fun loadPartnerServices() {
+    fun loadPartnerServices(silent: Boolean = false) {
         val partnerId = SessionManager.partnerId
         if (partnerId == 0L) {
             _partnerServicesState.value = PartnerServicesUiState.Error("Session expired. Please log in again.")
@@ -102,7 +115,7 @@ class HomeViewModel(
         }
 
         viewModelScope.launch {
-            _partnerServicesState.value = PartnerServicesUiState.Loading
+            if (!silent) _partnerServicesState.value = PartnerServicesUiState.Loading
             try {
                 val response = getPartnerServicesUseCase(partnerId)
                 if (response.isSuccessful) {
@@ -129,7 +142,33 @@ class HomeViewModel(
         }
     }
 
+    fun loadPartnerRatings() {
+        val partnerId = SessionManager.partnerId
+        if (partnerId == 0L) return
+
+        viewModelScope.launch {
+            _isLoadingRatings.value = true
+            try {
+                val response = RetrofitClient.apiService.getRatingsByPartner(partnerId)
+                if (response.isSuccessful) {
+                    val ratings = response.body().orEmpty()
+                    if (ratings.isNotEmpty()) {
+                        val avg = ratings.map { it.score }.average()
+                        _averageRating.value = String.format("%.1f", avg)
+                        _ratingCount.value = ratings.size
+                    } else {
+                        _averageRating.value = "-"
+                        _ratingCount.value = 0
+                    }
+                }
+            } catch (e: Exception) {
+                // Silent — do not disrupt the home screen
+            } finally {
+                _isLoadingRatings.value = false
+            }
+        }
+    }
+
     fun clearAcceptedTour() { _acceptedTour.value = null }
     fun clearAcceptError() { _acceptErrorMessage.value = null }
 }
-

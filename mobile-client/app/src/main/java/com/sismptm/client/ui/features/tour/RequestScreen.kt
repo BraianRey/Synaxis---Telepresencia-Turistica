@@ -58,6 +58,7 @@ import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.ui.theme.Background
 import com.sismptm.client.ui.theme.CardBackground
 import com.sismptm.client.ui.theme.DividerBorder
+import com.sismptm.client.ui.theme.ErrorDark
 import com.sismptm.client.ui.theme.PrimaryAccent
 import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextSecondary
@@ -352,12 +353,12 @@ private fun RequestFormCard(
 private fun RequestErrorCard(message: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFCDD2)),
         shape = RoundedCornerShape(14.dp)
     ) {
         Text(
             text = message,
-            color = Color(0xFFC62828),
+            color = ErrorDark,
             modifier = Modifier.padding(14.dp)
         )
     }
