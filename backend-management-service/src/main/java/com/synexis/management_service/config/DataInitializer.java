@@ -52,8 +52,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     @Override
-    // SE ELIMINÓ @Transactional de aquí para evitar que un fallo aislado tumbe todo
-    // el proceso
+    // initialization process
     public void run(ApplicationArguments args) {
         log.info("\n\n=== DataInitializer: starting seed ===\n\n");
         seedClients();
@@ -72,7 +71,7 @@ public class DataInitializer implements ApplicationRunner {
         seedClient("María López", "maria.seed@gmail.com", "password12", UserLanguage.es);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    ~@Transactional(propagation = Propagation.REQUIRES_NEW)
     public void seedClient(String name, String email, String password, UserLanguage language) {
         if (clientRepository.findByEmailIgnoreCase(email).isPresent()) {
             log.info("Client already exists in DB, skipping: {}", email);
