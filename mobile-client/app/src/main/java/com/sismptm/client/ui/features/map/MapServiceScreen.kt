@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,6 +67,10 @@ fun MapServiceScreen(
 
     val mapView = rememberMapViewForService(context, mapViewModel)
     val snackbarHostState = remember { SnackbarHostState() }
+
+    BackHandler {
+        onBack()
+    }
 
     MapServiceCreateEffect(
         createState = createState,

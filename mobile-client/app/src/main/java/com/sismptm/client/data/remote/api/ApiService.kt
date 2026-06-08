@@ -45,6 +45,10 @@ interface ApiService {
     @GET("api/services/client/{clientId}")
     suspend fun getServicesByClient(@Path("clientId") clientId: Long): Response<List<ServiceResponse>>
 
+    /** Retrieves all active services associated with a specific client */
+    @GET("api/services/client/{clientId}/active")
+    suspend fun getActiveServicesByClient(@Path("clientId") clientId: Long): Response<List<ServiceResponse>>
+
     /** Retrieves detailed information for a specific service */
     @GET("api/services/{serviceId}")
     suspend fun getServiceById(@Path("serviceId") serviceId: Long): Response<ServiceResponse>

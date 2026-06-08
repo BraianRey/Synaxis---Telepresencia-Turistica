@@ -152,7 +152,8 @@ fun ReserveServiceScreen(
             isLoading = isLoading,
             enabled = selectedDate != null && selectedTime != null && !isLoading,
             onConfirm = {
-                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.getDefault())
+                isoFormat.timeZone = java.util.TimeZone.getDefault()
                 val scheduledAt = isoFormat.format(calendar.time)
                 serviceViewModel.createService(location, description, scheduledAt)
             }
