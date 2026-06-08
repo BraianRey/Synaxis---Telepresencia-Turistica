@@ -7,6 +7,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -70,69 +72,16 @@ fun NavGraph() {
         popExitTransition = { slideOutHorizontally(tween(300)) { it } + fadeOut(tween(200)) }
     ) {
         composable(Screen.Welcome.route) {
-            WelcomeScreen(
-                onGetStarted = {
-                    navController.navigate(Screen.Register.route) {
-                        popUpTo(Screen.Welcome.route) { inclusive = true }
-                    }
-                },
-                onSignIn = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Welcome.route) { inclusive = true }
-                    }
-                },
-                onNavigateToStreaming = {
-                    // Default for testing if needed
-                    navController.navigate(Screen.Streaming.createRoute(0L))
-                }
-            )
+            WelcomeComposable(navController)
         }
         composable(Screen.Login.route) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
-                },
-                onNavigateToRegister = {
-                    navController.navigate(Screen.Register.route)
-                }
-            )
+            LoginComposable(navController)
         }
         composable(Screen.Register.route) {
-            RegisterScreen(
-                onRegisterSuccess = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Register.route) { inclusive = true }
-                    }
-                },
-                onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Register.route) { inclusive = true }
-                    }
-                }
-            )
+            RegisterComposable(navController)
         }
         composable(Screen.Home.route) {
-            HomeScreen(
-                onNavigateToPartnerSearch = {
-                    navController.navigate(Screen.PartnerSearch.route)
-                },
-                onOpenServiceWaiting = { serviceId ->
-                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
-                },
-                onNavigateToMapService = {
-                    navController.navigate(Screen.MapService.route)
-                },
-                onNavigateToReserveMap = {
-                    navController.navigate(Screen.MapService.route + "?mode=reserve")
-                },
-                onLogout = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
+            HomeComposable(navController)
         }
 
         composable(
@@ -142,24 +91,7 @@ fun NavGraph() {
                 defaultValue = "request"
             })
         ) { backStackEntry ->
-            val mode = backStackEntry.arguments?.getString("mode") ?: "request"
-            val isReserveMode = mode == "reserve"
-            MapServiceScreen(
-                reserveMode = isReserveMode,
-                onBack = {
-                    navController.popBackStack()
-                },
-                onServiceCreated = { serviceId ->
-                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
-                        popUpTo(Screen.MapService.route) { inclusive = true }
-                    }
-                },
-                onNavigateToReserve = { lat, lon, description ->
-                    navController.navigate(Screen.Reserve.createRoute(lat, lon, description)) {
-                        popUpTo(Screen.MapService.route) { inclusive = true }
-                    }
-                }
-            )
+            MapServiceComposable(navController, backStackEntry)
         }
 
         composable(
@@ -170,108 +102,227 @@ fun NavGraph() {
                 navArgument("description") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val lat = backStackEntry.arguments?.getFloat("lat")?.toDouble() ?: 0.0
-            val lon = backStackEntry.arguments?.getFloat("lon")?.toDouble() ?: 0.0
-            val description = backStackEntry.arguments?.getString("description") ?: ""
-            ReserveServiceScreen(
-                location = com.sismptm.client.ui.features.map.MapLocation(lat = lat, lon = lon),
-                description = java.net.URLDecoder.decode(description, "UTF-8"),
-                onBack = { navController.popBackStack() },
-                onReservationCreated = { serviceId ->
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                }
-            )
+            ReserveComposable(navController, backStackEntry)
         }
 
         composable(Screen.PartnerSearch.route) {
-            PartnerSearchScreen(
-                onCancelSearch = {
-                    navController.popBackStack()
-                },
-                onRequestTour = {
-                    navController.navigate(Screen.Request.route)
-                }
-            )
+            PartnerSearchComposable(navController)
         }
 
         composable(Screen.Request.route) {
-            RequestScreen(
-                onViewDetails = { serviceId ->
-                    navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
-                        popUpTo(Screen.Request.route) { inclusive = true }
-                    }
-                },
-                onBack = { navController.popBackStack() }
-            )
+            RequestComposable(navController)
         }
 
         composable(
             route = Screen.ServiceWaiting.route,
             arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
-            ServiceWaitingScreen(
-                serviceId = serviceId,
-                onBackHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
-                onNavigateToStreaming = { sid ->
-                    navController.navigate(Screen.Streaming.createRoute(sid)) {
-                        popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
-                    }
-                },
-                onNavigateToSummary = { sid ->
-                    navController.navigate(Screen.ServiceSummary.createRoute(sid)) {
-                        popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
-                    }
-                }
-            )
+            ServiceWaitingComposable(navController, backStackEntry)
         }
 
         composable(Screen.ServiceDetail.route) {
-            ServiceDetailScreen(
-                onConfirm = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
-            )
+            ServiceDetailComposable(navController)
         }
 
         composable(
             route = Screen.Streaming.route,
             arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
-            StreamingScreen(
-                serviceId = serviceId,
-                onBack = { navController.popBackStack() },
-                onNavigateToSummary = { sid ->
-                    navController.navigate(Screen.ServiceSummary.createRoute(sid)) {
-                        popUpTo(Screen.Streaming.route) { inclusive = true }
-                    }
-                }
-            )
+            StreamingComposable(navController, backStackEntry)
         }
 
         composable(
             route = Screen.ServiceSummary.route,
             arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
-            ServiceSummaryScreen(
-                serviceId = serviceId,
-                onBackToHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                }
-            )
+            ServiceSummaryComposable(navController, backStackEntry)
         }
     }
+}
+
+@Composable
+private fun WelcomeComposable(navController: NavHostController) {
+    WelcomeScreen(
+        onGetStarted = {
+            navController.navigate(Screen.Register.route) {
+                popUpTo(Screen.Welcome.route) { inclusive = true }
+            }
+        },
+        onSignIn = {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Welcome.route) { inclusive = true }
+            }
+        },
+        onNavigateToStreaming = {
+            navController.navigate(Screen.Streaming.createRoute(0L))
+        }
+    )
+}
+
+@Composable
+private fun LoginComposable(navController: NavHostController) {
+    LoginScreen(
+        onLoginSuccess = {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        },
+        onNavigateToRegister = {
+            navController.navigate(Screen.Register.route)
+        }
+    )
+}
+
+@Composable
+private fun RegisterComposable(navController: NavHostController) {
+    RegisterScreen(
+        onRegisterSuccess = {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Register.route) { inclusive = true }
+            }
+        },
+        onNavigateToLogin = {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Register.route) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun HomeComposable(navController: NavHostController) {
+    HomeScreen(
+        onNavigateToPartnerSearch = {
+            navController.navigate(Screen.PartnerSearch.route)
+        },
+        onOpenServiceWaiting = { serviceId ->
+            navController.navigate(Screen.ServiceWaiting.createRoute(serviceId))
+        },
+        onNavigateToMapService = {
+            navController.navigate(Screen.MapService.route)
+        },
+        onNavigateToReserveMap = {
+            navController.navigate(Screen.MapService.route + "?mode=reserve")
+        },
+        onLogout = {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun MapServiceComposable(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val mode = backStackEntry.arguments?.getString("mode") ?: "request"
+    val isReserveMode = mode == "reserve"
+    MapServiceScreen(
+        reserveMode = isReserveMode,
+        onBack = { navController.popBackStack() },
+        onServiceCreated = { serviceId ->
+            navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                popUpTo(Screen.MapService.route) { inclusive = true }
+            }
+        },
+        onNavigateToReserve = { lat, lon, description ->
+            navController.navigate(Screen.Reserve.createRoute(lat, lon, description)) {
+                popUpTo(Screen.MapService.route) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun ReserveComposable(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val lat = backStackEntry.arguments?.getFloat("lat")?.toDouble() ?: 0.0
+    val lon = backStackEntry.arguments?.getFloat("lon")?.toDouble() ?: 0.0
+    val description = backStackEntry.arguments?.getString("description") ?: ""
+    ReserveServiceScreen(
+        location = com.sismptm.client.ui.features.map.MapLocation(lat = lat, lon = lon),
+        description = java.net.URLDecoder.decode(description, "UTF-8"),
+        onBack = { navController.popBackStack() },
+        onReservationCreated = { serviceId ->
+            navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                popUpTo(Screen.Reserve.route) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun PartnerSearchComposable(navController: NavHostController) {
+    PartnerSearchScreen(
+        onCancelSearch = { navController.popBackStack() },
+        onRequestTour = { navController.navigate(Screen.Request.route) }
+    )
+}
+
+@Composable
+private fun RequestComposable(navController: NavHostController) {
+    RequestScreen(
+        onViewDetails = { serviceId ->
+            navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
+                popUpTo(Screen.Request.route) { inclusive = true }
+            }
+        },
+        onBack = { navController.popBackStack() }
+    )
+}
+
+@Composable
+private fun ServiceWaitingComposable(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+    ServiceWaitingScreen(
+        serviceId = serviceId,
+        onBackHome = {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Home.route) { inclusive = false }
+                launchSingleTop = true
+            }
+        },
+        onNavigateToStreaming = { sid ->
+            navController.navigate(Screen.Streaming.createRoute(sid)) {
+                popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
+            }
+        },
+        onNavigateToSummary = { sid ->
+            navController.navigate(Screen.ServiceSummary.createRoute(sid)) {
+                popUpTo(Screen.ServiceWaiting.route) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun ServiceDetailComposable(navController: NavHostController) {
+    ServiceDetailScreen(onConfirm = { navController.popBackStack() }, onBack = { navController.popBackStack() })
+}
+
+@Composable
+private fun StreamingComposable(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+    StreamingScreen(
+        serviceId = serviceId,
+        onBack = { navController.popBackStack() },
+        onNavigateToSummary = { sid ->
+            navController.navigate(Screen.ServiceSummary.createRoute(sid)) {
+                popUpTo(Screen.Streaming.route) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun ServiceSummaryComposable(navController: NavHostController, backStackEntry: NavBackStackEntry) {
+    val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+    ServiceSummaryScreen(
+        serviceId = serviceId,
+        onBackToHome = {
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Home.route) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    )
 }
 

@@ -60,7 +60,7 @@ class LoginViewModel : ViewModel() {
                         parseError(response.code(), response.errorBody()?.string())
                     )
                 }
-            } catch (ex: Exception) {
+            } catch (ex: java.io.IOException) {
                 _uiState.value = LoginUiState.Error(parseConnectionError(ex))
             }
         }

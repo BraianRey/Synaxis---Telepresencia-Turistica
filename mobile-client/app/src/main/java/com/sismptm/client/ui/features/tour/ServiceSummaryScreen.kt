@@ -2,16 +2,57 @@ package com.sismptm.client.ui.features.tour
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +78,16 @@ import com.sismptm.client.data.remote.api.dto.PaymentSummaryResponse
 import com.sismptm.client.data.remote.api.dto.RatingRequest
 import com.sismptm.client.data.remote.api.dto.RatingResponse
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
-import com.sismptm.client.ui.theme.*
+import com.sismptm.client.ui.theme.Background
+import com.sismptm.client.ui.theme.CardBackground
+import com.sismptm.client.ui.theme.Error
+import com.sismptm.client.ui.theme.PrimaryAccent
+import com.sismptm.client.ui.theme.StarColor
+import com.sismptm.client.ui.theme.Success
+import com.sismptm.client.ui.theme.SuccessLight
+import com.sismptm.client.ui.theme.TextPrimary
+import com.sismptm.client.ui.theme.TextSecondary
+import com.sismptm.client.ui.theme.TextTertiary
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -100,13 +150,17 @@ class ServiceSummaryViewModel : ViewModel() {
                             _payment.value = paymentResponse.body()
                         }
                         // Payment load failure is silent — service data is still shown
-                    } catch (e: Exception) {
+                    } catch (e: java.io.IOException) {
+                        // Generic exception kept: Could be network or parsing error
                         // Silent — do not override existing _error state
+                        Log.e("ServiceSummaryViewModel", "Payment load failed silently", e)
                     }
                 } else {
                     _error.value = "Failed to load service details "
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Could be network or parsing error
+                Log.e("ServiceSummaryViewModel", "Failed to load service details", e)
                 _error.value = e.message ?: "Unknown error"
             } finally {
                 _isLoading.value = false
@@ -127,8 +181,9 @@ class ServiceSummaryViewModel : ViewModel() {
                     _payment.value = response.body()
                     Log.i("ServiceSummaryViewModel", "Payment confirmed for service $serviceId")
                 }
-            } catch (e: Exception) {
-                Log.e("ServiceSummaryViewModel", "Error confirming payment: ${e.message}")
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network or communication error
+                Log.e("ServiceSummaryViewModel", "Error confirming payment", e)
             }
         }
     }
@@ -146,8 +201,9 @@ class ServiceSummaryViewModel : ViewModel() {
                             break
                         }
                     }
-                } catch (e: Exception) {
-                    Log.e("ServiceSummaryViewModel", "Polling payment error: ${e.message}")
+                } catch (e: java.io.IOException) {
+                    // Generic exception kept: Network error during polling
+                    Log.e("ServiceSummaryViewModel", "Polling payment error", e)
                 }
                 delay(5000)
             }
@@ -166,8 +222,9 @@ class ServiceSummaryViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     _existingRating.value = response.body()
                 }
-            } catch (e: Exception) {
-                Log.e("ServiceSummaryViewModel", "Error checking rating: ${e.message}")
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error checking rating
+                Log.e("ServiceSummaryViewModel", "Error checking rating", e)
             }
         }
     }
@@ -228,7 +285,8 @@ class ServiceSummaryViewModel : ViewModel() {
                     val backendMessage = try {
                         val json = org.json.JSONObject(errorBody ?: "{}")
                         json.optString("error", "")
-                    } catch (ex: Exception) {
+                    } catch (ex: org.json.JSONException) {
+                        Log.e("ServiceSummaryViewModel", "Error parsing JSON", ex)
                         ""
                     }
                     val displayMessage = if (backendMessage.isNotBlank()) backendMessage
@@ -236,9 +294,10 @@ class ServiceSummaryViewModel : ViewModel() {
                     _ratingError.value = displayMessage
                     Log.e("ServiceSummaryViewModel", "Rating failed: HTTP ${response.code()}, body: $errorBody")
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
+                // Generic exception kept: Network error submitting rating
                 _ratingError.value = e.message ?: "Unknown error"
-                Log.e("ServiceSummaryViewModel", "Error submitting rating: ${e.message}")
+                Log.e("ServiceSummaryViewModel", "Error submitting rating", e)
             } finally {
                 _isSubmittingRating.value = false
             }
@@ -249,6 +308,19 @@ class ServiceSummaryViewModel : ViewModel() {
         _ratingSubmitted.value = false
     }
 }
+
+private data class ServiceSummaryContentState(
+    val payment: PaymentSummaryResponse?,
+    val paymentConfirmed: Boolean,
+    val existingRating: RatingResponse?
+)
+
+private data class ServiceSummaryActions(
+    val onConfirmPayment: () -> Unit,
+    val onBackToHome: () -> Unit,
+    val onOpenRatingDialog: () -> Unit,
+    val onRetry: () -> Unit
+)
 
 /**
  * Screen displaying a summary of a completed service.
@@ -291,6 +363,64 @@ fun ServiceSummaryScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    ServiceSummaryScreenEffects(
+        serviceId = serviceId,
+        service = service,
+        viewModel = viewModel,
+        payment = payment,
+        ratingSubmitted = ratingSubmitted,
+        snackbarHostState = snackbarHostState
+    )
+
+    ServiceSummaryScreenScaffold(
+        serviceData = serviceData,
+        isLoading = isLoading,
+        error = error,
+        payment = payment,
+        paymentConfirmed = paymentConfirmed,
+        existingRating = existingRating,
+        snackbarHostState = snackbarHostState,
+        actions = ServiceSummaryActions(
+            onConfirmPayment = { viewModel.confirmPayment(serviceId) },
+            onBackToHome = onBackToHome,
+            onOpenRatingDialog = { viewModel.openRatingDialog() },
+            onRetry = { viewModel.loadService(serviceId) }
+        )
+    )
+
+    if (showRatingDialog && existingRating == null) {
+        RatingModal(
+            score = ratingScore,
+            comment = ratingComment,
+            isSubmitting = isSubmittingRating,
+            error = ratingError,
+            onScoreChange = { viewModel.onRatingScoreChanged(it) },
+            onCommentChange = { viewModel.onRatingCommentChanged(it) },
+            onSubmit = { viewModel.submitRating(serviceId) },
+            onSkip = { viewModel.skipRating() },
+            onDismiss = { viewModel.dismissRatingDialog() }
+        )
+    }
+}
+
+@Composable
+private fun ServiceSummaryScreenEffects(
+    serviceId: Long,
+    service: ServiceResponse?,
+    viewModel: ServiceSummaryViewModel,
+    payment: PaymentSummaryResponse?,
+    ratingSubmitted: Boolean,
+    snackbarHostState: SnackbarHostState
+) {
+    LaunchedEffect(serviceId) {
+        if (service != null) {
+            viewModel.setService(service)
+        } else {
+            viewModel.loadService(serviceId)
+        }
+        viewModel.checkExistingRating(serviceId)
+    }
+
     LaunchedEffect(serviceId, payment) {
         if (payment == null) {
             viewModel.startPaymentPolling(serviceId)
@@ -308,7 +438,20 @@ fun ServiceSummaryScreen(
             viewModel.resetRatingSubmitted()
         }
     }
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ServiceSummaryScreenScaffold(
+    serviceData: ServiceResponse?,
+    isLoading: Boolean,
+    error: String?,
+    payment: PaymentSummaryResponse?,
+    paymentConfirmed: Boolean,
+    existingRating: RatingResponse?,
+    snackbarHostState: SnackbarHostState,
+    actions: ServiceSummaryActions
+) {
     Scaffold(
         containerColor = Background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -322,7 +465,7 @@ fun ServiceSummaryScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackToHome) {
+                    IconButton(onClick = actions.onBackToHome) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back),
@@ -349,37 +492,23 @@ fun ServiceSummaryScreen(
                 error != null -> {
                     ErrorView(
                         message = error ?: "Unknown error",
-                        onRetry = { viewModel.loadService(serviceId) },
-                        onBack = onBackToHome
+                        onRetry = actions.onRetry,
+                        onBack = actions.onBackToHome
                     )
                 }
                 serviceData != null -> {
                     ServiceSummaryContent(
-                        service = serviceData!!,
-                        payment = payment,
-                        paymentConfirmed = paymentConfirmed,
-                        existingRating = existingRating,
-                        onConfirmPayment = { viewModel.confirmPayment(serviceId) },
-                        onBackToHome = onBackToHome,
-                        onOpenRatingDialog = { viewModel.openRatingDialog() }
+                        service = serviceData,
+                        state = ServiceSummaryContentState(
+                            payment = payment,
+                            paymentConfirmed = paymentConfirmed,
+                            existingRating = existingRating
+                        ),
+                        actions = actions
                     )
                 }
             }
         }
-    }
-
-    if (showRatingDialog && existingRating == null) {
-        RatingModal(
-            score = ratingScore,
-            comment = ratingComment,
-            isSubmitting = isSubmittingRating,
-            error = ratingError,
-            onScoreChange = { viewModel.onRatingScoreChanged(it) },
-            onCommentChange = { viewModel.onRatingCommentChanged(it) },
-            onSubmit = { viewModel.submitRating(serviceId) },
-            onSkip = { viewModel.skipRating() },
-            onDismiss = { viewModel.dismissRatingDialog() }
-        )
     }
 }
 
@@ -400,7 +529,7 @@ private fun ErrorView(
             imageVector = Icons.Default.Error,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = Color(0xFFE53935)
+            tint = Error
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -422,12 +551,8 @@ private fun ErrorView(
 @Composable
 private fun ServiceSummaryContent(
     service: ServiceResponse,
-    payment: PaymentSummaryResponse?,
-    paymentConfirmed: Boolean,
-    existingRating: RatingResponse?,
-    onConfirmPayment: () -> Unit,
-    onBackToHome: () -> Unit,
-    onOpenRatingDialog: () -> Unit
+    state: ServiceSummaryContentState,
+    actions: ServiceSummaryActions
 ) {
     Column(
         modifier = Modifier
@@ -441,15 +566,15 @@ private fun ServiceSummaryContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (payment != null && !paymentConfirmed) {
+        if (state.payment != null && !state.paymentConfirmed) {
             Button(
-                onClick = onConfirmPayment,
+                onClick = actions.onConfirmPayment,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50)
+                    containerColor = Success
                 )
             ) {
                 Icon(
@@ -466,7 +591,7 @@ private fun ServiceSummaryContent(
                     color = Color.White
                 )
             }
-        } else if (paymentConfirmed) {
+        } else if (state.paymentConfirmed) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -475,7 +600,7 @@ private fun ServiceSummaryContent(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = Color(0xFF4CAF50),
+                    tint = Success,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -483,16 +608,16 @@ private fun ServiceSummaryContent(
                     stringResource(R.string.payment_confirmed),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4CAF50)
+                    color = Success
                 )
             }
         }
 
         // Service Stats (Duration & Cost)
-        ServiceStatsCard(service, payment)
+        ServiceStatsCard(service, state.payment)
 
         // Partner Information
-        PartnerInfoCard(service, existingRating, onOpenRatingDialog)
+        PartnerInfoCard(service, state.existingRating, actions.onOpenRatingDialog)
 
         // Service Details
         ServiceDetailsCard(service)
@@ -501,7 +626,7 @@ private fun ServiceSummaryContent(
 
         // Back to Home Button
         Button(
-            onClick = onBackToHome,
+            onClick = actions.onBackToHome,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -528,7 +653,7 @@ private fun ServiceSummaryContent(
 private fun SuccessHeaderCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B5E20)),
+        colors = CardDefaults.cardColors(containerColor = SuccessLight),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
@@ -540,7 +665,7 @@ private fun SuccessHeaderCard() {
             Surface(
                 modifier = Modifier.size(64.dp),
                 shape = CircleShape,
-                color = Color(0xFF4CAF50)
+                color = Success
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
@@ -564,7 +689,7 @@ private fun SuccessHeaderCard() {
             Text(
                 text = stringResource(R.string.thank_you_synexis),
                 fontSize = 14.sp,
-                color = Color(0xFFA5D6A7),
+                color = SuccessLight,
                 textAlign = TextAlign.Center
             )
         }
@@ -608,7 +733,7 @@ private fun ServiceStatsCard(service: ServiceResponse, payment: PaymentSummaryRe
                     value = payment?.let {
                         stringResource(R.string.currency_format, "%.2f".format(it.totalAmount))
                     } ?: service.getFormattedCost(),
-                    color = Color(0xFF4CAF50)
+                    color = Success
                 )
             }
         }
@@ -678,114 +803,133 @@ private fun PartnerInfoCard(
                 color = TextPrimary
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Avatar
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (service.partnerPicDirectory != null) {
-                        val imageUrl = NetworkConfig.BASE_URL + service.partnerPicDirectory
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(imageUrl)
-                                .crossfade(300)
-                                .build(),
-                            contentDescription = "Partner picture",
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp),
-                            tint = Color.White
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = service.partnerName ?: stringResource(R.string.unknown_guide),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = service.partnerEmail ?: "",
-                        fontSize = 14.sp,
-                        color = TextSecondary
-                    )
-                }
-            }
+            PartnerHeaderSection(service)
 
             if (existingRating != null) {
-                // Real rating display
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    repeat(5) { index ->
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = if (index < existingRating.score) StarColor else TextSecondary
-                        )
-                    }
-                    Text(
-                        text = "(${existingRating.score}.0)",
-                        fontSize = 12.sp,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                if (!existingRating.comment.isNullOrBlank()) {
-                    Text(
-                        text = "\"${existingRating.comment}\"",
-                        fontSize = 13.sp,
-                        color = TextTertiary,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
+                ExistingRatingSection(existingRating)
             } else {
-                // Rate button
-                Button(
-                    onClick = onOpenRatingDialog,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        stringResource(R.string.rate_your_guide),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                }
+                RatingButtonSection(onOpenRatingDialog)
             }
         }
+    }
+}
+
+@Composable
+private fun PartnerHeaderSection(service: ServiceResponse) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        PartnerAvatarSection(service)
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = service.partnerName ?: stringResource(R.string.unknown_guide),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+            Text(
+                text = service.partnerEmail ?: "",
+                fontSize = 14.sp,
+                color = TextSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun PartnerAvatarSection(service: ServiceResponse) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(Color.Gray),
+        contentAlignment = Alignment.Center
+    ) {
+        if (service.partnerPicDirectory != null) {
+            val imageUrl = NetworkConfig.BASE_URL + service.partnerPicDirectory
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(300)
+                    .build(),
+                contentDescription = "Partner picture",
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExistingRatingSection(existingRating: RatingResponse) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            repeat(5) { index ->
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = if (index < existingRating.score) StarColor else TextSecondary
+                )
+            }
+            Text(
+                text = "(${existingRating.score}.0)",
+                fontSize = 12.sp,
+                color = TextSecondary,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+        if (!existingRating.comment.isNullOrBlank()) {
+            Text(
+                text = "\"${existingRating.comment}\"",
+                fontSize = 13.sp,
+                color = TextTertiary,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RatingButtonSection(onOpenRatingDialog: () -> Unit) {
+    Button(
+        onClick = onOpenRatingDialog,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp),
+        shape = RoundedCornerShape(10.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Star,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = Color.White
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            stringResource(R.string.rate_your_guide),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White
+        )
     }
 }
 
@@ -842,7 +986,8 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                             .ofPattern("MMM dd, yyyy - HH:mm")
                             .withZone(java.time.ZoneId.systemDefault())
                         formatter.format(instant)
-                    } catch (e: Exception) {
+                    } catch (e: java.time.format.DateTimeParseException) {
+                        Log.e("ServiceSummaryScreen", "Error parsing date", e)
                         it
                     }
                 } ?: stringResource(R.string.not_available)

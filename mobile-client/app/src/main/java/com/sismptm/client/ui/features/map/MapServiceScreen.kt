@@ -3,12 +3,32 @@ package com.sismptm.client.ui.features.map
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +45,7 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
 import com.sismptm.client.ui.features.tour.ServiceViewModel
 import com.sismptm.client.ui.features.tour.CreateServiceUiState
+import com.sismptm.client.ui.theme.BlueSecondary
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -46,25 +67,13 @@ fun MapServiceScreen(
     val mapView = rememberMapViewForService(context, mapViewModel)
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(createState) {
-        Log.d("MapServiceScreen", "[STATE] createState changed to $createState")
-        when (createState) {
-            is CreateServiceUiState.Success -> {
-                val serviceId = (createState as CreateServiceUiState.Success).serviceId
-                Log.d("MapServiceScreen", "[SUCCESS] serviceId=$serviceId. Navigating to waiting screen.")
-                mapViewModel.clearLocation()
-                serviceViewModel.resetState()
-                onServiceCreated(serviceId)
-            }
-            is CreateServiceUiState.Error -> {
-                val msg = (createState as CreateServiceUiState.Error).message
-                Log.e("MapServiceScreen", "[ERROR] $msg")
-                snackbarHostState.showSnackbar(msg)
-            }
-            is CreateServiceUiState.Loading -> Log.d("MapServiceScreen", "[STATE] Loading...")
-            is CreateServiceUiState.Idle -> Log.d("MapServiceScreen", "[STATE] Idle")
-        }
-    }
+    MapServiceCreateEffect(
+        createState = createState,
+        mapViewModel = mapViewModel,
+        serviceViewModel = serviceViewModel,
+        snackbarHostState = snackbarHostState,
+        onServiceCreated = onServiceCreated
+    )
 
     Box(
         modifier = Modifier
@@ -77,87 +86,167 @@ fun MapServiceScreen(
             factory = { mapView }
         )
 
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-        }
+        // Se pasa la alineación desde el Box padre
+        MapServiceBackButton(
+            onBack = onBack,
+            modifier = Modifier.align(Alignment.TopStart)
+        )
 
-        if (selectedLocation != null) {
-            FloatingActionButton(
-                onClick = { mapViewModel.showDescriptionSheet() },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .navigationBarsPadding()
-                    .padding(16.dp),
-                containerColor = Color(0xFF2196F3)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "Confirm location",
-                    tint = Color.White
-                )
-            }
-        }
+        // Se pasa la alineación desde el Box padre
+        MapServiceConfirmButton(
+            visible = selectedLocation != null,
+            onClick = { mapViewModel.showDescriptionSheet() },
+            modifier = Modifier.align(Alignment.BottomEnd)
+        )
 
-        // Sheet anchored to the bottom of the Box
         if (showDescriptionSheet) {
-            // Semi-transparent background
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x80000000))
+            MapServiceDescriptionSheet(
+                viewModel = mapViewModel,
+                reserveMode = reserveMode,
+                onNavigateToReserve = onNavigateToReserve,
+                serviceViewModel = serviceViewModel,
+                onDismiss = { mapViewModel.hideDescriptionSheet() }
             )
-            // Sheet content at the bottom
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                LocationDescriptionSheet(
-                    viewModel = mapViewModel,
-                    reserveMode = reserveMode,
-                    onConfirm = { location, description ->
-                        if (reserveMode) {
-                            Log.d("MapServiceScreen", "[ACTION] Reserve mode: navigating to ReserveServiceScreen")
-                            onNavigateToReserve(location.lat, location.lon, description)
-                        } else {
-                            Log.d("MapServiceScreen", "[ACTION] onConfirm received, calling createService")
-                            serviceViewModel.createService(location, description)
-                        }
-                    },
-                    onDismiss = { mapViewModel.hideDescriptionSheet() }
-                )
-            }
         }
 
-        if (createState is CreateServiceUiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x80000000)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = Color(0xFF2196F3))
-            }
-        }
+        MapServiceLoadingOverlay(isLoading = createState is CreateServiceUiState.Loading)
 
-        // Snackbar to show errors to the user
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
         )
+    }
+}
+
+@Composable
+private fun MapServiceCreateEffect(
+    createState: CreateServiceUiState,
+    mapViewModel: MapViewModel,
+    serviceViewModel: ServiceViewModel,
+    snackbarHostState: SnackbarHostState,
+    onServiceCreated: (Long) -> Unit
+) {
+    LaunchedEffect(createState) {
+        Log.d("MapServiceScreen", "[STATE] createState changed to $createState")
+        when (createState) {
+            is CreateServiceUiState.Success -> {
+                val serviceId = createState.serviceId
+                Log.d(
+                    "MapServiceScreen",
+                    "[SUCCESS] serviceId=$serviceId. Navigating to waiting screen."
+                )
+                mapViewModel.clearLocation()
+                serviceViewModel.resetState()
+                onServiceCreated(serviceId)
+            }
+            is CreateServiceUiState.Error -> {
+                val msg = createState.message
+                Log.e("MapServiceScreen", "[ERROR] $msg")
+                snackbarHostState.showSnackbar(msg)
+            }
+            is CreateServiceUiState.Loading -> Log.d("MapServiceScreen", "[STATE] Loading...")
+            is CreateServiceUiState.Idle -> Log.d("MapServiceScreen", "[STATE] Idle")
+        }
+    }
+}
+
+@Composable
+private fun MapServiceBackButton(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onBack,
+        modifier = modifier
+            .statusBarsPadding()
+            .padding(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.ArrowBack,
+            contentDescription = "Back",
+            tint = Color.White,
+            modifier = Modifier.size(32.dp)
+        )
+    }
+}
+
+@Composable
+private fun MapServiceConfirmButton(
+    visible: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (!visible) return
+
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier
+            .navigationBarsPadding()
+            .padding(16.dp),
+        containerColor = BlueSecondary
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Check,
+            contentDescription = "Confirm location",
+            tint = Color.White
+        )
+    }
+}
+
+@Composable
+private fun MapServiceDescriptionSheet(
+    viewModel: MapViewModel,
+    reserveMode: Boolean,
+    onNavigateToReserve: (Double, Double, String) -> Unit,
+    serviceViewModel: ServiceViewModel,
+    onDismiss: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x80000000))
+    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        LocationDescriptionSheet(
+            viewModel = viewModel,
+            reserveMode = reserveMode,
+            onConfirm = { location, description ->
+                if (reserveMode) {
+                    Log.d(
+                        "MapServiceScreen",
+                        "[ACTION] Reserve mode: navigating to ReserveServiceScreen"
+                    )
+                    onNavigateToReserve(location.lat, location.lon, description)
+                } else {
+                    Log.d(
+                        "MapServiceScreen",
+                        "[ACTION] onConfirm received, calling createService"
+                    )
+                    serviceViewModel.createService(location, description)
+                }
+            },
+            onDismiss = onDismiss
+        )
+    }
+}
+
+@Composable
+private fun MapServiceLoadingOverlay(isLoading: Boolean) {
+    if (!isLoading) return
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x80000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = BlueSecondary)
     }
 }
 

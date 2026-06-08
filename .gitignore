@@ -1,42 +1,76 @@
-# Gradle
+
 .gradle/
 build/
+**/build/
+**/.gradle/
 
-# Android
 local.properties
 *.apk
 *.aab
 *.iml
+*.keystore
+*.jks
 
-# VS Code
-.vscode/*
+.idea/
+**/.idea/
+*.iws
+*.ipr
 
+
+.vscode/
+
+# ============================================================
 # OS
+# ============================================================
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Secrets
+# ============================================================
+# Secrets y configuración local
+# ============================================================
 .env
+local.properties
 
-# Local helper for git commit message (git commit -F commit-message.txt)
+# ============================================================
+# Artefactos generados por Detekt
+# ============================================================
+detekt-report.txt
+**/detekt-report.txt
+**/build/reports/detekt/
+
+# ============================================================
+# Artefactos de compilación / logs locales
+# ============================================================
+mobile-client/build.log
+mobile-client/compile_errors_utf8.txt
+**/compile_errors*.txt
+
+# ============================================================
+# Git helpers locales
+# ============================================================
 commit-message.txt
+CONTEXTO.MD
 
-# H2 file database (local dev)
+# ============================================================
+# Backend - archivos locales generados
+# ============================================================
 backend-management-service/data/
-
-# Management service docs (local / generated)
 backend-management-service/docs/
-
-# Eclipse IDE output directory (should not be part of source control)
 backend-management-service/bin/
 
-# Build log artifact
-mobile-client/build.log
-
-# Profile pictures uploaded during local development
+# ============================================================
+# Imágenes de perfil locales
+# ============================================================
 backend-management-service/picProfile/*
 !backend-management-service/picProfile/.gitkeep
 
+# ============================================================
+# H2 database local
+# ============================================================
+*.db
+*.mv.db
+*.trace.db
 # IntelliJ IDEA
 .idea/*
 *.iws

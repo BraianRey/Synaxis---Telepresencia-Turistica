@@ -43,326 +43,321 @@ fun ServiceDetailScreen(
 ) {
     Scaffold(
         containerColor = Background,
-        bottomBar = {
-            NavigationBar(
-                containerColor = Color(0xFF1A1A1A),
-                modifier = Modifier.height(56.dp)
-            ) {
-                val items = listOf("Explore", "Favorites", "Tours", "Messages", "Account")
-                val icons = listOf(
-                    Icons.Default.Home,
-                    Icons.Default.Favorite,
-                    Icons.Default.Star,
-                    Icons.Default.MailOutline,
-                    Icons.Default.Person
-                )
-                val selectedIndex = 0 // Explore is active
-                items.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = icons[index],
-                                contentDescription = item,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item,
-                                fontSize = 12.sp
-                            )
-                        },
-                        selected = index == selectedIndex,
-                        onClick = { /* Handle navigation */ },
-                        colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                            selectedIconColor = PrimaryAccent,
-                            selectedTextColor = PrimaryAccent,
-                            unselectedIconColor = TextSecondary,
-                            unselectedTextColor = TextSecondary
-                        )
-                    )
-                }
-            }
-        }
+        bottomBar = { ServiceDetailBottomBar() }
     ) { padding ->
-        Column(
+        ServiceDetailContent(onConfirm = onConfirm, padding = padding)
+    }
+}
+
+@Composable
+private fun ServiceDetailBottomBar() {
+    NavigationBar(
+        containerColor = Background,
+        modifier = Modifier.height(56.dp)
+    ) {
+        val items = listOf("Explore", "Favorites", "Tours", "Messages", "Account")
+        val icons = listOf(
+            Icons.Default.Home,
+            Icons.Default.Favorite,
+            Icons.Default.Star,
+            Icons.Default.MailOutline,
+            Icons.Default.Person
+        )
+        val selectedIndex = 0 // Explore is active
+        items.forEachIndexed { index, item ->
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = icons[index],
+                        contentDescription = item,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                label = {
+                    Text(
+                        text = item,
+                        fontSize = 12.sp
+                    )
+                },
+                selected = index == selectedIndex,
+                onClick = { /* Handle navigation */ },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    selectedIconColor = PrimaryAccent,
+                    selectedTextColor = PrimaryAccent,
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun ServiceDetailContent(onConfirm: () -> Unit, padding: PaddingValues) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState())
+    ) {
+        ServiceDetailHeroSection()
+        Spacer(modifier = Modifier.height(20.dp))
+        ServiceDetailPartnerInfo()
+        Spacer(modifier = Modifier.height(20.dp))
+        ServiceDetailStats()
+        Spacer(modifier = Modifier.height(20.dp))
+        ServiceDetailStatusChips()
+        Spacer(modifier = Modifier.height(20.dp))
+        ServiceDetailAbout()
+        Spacer(modifier = Modifier.height(20.dp))
+        ServiceDetailActionBar(onConfirm = onConfirm)
+    }
+}
+
+@Composable
+private fun ServiceDetailHeroSection() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp)
+            .background(Color.Gray),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+                .height(80.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Background)
+                    )
+                )
+                .align(Alignment.BottomCenter)
+        )
+        Text(
+            text = "Partner Profile",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary,
+            modifier = Modifier.padding(top = 48.dp)
+        )
+        Box(
+            modifier = Modifier
+                .offset(y = 80.dp)
+                .align(Alignment.BottomCenter)
         ) {
-            // Hero Section
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .background(Color.Gray), // Placeholder for cover photo
-                contentAlignment = Alignment.TopCenter
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray),
+                contentAlignment = Alignment.Center
             ) {
-                // Gradient overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Background)
-                            )
-                        )
-                        .align(Alignment.BottomCenter)
-                )
-                // Title
-                Text(
-                    text = "Partner Profile",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    modifier = Modifier.padding(top = 48.dp) // Assuming status bar space
-                )
             }
-
-            // Avatar Overlay
             Box(
                 modifier = Modifier
-                    .offset(y = (-40).dp)
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(Color.Gray), // Placeholder avatar
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Avatar content, e.g., Icon or Image
-                }
-                // Online dot
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .align(Alignment.BottomEnd)
-                        .clip(CircleShape)
-                        .background(Color(0xFF4CAF50))
+                    .size(12.dp)
+                    .align(Alignment.BottomEnd)
+                    .clip(CircleShape)
+                    .background(Success)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ServiceDetailPartnerInfo() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = "Carlos Medina",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Bogotá, Colombia",
+            fontSize = 14.sp,
+            color = TextSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(5) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Star",
+                    tint = StarColor,
+                    modifier = Modifier.size(14.dp)
                 )
             }
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "4.9 (127 reviews)",
+                fontSize = 14.sp,
+                color = TextSecondary
+            )
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(20.dp))
+@Composable
+private fun ServiceDetailStats() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 32.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ServiceDetailStatItem(value = "38", label = "Tours done")
+        ServiceDetailDivider()
+        ServiceDetailStatItem(value = "127", label = "Reviews")
+        ServiceDetailDivider()
+        ServiceDetailStatItem(value = "2", label = "Min use")
+    }
+}
 
-            // Partner Info
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Carlos Medina",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Bogotá, Colombia",
-                    fontSize = 14.sp,
-                    color = TextSecondary,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(5) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Star",
-                            tint = StarColor,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "4.9 (127 reviews)",
-                        fontSize = 14.sp,
-                        color = TextSecondary
-                    )
-                }
-            }
+@Composable
+private fun ServiceDetailStatItem(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = TextSecondary
+        )
+    }
+}
 
-            Spacer(modifier = Modifier.height(20.dp))
+@Composable
+private fun ServiceDetailDivider() {
+    Box(
+        modifier = Modifier
+            .width(1.dp)
+            .height(32.dp)
+            .background(DividerBorder)
+    )
+}
 
-            // Stats Row
-            Row(
+@Composable
+private fun ServiceDetailStatusChips() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier
+                .background(AvailableBadgeBg, RoundedCornerShape(20.dp))
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "38",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "Tours done",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(32.dp)
-                        .background(DividerBorder)
-                )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "127",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "Reviews",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(32.dp)
-                        .background(DividerBorder)
-                )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "2",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "Min use",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                }
-            }
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(AvailableBadgeText)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "Available now",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = AvailableBadgeText
+            )
+        }
 
-            Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
-            // Status Chips Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Available  chip
-                Row(
-                    modifier = Modifier
-                        .background(AvailableBadgeBg, RoundedCornerShape(20.dp))
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(AvailableBadgeText)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Available now",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = AvailableBadgeText
-                    )
-                }
+        Box(
+            modifier = Modifier
+                .background(ScheduleBadgeBg, RoundedCornerShape(20.dp))
+                .padding(horizontal = 14.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = "○ Schedule for later",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = ScheduleBadgeText
+            )
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.width(12.dp))
+@Composable
+private fun ServiceDetailAbout() {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            text = "About",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Experienced guide specializing in historic city tours and cultural experiences in Bogotá. I offer immersive real-time tours through the most iconic neighborhoods and landmarks.",
+            fontSize = 14.sp,
+            color = TextSecondary,
+            lineHeight = 22.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Read more",
+            fontSize = 14.sp,
+            color = PrimaryAccent
+        )
+    }
+}
 
-                // Schedule chip
-                Box(
-                    modifier = Modifier
-                        .background(ScheduleBadgeBg, RoundedCornerShape(20.dp))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "○ Schedule for later",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = ScheduleBadgeText
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // About Section
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    text = "About",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Experienced guide specializing in historic city tours and cultural experiences in Bogotá. I offer immersive real-time tours through the most iconic neighborhoods and landmarks.",
-                    fontSize = 14.sp,
-                    color = TextSecondary,
-                    lineHeight = 22.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Read more",
-                    fontSize = 14.sp,
-                    color = PrimaryAccent
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Bottom Action Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(CardBackground)
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .height(72.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Starting from",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
-                    Text(
-                        text = "~$15.000 COP / hour",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = onConfirm,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
-                    shape = RoundedCornerShape(24.dp),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-                ) {
-                    Text(
-                        text = "Request Tour",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                }
-            }
+@Composable
+private fun ServiceDetailActionBar(onConfirm: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(CardBackground)
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .height(72.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Starting from",
+                fontSize = 12.sp,
+                color = TextSecondary
+            )
+            Text(
+                text = "~$15.000 COP / hour",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Button(
+            onClick = onConfirm,
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+            shape = RoundedCornerShape(24.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = "Request Tour",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
         }
     }
 }
