@@ -20,7 +20,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -43,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,11 +65,20 @@ import com.sismptm.client.ui.theme.TextPrimary
 import com.sismptm.client.ui.theme.TextTertiary
 
 @Composable
-fun ProfileScreen(onLogout: () -> Unit) {
+fun ProfileScreen(
+    onLogout: () -> Unit,
+    picDirectory: String? = null,
+    onUpdatePhoto: (android.net.Uri) -> Unit
+) {
     val name = SessionManager.userName.ifBlank { stringResource(R.string.not_specified) }
     val email = SessionManager.userEmail.ifBlank { stringResource(R.string.not_specified) }
     val role = SessionManager.userRole.ifBlank { stringResource(R.string.not_specified) }
     val initial = name.take(1).uppercase()
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let(onUpdatePhoto)
+    }
     
     var isEditing by remember { mutableStateOf(false) }
     var selectedLanguage by remember { mutableStateOf(SessionManager.language) }
@@ -87,7 +100,10 @@ fun ProfileScreen(onLogout: () -> Unit) {
             modifier = Modifier.padding(bottom = 24.dp)
         )
         
-        avatarSection(initial)
+        val picDirToShow = picDirectory ?: SessionManager.picDirectory
+        avatarSection(initial, picDirToShow) {
+            imagePickerLauncher.launch("image/*")
+        }
         Spacer(modifier = Modifier.height(32.dp))
         infoCardsSection(name, email, role)
         Spacer(modifier = Modifier.height(12.dp))
@@ -111,22 +127,22 @@ fun ProfileScreen(onLogout: () -> Unit) {
             )
         }
         
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         logoutButton(onLogout)
         Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun avatarSection(initial: String) {
+private fun avatarSection(initial: String, picDirectory: String?, onPhotoClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(100.dp)
             .clip(CircleShape)
-            .background(PrimaryAccent.copy(alpha = 0.2f)),
+            .background(PrimaryAccent.copy(alpha = 0.2f))
+            .clickable(onClick = onPhotoClick),
         contentAlignment = Alignment.Center
     ) {
-        val picDirectory = SessionManager.picDirectory
         if (picDirectory != null) {
             val imageUrl = NetworkConfig.BASE_URL + picDirectory
             AsyncImage(
@@ -134,7 +150,7 @@ private fun avatarSection(initial: String) {
                     .data(imageUrl)
                     .crossfade(300)
                     .build(),
-                contentDescription = "Profile picture",
+                contentDescription = stringResource(R.string.change_profile_photo),
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape),
@@ -146,6 +162,22 @@ private fun avatarSection(initial: String) {
                 color = PrimaryAccent,
                 fontSize = 40.sp,
                 fontWeight = FontWeight.Bold
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(Color.Black.copy(alpha = 0.35f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CameraAlt,
+                contentDescription = stringResource(R.string.change_profile_photo),
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
             )
         }
     }
@@ -283,7 +315,10 @@ private fun profileInfoCard(
 @Composable
 private fun editableLanguageCard(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val languages = listOf("en" to "English", "es" to "Español")
+    val languages = listOf(
+        "en" to stringResource(R.string.language_english),
+        "es" to stringResource(R.string.language_spanish)
+    )
     val selectedLabel = languages.find { it.first == selectedLanguage }?.second ?: selectedLanguage
 
     Card(

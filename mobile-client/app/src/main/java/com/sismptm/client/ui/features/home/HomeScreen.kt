@@ -48,6 +48,7 @@ import com.sismptm.client.R
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.ui.features.tour.ServiceViewModel
+import com.sismptm.client.ui.features.profile.ProfileScreen
 import java.time.Instant
 
 @Composable
@@ -63,6 +64,7 @@ fun HomeScreen(
 ) {
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
+    val activeServicesState by homeViewModel.activeServicesState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
 
@@ -99,6 +101,7 @@ fun HomeScreen(
                 0 -> ExploreTabContent(
                     uiState = uiState,
                     servicesState = servicesState,
+                    activeServicesState = activeServicesState,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
                     onNavigateToMapService = onNavigateToMapService,
                     onNavigateToReserveMap = onNavigateToReserveMap,
@@ -109,7 +112,11 @@ fun HomeScreen(
                     onRefresh = { homeViewModel.loadClientServices() },
                     onOpenWaiting = onOpenServiceWaiting
                 )
-                2 -> ProfileTab(onLogout, uiState.picDirectory)
+                2 -> ProfileScreen(
+                    onLogout,
+                    picDirectory = uiState.picDirectory,
+                    onUpdatePhoto = { uri -> homeViewModel.updateProfilePicture(context, uri) }
+                )
             }
         }
     }
@@ -119,6 +126,7 @@ fun HomeScreen(
 private fun ExploreTabContent(
     uiState: HomeUiState,
     servicesState: HomeViewModel.ClientServicesUiState,
+    activeServicesState: HomeViewModel.ClientServicesUiState,
     @Suppress("UnusedParameter")
     onNavigateToPartnerSearch: () -> Unit,
     onNavigateToMapService: () -> Unit,
@@ -171,15 +179,15 @@ private fun ExploreTabContent(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        val completedWithImage = if (servicesState is HomeViewModel.ClientServicesUiState.Success) {
-            servicesState.services
-                .filter { it.status.uppercase() == "COMPLETED" && it.locationReferenceImageUrl != null }
+        val activeWithImage = if (activeServicesState is HomeViewModel.ClientServicesUiState.Success) {
+            activeServicesState.services
+                .filter { it.locationReferenceImageUrl != null }
                 .take(5)
         } else emptyList()
 
-        if (completedWithImage.isNotEmpty()) {
+        if (activeWithImage.isNotEmpty()) {
             RecentPlacesSection(
-                services = completedWithImage,
+                services = activeWithImage,
                 onServiceClick = onNavigateToMapService
             )
         }
@@ -617,7 +625,7 @@ private fun RecentPlacesSection(
             .padding(horizontal = 20.dp)
     ) {
         Text(
-            text = stringResource(R.string.recent_places),
+            text = stringResource(R.string.active_services),
             fontSize = 14.sp,
             fontWeight = FontWeight.ExtraBold,
             letterSpacing = 1.2.sp,

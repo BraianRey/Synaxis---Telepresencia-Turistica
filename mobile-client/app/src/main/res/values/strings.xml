@@ -62,6 +62,7 @@
     <string name="home_services_no_history">No services in history</string>
     <string name="reserve_service_btn">Reserve service</string>
     <string name="recent_places">Recent places</string>
+    <string name="active_services">Active services</string>
 
     <!-- Partner Search Screen -->
     <string name="search_cancel">Cancel</string>
@@ -220,6 +221,9 @@
     <string name="save_changes">Save Changes</string>
     <string name="cancel">Cancel</string>
     <string name="role">Role</string>
+    <string name="change_profile_photo">Change profile photo</string>
+    <string name="language_english">English</string>
+    <string name="language_spanish">Español</string>
     <string name="search_placeholder_example">Bogotá, Colombia</string>
     <string name="location_placeholder_example">E.g., Coffee shop near the park...</string>
     <string name="describe_location_title">Describe the location</string>
