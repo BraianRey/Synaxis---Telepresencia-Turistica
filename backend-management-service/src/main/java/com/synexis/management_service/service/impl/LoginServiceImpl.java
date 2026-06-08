@@ -3,6 +3,7 @@ package com.synexis.management_service.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.synexis.management_service.dto.response.usersProfile.LoginResponse;
+import com.synexis.management_service.dto.response.usersProfile.RefreshTokenResponse;
 import com.synexis.management_service.entity.Client;
 import com.synexis.management_service.entity.Partner;
 import com.synexis.management_service.exception.InvalidCredentialsException;
@@ -82,6 +83,42 @@ public class LoginServiceImpl implements LoginService {
                 partner.getRole().name(),
                 partner.getLanguage().name(),
                 picDir);
+    }
+
+    @Override
+    public RefreshTokenResponse refresh(String refreshToken) {
+        String formBody = "client_id=" + encode(CLIENT_ID)
+                + "&client_secret=" + encode(CLIENT_SECRET)
+                + "&grant_type=refresh_token"
+                + "&refresh_token=" + encode(refreshToken);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(KEYCLOAK_URL + "/realms/" + REALM + "/protocol/openid-connect/token"))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(formBody))
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                JsonNode node = objectMapper.readTree(response.body());
+                return new RefreshTokenResponse(
+                        node.path("access_token").asText(),
+                        node.path("refresh_token").asText(),
+                        node.path("token_type").asText(),
+                        node.path("expires_in").asLong());
+            }
+            if (response.statusCode() == 400 || response.statusCode() == 401) {
+                throw new WrongPasswordException();
+            }
+            throw new KeycloakUserCreationException(
+                    "Keycloak token refresh error. Status: " + response.statusCode());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new KeycloakUserCreationException("Unable to refresh token with Keycloak: " + ex.getMessage());
+        } catch (IOException ex) {
+            throw new KeycloakUserCreationException("Unable to refresh token with Keycloak: " + ex.getMessage());
+        }
     }
 
     private TokenResult requestToken(String email, String password) {

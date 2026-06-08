@@ -1,6 +1,11 @@
 package com.sismptm.partner.ui.features.streaming
 
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,6 +50,8 @@ class StreamingViewModel(application: Application) :
     private val reconnectionDelays = listOf(3000L, 6000L, 12000L, 20000L, 30000L)
     private var reconnectionJob: Job? = null
     private var lastState: PeerConnection.PeerConnectionState = PeerConnection.PeerConnectionState.NEW
+    private var connectivityManager: ConnectivityManager? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     val eglBase: EglBase = EglBase.create()
     private val webRTCManager = WebRTCManager(context = application, listener = this, eglBase = eglBase)
@@ -68,6 +75,21 @@ class StreamingViewModel(application: Application) :
     private val _serviceCompleted = MutableStateFlow<Boolean>(false)
     val serviceCompleted: StateFlow<Boolean> = _serviceCompleted.asStateFlow()
 
+    private val cachedIceServers = mutableListOf<PeerConnection.IceServer>()
+
+    private fun mapIceServers(infoList: List<com.sismptm.partner.data.remote.api.dto.IceServerInfo>): List<PeerConnection.IceServer> {
+        return infoList.map { info ->
+            val builder = PeerConnection.IceServer.builder(info.urls)
+            if (info.username != null) {
+                builder.setUsername(info.username)
+            }
+            if (info.credential != null) {
+                builder.setPassword(info.credential)
+            }
+            builder.createIceServer()
+        }
+    }
+
     /**
      * Initializes hardware capture and connects to the signaling server using the defined peer ID.
      * Ensures previous sessions are cleaned up before starting.
@@ -80,11 +102,37 @@ class StreamingViewModel(application: Application) :
         this.serviceId = customId.toLongOrNull() ?: 0L
         webRTCManager.startLocalCapture(surfaceViewRenderer)
 
+        viewModelScope.launch {
+            val servers = try {
+                val response = RetrofitClient.apiService.getIceServers()
+                if (response.isSuccessful) {
+                    response.body()?.iceServers?.let { mapIceServers(it) } ?: emptyList()
+                } else {
+                    Log.e(TAG, "Failed to load ICE servers from backend: ${response.code()}")
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching ICE servers: ${e.message}")
+                emptyList()
+            }
+
+            synchronized(cachedIceServers) {
+                cachedIceServers.clear()
+                cachedIceServers.addAll(servers)
+            }
+
+            if (servers.isNotEmpty()) {
+                Log.i(TAG, "Dynamic ICE servers loaded. Updating peer connection...")
+                webRTCManager.setupNewPeerConnection(servers)
+            }
+        }
+
         val baseUrl = BuildConfig.BASE_WEBRTC
         val signalingUrl = if (baseUrl.contains("?")) "$baseUrl&peerId=$partnerId" else "$baseUrl?peerId=$partnerId"
 
         signalingClient = SignalingClient(signalingUrl, this)
         signalingClient?.connect()
+        registerNetworkCallback()
 
         startServiceOnBackend()
     }
@@ -236,7 +284,8 @@ class StreamingViewModel(application: Application) :
         Log.i(TAG, "Attempting connection recovery (Attempt $reconnectionAttempts)")
         
         // Rebuild PeerConnection to escape potentially corrupted stack states
-        webRTCManager.setupNewPeerConnection()
+        val servers = synchronized(cachedIceServers) { ArrayList(cachedIceServers) }
+        webRTCManager.setupNewPeerConnection(servers)
         webRTCManager.createOffer()
     }
 
@@ -287,8 +336,44 @@ class StreamingViewModel(application: Application) :
         }
     }
 
+    private fun registerNetworkCallback() {
+        val context = getApplication<Application>()
+        connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                Log.i(TAG, "Network became available. Resetting reconnection counters.")
+                reconnectionAttempts = 0
+                signalingClient?.connect()
+                viewModelScope.launch {
+                    if (lastState != PeerConnection.PeerConnectionState.CONNECTED) {
+                        Log.i(TAG, "Reconnection attempt triggered by network recovery.")
+                        attemptRecovery()
+                    }
+                }
+            }
+        }
+        try {
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+            connectivityManager?.registerNetworkCallback(request, networkCallback!!)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to register network callback: ${e.message}")
+        }
+    }
+
+    private fun unregisterNetworkCallback() {
+        try {
+            networkCallback?.let { connectivityManager?.unregisterNetworkCallback(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to unregister network callback: ${e.message}")
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
+        unregisterNetworkCallback()
         connectionTimeout?.cancel()
         reconnectionJob?.cancel()
         webRTCManager.dispose()

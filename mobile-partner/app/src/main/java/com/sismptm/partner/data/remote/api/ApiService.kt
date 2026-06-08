@@ -64,4 +64,8 @@ interface ApiService {
     /** Retrieves all ratings for a specific partner */
     @GET("api/ratings/partner/{partnerId}")
     suspend fun getRatingsByPartner(@Path("partnerId") partnerId: Long): Response<List<RatingResponse>>
+
+    /** Retrieves dynamically generated ICE/TURN servers credentials */
+    @GET("api/streaming/ice-servers")
+    suspend fun getIceServers(): Response<IceServersResponse>
 }

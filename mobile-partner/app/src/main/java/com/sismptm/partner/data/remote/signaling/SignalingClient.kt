@@ -40,6 +40,8 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
 
     fun connect() {
         isManualDisconnect = false
+        webSocket?.close(1000, "Reconnecting")
+        webSocket = null
         Log.d(TAG, "Connecting to signaling server: $serverUrl")
         val request = Request.Builder().url(serverUrl).build()
 

@@ -90,17 +90,19 @@ class WebRTCManager(
         }
     }
 
-    fun createPeerConnection() {
+    fun createPeerConnection(customIceServers: List<PeerConnection.IceServer> = emptyList()) {
         if (isDisposed) return
 
         peerConnection?.dispose()
         remoteDescriptionSet = false
         synchronized(pendingCandidates) { pendingCandidates.clear() }
 
-        val iceServers = listOf(
-            PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
-            PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer()
-        )
+        val iceServers = customIceServers.ifEmpty {
+            listOf(
+                PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer(),
+                PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer()
+            )
+        }
 
         val rtcConfig = PeerConnection.RTCConfiguration(iceServers).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN

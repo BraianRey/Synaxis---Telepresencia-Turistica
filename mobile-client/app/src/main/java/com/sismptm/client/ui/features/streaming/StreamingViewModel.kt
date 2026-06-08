@@ -1,6 +1,11 @@
 package com.sismptm.client.ui.features.streaming
 
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,6 +41,8 @@ class StreamingViewModel(application: Application) :
     private val reconnectionDelays = listOf(2000L, 4000L, 8000L, 10000L)
     private var reconnectionJob: Job? = null
     private var qualityMonitorJob: Job? = null
+    private var connectivityManager: ConnectivityManager? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     private val _connectionState = MutableStateFlow(PeerConnection.PeerConnectionState.NEW)
     val connectionState: StateFlow<PeerConnection.PeerConnectionState> = _connectionState
@@ -50,6 +57,21 @@ class StreamingViewModel(application: Application) :
 
     val eglBase: EglBase = EglBase.create()
 
+    private val cachedIceServers = mutableListOf<PeerConnection.IceServer>()
+
+    private fun mapIceServers(infoList: List<com.sismptm.client.data.remote.api.dto.IceServerInfo>): List<PeerConnection.IceServer> {
+        return infoList.map { info ->
+            val builder = PeerConnection.IceServer.builder(info.urls)
+            if (info.username != null) {
+                builder.setUsername(info.username)
+            }
+            if (info.credential != null) {
+                builder.setPassword(info.credential)
+            }
+            builder.createIceServer()
+        }
+    }
+
     /**
      * Initializes the WebRTC connection.
      */
@@ -63,35 +85,56 @@ class StreamingViewModel(application: Application) :
 
         signalingClient = SignalingClient(this, myClientId)
         
-        webRTCManager = WebRTCManager(
-            context = getApplication(),
-            eglBase = eglBase,
-            onRemoteTrack = onRemoteTrack
-        ).apply {
-            createPeerConnection()
-            setOnIceCandidateCallback { candidate ->
-                signalingClient?.sendIceCandidate(
-                    sdp = candidate.sdp,
-                    sdpMid = candidate.sdpMid,
-                    sdpMLineIndex = candidate.sdpMLineIndex,
-                    targetId = partnerId
-                )
+        viewModelScope.launch {
+            val servers = try {
+                val response = RetrofitClient.apiService.getIceServers()
+                if (response.isSuccessful) {
+                    response.body()?.iceServers?.let { mapIceServers(it) } ?: emptyList()
+                } else {
+                    Log.e(TAG, "Failed to load ICE servers from backend: ${response.code()}")
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching ICE servers: ${e.message}")
+                emptyList()
             }
-            setOnConnectionStateChangeListener { state ->
-                onConnectionStateChanged(state)
-            }
-        }
 
-        connectionTimeout?.cancel()
-        connectionTimeout = viewModelScope.launch {
-            delay(30000) // 30s timeout for initial connection
-            if (_connectionState.value != PeerConnection.PeerConnectionState.CONNECTED) {
-                Log.e(TAG, "Initial Connection Timeout - Retrying...")
-                attemptRejoin()
+            synchronized(cachedIceServers) {
+                cachedIceServers.clear()
+                cachedIceServers.addAll(servers)
             }
-        }
 
-        signalingClient?.connect()
+            webRTCManager = WebRTCManager(
+                context = getApplication(),
+                eglBase = eglBase,
+                onRemoteTrack = onRemoteTrack
+            ).apply {
+                createPeerConnection(servers)
+                setOnIceCandidateCallback { candidate ->
+                    signalingClient?.sendIceCandidate(
+                        sdp = candidate.sdp,
+                        sdpMid = candidate.sdpMid,
+                        sdpMLineIndex = candidate.sdpMLineIndex,
+                        targetId = partnerId
+                    )
+                }
+                setOnConnectionStateChangeListener { state ->
+                    onConnectionStateChanged(state)
+                }
+            }
+
+            connectionTimeout?.cancel()
+            connectionTimeout = viewModelScope.launch {
+                delay(30000) // 30s timeout for initial connection
+                if (_connectionState.value != PeerConnection.PeerConnectionState.CONNECTED) {
+                    Log.e(TAG, "Initial Connection Timeout - Retrying...")
+                    attemptRejoin()
+                }
+            }
+
+            signalingClient?.connect()
+            registerNetworkCallback()
+        }
     }
 
     /**
@@ -273,7 +316,8 @@ class StreamingViewModel(application: Application) :
     private fun attemptRejoin() {
         reconnectionAttempts++
         // Reset PeerConnection for a clean start on failure
-        webRTCManager?.createPeerConnection()
+        val servers = synchronized(cachedIceServers) { ArrayList(cachedIceServers) }
+        webRTCManager?.createPeerConnection(servers)
         signalingClient?.sendJoin(partnerId)
     }
 
@@ -297,8 +341,44 @@ class StreamingViewModel(application: Application) :
         webRTCManager?.addIceCandidate(IceCandidate(sdpMid, sdpMLineIndex, sdp))
     }
 
+    private fun registerNetworkCallback() {
+        val context = getApplication<Application>()
+        connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                Log.i(TAG, "Network became available. Resetting reconnection counters.")
+                reconnectionAttempts = 0
+                signalingClient?.connect()
+                viewModelScope.launch {
+                    if (_connectionState.value != PeerConnection.PeerConnectionState.CONNECTED) {
+                        Log.i(TAG, "Reconnection attempt triggered by network recovery.")
+                        attemptRejoin()
+                    }
+                }
+            }
+        }
+        try {
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+            connectivityManager?.registerNetworkCallback(request, networkCallback!!)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to register network callback: ${e.message}")
+        }
+    }
+
+    private fun unregisterNetworkCallback() {
+        try {
+            networkCallback?.let { connectivityManager?.unregisterNetworkCallback(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to unregister network callback: ${e.message}")
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
+        unregisterNetworkCallback()
         reconnectionJob?.cancel()
         qualityMonitorJob?.cancel()
         connectionTimeout?.cancel()

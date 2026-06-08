@@ -18,10 +18,12 @@ object RetrofitClient {
     }
 
     private val authInterceptor = AuthInterceptor()
+    private val tokenAuthenticator = TokenAuthenticator()
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .addInterceptor(authInterceptor)
+        .authenticator(tokenAuthenticator)
         .connectTimeout(NetworkConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
         .readTimeout(NetworkConfig.READ_TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(NetworkConfig.WRITE_TIMEOUT, TimeUnit.SECONDS)

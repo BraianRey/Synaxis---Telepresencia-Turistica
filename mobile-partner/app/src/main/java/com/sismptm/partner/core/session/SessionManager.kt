@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 object SessionManager {
     var accessToken: String = ""
+    var refreshToken: String = ""
     var partnerId: Long = 0L
     var partnerName: String = ""
     var partnerEmail: String = ""
@@ -28,8 +29,9 @@ object SessionManager {
     
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
 
-    fun saveSession(token: String, id: Long, name: String, email: String, lang: String? = "en", picDirectory: String? = null) {
+    fun saveSession(token: String, refreshTkn: String, id: Long, name: String, email: String, lang: String? = "en", picDirectory: String? = null) {
         accessToken = token
+        refreshToken = refreshTkn
         partnerId = id
         partnerName = name
         partnerEmail = email
@@ -39,6 +41,7 @@ object SessionManager {
 
     fun clearSession() {
         accessToken = ""
+        refreshToken = ""
         partnerId = 0L
         partnerName = ""
         partnerEmail = ""

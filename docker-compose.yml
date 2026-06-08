@@ -47,6 +47,21 @@ services:
     networks:
       - tourpresence-network
 
+  coturn:
+    container_name: coturn
+    image: coturn/coturn:4.6.2-alpine
+    restart: always
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+      - "5349:5349/udp"
+      - "5349:5349/tcp"
+      - "50000-50100:50000-50100/udp"
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
+    networks:
+      - tourpresence-network
+
 networks:
   tourpresence-network:
     driver: bridge

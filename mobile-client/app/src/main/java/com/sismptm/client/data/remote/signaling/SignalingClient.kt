@@ -41,6 +41,8 @@ class SignalingClient(
      */
     fun connect() {
         if (isClosing) return
+        webSocket?.close(1000, "Reconnecting")
+        webSocket = null
         val baseUrl = NetworkConfig.WS_SIGNALING_URL
         val url = if (baseUrl.contains("?")) "$baseUrl&peerId=$clientPeerId" else "$baseUrl?peerId=$clientPeerId"
 

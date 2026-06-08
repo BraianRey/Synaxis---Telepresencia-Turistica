@@ -45,6 +45,7 @@ class LoginViewModel(
                         Log.d("LoginDebug", "Partner login response: id=${body.id}, name=${body.name}, picDirectory=${body.picDirectory}")
                         SessionManager.saveSession(
                             token = body.accessToken,
+                            refreshTkn = body.refreshToken,
                             id = body.id,
                             name = body.name,
                             email = body.email,

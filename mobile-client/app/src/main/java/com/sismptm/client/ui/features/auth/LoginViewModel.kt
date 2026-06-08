@@ -45,6 +45,7 @@ class LoginViewModel : ViewModel() {
                         // Using the new unified SessionManager
                         SessionManager.saveSession(
                             token = loginResponse.accessToken,
+                            refreshTkn = loginResponse.refreshToken,
                             id = loginResponse.id,
                             name = loginResponse.name,
                             email = loginResponse.email,

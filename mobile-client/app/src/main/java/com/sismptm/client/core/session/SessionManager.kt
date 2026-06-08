@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 object SessionManager {
     var accessToken: String = ""
         private set
+
+    var refreshToken: String = ""
+        private set
     
     var userId: Long = -1L
         private set
@@ -46,8 +49,9 @@ object SessionManager {
     /**
      * Saves the user session data.
      */
-    fun saveSession(token: String, id: Long, name: String, email: String, role: String, lang: String? = "en", picDirectory: String? = null) {
+    fun saveSession(token: String, refreshTkn: String, id: Long, name: String, email: String, role: String, lang: String? = "en", picDirectory: String? = null) {
         accessToken = token
+        refreshToken = refreshTkn
         userId = id
         userName = name
         userEmail = email
@@ -61,6 +65,7 @@ object SessionManager {
      */
     fun clearSession() {
         accessToken = ""
+        refreshToken = ""
         userId = -1L
         userName = ""
         userEmail = ""

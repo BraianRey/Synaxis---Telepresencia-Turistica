@@ -1,7 +1,9 @@
 package com.synexis.management_service.controller;
 
 import com.synexis.management_service.dto.request.LoginRequest;
+import com.synexis.management_service.dto.request.RefreshTokenRequest;
 import com.synexis.management_service.dto.response.usersProfile.LoginResponse;
+import com.synexis.management_service.dto.response.usersProfile.RefreshTokenResponse;
 import com.synexis.management_service.service.LoginService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +32,11 @@ public class AuthController {
     public ResponseEntity<LoginResponse> loginPartner(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(loginService.loginPartner(request.email(), request.password()));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshTokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(loginService.refresh(request.refreshToken()));
+    }
 }
+
 

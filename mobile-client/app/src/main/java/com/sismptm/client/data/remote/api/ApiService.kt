@@ -78,4 +78,8 @@ interface ApiService {
     /** Retrieves the rating associated with a specific service */
     @GET("api/ratings/service/{serviceId}")
     suspend fun getRatingByService(@Path("serviceId") serviceId: Long): Response<RatingResponse>
+
+    /** Retrieves dynamically generated ICE/TURN servers credentials */
+    @GET("api/streaming/ice-servers")
+    suspend fun getIceServers(): Response<IceServersResponse>
 }

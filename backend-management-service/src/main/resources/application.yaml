@@ -43,4 +43,10 @@ server:
 
 keycloak:
   realm: synexis
-  
+
+turn:
+  secret: ${TURN_SECRET:synexissupersecretkey2026}
+  host: ${TURN_HOST:192.168.0.14}
+  udp-port: ${TURN_UDP_PORT:3478}
+  tcp-port: ${TURN_TCP_PORT:3478}
+  tls-port: ${TURN_TLS_PORT:5349}

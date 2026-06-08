@@ -224,7 +224,13 @@ class WebRTCManager(
         peerConnection = null
     }
 
-    fun setupNewPeerConnection() {
+    private var customIceServers: List<PeerConnection.IceServer> = emptyList()
+
+    fun setupNewPeerConnection(servers: List<PeerConnection.IceServer> = emptyList()) {
+        if (servers.isNotEmpty()) {
+            this.customIceServers = servers
+        }
+
         peerConnection?.close()
         peerConnection?.dispose()
         peerConnection = null
@@ -281,16 +287,18 @@ class WebRTCManager(
     }
 
     private fun buildPeerConnection(): PeerConnection? {
-        val iceServers =
-                listOf(
-                        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
-                                .createIceServer()
-                )
+        val iceServers = customIceServers.ifEmpty {
+            listOf(
+                PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
+                    .createIceServer()
+            )
+        }
         val rtcConfig =
                 PeerConnection.RTCConfiguration(iceServers).apply {
                     sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
                     continualGatheringPolicy =
                             PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
+                    tcpCandidatePolicy = PeerConnection.TcpCandidatePolicy.ENABLED
                     // Optimization for lower latency and efficient stream bundling
                     bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE
                     rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE
