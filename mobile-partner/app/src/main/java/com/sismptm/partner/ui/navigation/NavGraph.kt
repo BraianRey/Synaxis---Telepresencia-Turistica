@@ -14,12 +14,12 @@ import androidx.navigation.navArgument
 import com.sismptm.partner.ui.features.auth.LoginScreen
 import com.sismptm.partner.ui.features.auth.RegisterScreen
 import com.sismptm.partner.ui.features.home.HomeScreen
+import com.sismptm.partner.ui.features.profile.ProfileScreen
 import com.sismptm.partner.ui.features.streaming.StreamingScreen
+import com.sismptm.partner.ui.features.tour.PartnerServiceSummaryScreen
 import com.sismptm.partner.ui.features.tour.RequestDetailScreen
 import com.sismptm.partner.ui.features.tour.ServiceDetailScreen
 import com.sismptm.partner.ui.features.tour.ServiceReadyScreen
-import com.sismptm.partner.ui.features.tour.PartnerServiceSummaryScreen
-import com.sismptm.partner.ui.features.profile.ProfileScreen
 
 /**
  * Defines the navigation structure and routes for the Partner application.
@@ -94,9 +94,6 @@ fun PartnerNavGraph() {
                 },
                 onNavigateToServiceReady = { serviceId ->
                     navController.navigate(Screen.ServiceReady.createRoute(serviceId))
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
@@ -130,7 +127,7 @@ fun PartnerNavGraph() {
             val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
             StreamingScreen(
                 serviceId = serviceId,
-                onBack = { 
+                onBack = {
                     // Navigate to summary after streaming ends
                     navController.navigate(Screen.ServiceSummary.createRoute(serviceId)) {
                         popUpTo(Screen.Home.route) { inclusive = false }

@@ -10,7 +10,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -24,8 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -91,9 +90,17 @@ fun StreamingScreen(
 
 @Composable
 private fun StreamingPermissionDeniedScreen(onRetry: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF12151B)).padding(24.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF12151B)).padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.camera_mic_permission_required), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(
+                stringResource(R.string.camera_mic_permission_required),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
             Button(onClick = onRetry) { Text(stringResource(R.string.grant_access)) }
         }
     }
@@ -130,7 +137,11 @@ private fun StreamingContent(
     DisposableEffect(Unit) {
         onDispose {
             activeMediaPlayer?.let {
-                try { if (it.isPlaying) it.stop() } catch (e: Exception) {}
+                try {
+                    if (it.isPlaying) it.stop()
+                } catch (e: IllegalStateException) {
+                    android.util.Log.w("StreamingScreen", "MediaPlayer stop failed on dispose", e)
+                }
                 it.release()
             }
             activeMediaPlayer = null
@@ -210,12 +221,14 @@ private fun StreamingContent(
 @Composable
 private fun ConnectionStatusBadge(state: PeerConnection.PeerConnectionState, modifier: Modifier) {
     val tint = when (state) {
-        PeerConnection.PeerConnectionState.CONNECTED  -> Color.Green
+        PeerConnection.PeerConnectionState.CONNECTED -> Color.Green
         PeerConnection.PeerConnectionState.CONNECTING -> Color.Yellow
         else -> Color.Red
     }
     Row(
-        modifier = modifier.clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.5f)).padding(horizontal = 12.dp, vertical = 6.dp),
+        modifier = modifier.clip(
+            RoundedCornerShape(8.dp)
+        ).background(Color.Black.copy(alpha = 0.5f)).padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(Icons.Default.SignalCellularAlt, contentDescription = null, modifier = Modifier.size(20.dp), tint = tint)
@@ -228,7 +241,7 @@ private fun ConnectionStatusBadge(state: PeerConnection.PeerConnectionState, mod
 private fun CommandOverlay(displayCommands: List<String>, modifier: Modifier) {
     Column(modifier = modifier.width(200.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         displayCommands.forEachIndexed { index, command ->
-            val alphaValue = when(index) {
+            val alphaValue = when (index) {
                 0 -> 1.0f
                 1 -> 0.6f
                 2 -> 0.3f
@@ -289,7 +302,9 @@ private fun playInstructionAudio(context: Context, instruction: String) {
             if (it.isPlaying) it.stop()
             it.release()
         }
-    } catch (e: Exception) {}
+    } catch (e: IllegalStateException) {
+        android.util.Log.w("StreamingScreen", "MediaPlayer stop/release failed", e)
+    }
 
     try {
         activeMediaPlayer = MediaPlayer.create(localizedContext, audioResId)?.apply {
@@ -299,7 +314,8 @@ private fun playInstructionAudio(context: Context, instruction: String) {
             }
             start()
         }
-    } catch (e: Exception) {
+    } catch (e: IllegalStateException) {
+        android.util.Log.w("StreamingScreen", "MediaPlayer create/start failed", e)
         activeMediaPlayer = null
     }
 }

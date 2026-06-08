@@ -57,6 +57,7 @@ class WebRTCManager(
     private var lastRenderer: SurfaceViewRenderer? = null
 
     @Volatile private var isLocalDescriptionSet = false
+
     @Volatile private var isRemoteDescriptionSet = false
     private val pendingLocalIceCandidates = mutableListOf<IceCandidate>()
     private val pendingRemoteIceCandidates = mutableListOf<IceCandidate>()
@@ -79,7 +80,7 @@ class WebRTCManager(
         // Conservative tiering: heavily penalize low RAM to prevent OOM and encoder crashes
         return when {
             totalRamGb <= 3.0 -> 1 // Low tier: 480p max
-            processors <= 4 || totalRamGb <= 4.0 -> 1 
+            processors <= 4 || totalRamGb <= 4.0 -> 1
             processors <= 6 || totalRamGb <= 6.0 -> 2 // Mid tier: 720p max
             else -> 3 // High tier: 1080p max
         }
@@ -98,7 +99,7 @@ class WebRTCManager(
 
     fun startLocalCapture(surfaceViewRenderer: SurfaceViewRenderer) {
         if (isCapturing || isDisposed) return
-        
+
         // Ensure renderer is initialized only once to avoid "Already initialized" crash
         if (this.lastRenderer !== surfaceViewRenderer) {
             this.lastRenderer = surfaceViewRenderer
@@ -108,7 +109,7 @@ class WebRTCManager(
                 surfaceViewRenderer.setMirror(false) // Disable mirroring for back-facing camera capture
                 surfaceViewRenderer.setFpsReduction(15f) // Reduce GPU overhead for local preview
             } catch (e: IllegalStateException) {
-                Log.w(TAG, "SurfaceViewRenderer already initialized, skipping init")
+                Log.w(TAG, "SurfaceViewRenderer already initialized, skipping init", e)
             }
         }
 
@@ -145,7 +146,11 @@ class WebRTCManager(
         capturer.initialize(surfaceTextureHelper, context, videoSource!!.capturerObserver)
 
         when (deviceTier) {
-            3 -> capturer.startCapture(1280, 720, 30) // Capped at 720p to prevent thermal throttling on high-end devices
+            3 -> capturer.startCapture(
+                1280,
+                720,
+                30
+            ) // Capped at 720p to prevent thermal throttling on high-end devices
             2 -> capturer.startCapture(1280, 720, 30)
             else -> capturer.startCapture(640, 480, 30)
         }
@@ -199,26 +204,30 @@ class WebRTCManager(
      */
     fun stopLocalCapture() {
         isCapturing = false
-        
-        try { videoCapturer?.stopCapture() } catch (e: Exception) {}
+
+        try {
+            videoCapturer?.stopCapture()
+        } catch (e: InterruptedException) {
+            Log.w(TAG, "Interrupted while stopping capture", e)
+        }
         videoCapturer?.dispose()
         videoCapturer = null
-        
+
         surfaceTextureHelper?.dispose()
         surfaceTextureHelper = null
-        
+
         localVideoTrack?.dispose()
         localVideoTrack = null
-        
+
         videoSource?.dispose()
         videoSource = null
-        
+
         localAudioTrack?.dispose()
         localAudioTrack = null
-        
+
         audioSource?.dispose()
         audioSource = null
-        
+
         peerConnection?.close()
         peerConnection?.dispose()
         peerConnection = null
@@ -246,7 +255,7 @@ class WebRTCManager(
             configureSender(sender)
         }
         localAudioTrack?.let { peerConnection?.addTrack(it, listOf("stream0")) }
-        
+
         // Notify listener that a new connection has been established in NEW state
         mainHandler.post { listener.onConnectionStateChange(PeerConnection.PeerConnectionState.NEW) }
     }
@@ -347,23 +356,23 @@ class WebRTCManager(
      */
     private fun sdpWithBitrate(sdp: String, bitrateKbps: Int): String {
         var modifiedSdp = sdp
-        
+
         // Find H264 payload type (usually 96, 102, or 125)
         val h264Pattern = Pattern.compile("a=rtpmap:(\\d+) H264/90000\r\n")
         val h264Matcher = h264Pattern.matcher(modifiedSdp)
         var h264Payload: String? = null
-        
+
         if (h264Matcher.find()) {
             h264Payload = h264Matcher.group(1)
         }
-        
+
         // Inject b=AS (Application Specific) max bitrate limit into video mid
         val videoMidPattern = Pattern.compile("(a=mid:video\r\n)")
         val videoMidMatcher = videoMidPattern.matcher(modifiedSdp)
         if (videoMidMatcher.find()) {
             modifiedSdp = videoMidMatcher.replaceFirst("$1b=AS:$bitrateKbps\r\n")
         }
-        
+
         // Inject Google-specific limits to the H264 fmtp line
         if (h264Payload != null) {
             val fmtpPattern = Pattern.compile("(a=fmtp:$h264Payload[^\r\n]+)")
@@ -372,17 +381,17 @@ class WebRTCManager(
                 val originalFmtp = fmtpMatcher.group(1)
                 // Clean any existing x-google flags to prevent duplicates
                 val cleanedFmtp = originalFmtp!!.split(";").filterNot { it.contains("x-google-") }.joinToString(";")
-                
+
                 // Allow WebRTC to start at a low bitrate (300kbps) and scale up organically.
                 // This eliminates the 3-second startup latency caused by forced high bitrates.
                 val minBitrate = 100
-                val startBitrate = 300 
-                
+                val startBitrate = 300
+
                 val newFmtp = "$cleanedFmtp;x-google-min-bitrate=$minBitrate;x-google-max-bitrate=$bitrateKbps;x-google-start-bitrate=$startBitrate"
                 modifiedSdp = modifiedSdp.replace(originalFmtp, newFmtp)
             }
         }
-        
+
         return modifiedSdp
     }
 

@@ -5,12 +5,11 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.BuildConfig
+import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.data.remote.api.dto.IceCandidateModel
 import com.sismptm.partner.data.remote.signaling.SignalingClient
 import com.sismptm.partner.data.remote.signaling.SignalingMessage
 import com.sismptm.partner.manager.webrtc.WebRTCManager
-import java.util.UUID
-import kotlin.random.Random
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +17,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.webrtc.*
-import com.sismptm.partner.core.network.RetrofitClient
-import com.sismptm.partner.data.remote.api.dto.ServiceResponse
+import java.util.UUID
+import kotlin.random.Random
 
 data class CommandEvent(val text: String, val id: String = UUID.randomUUID().toString())
 
@@ -75,7 +74,7 @@ class StreamingViewModel(application: Application) :
     fun initStreaming(surfaceViewRenderer: SurfaceViewRenderer, customId: String) {
         signalingClient?.disconnect()
         webRTCManager.stopLocalCapture()
-        
+
         this.partnerId = customId
         this.serviceId = customId.toLongOrNull() ?: 0L
         webRTCManager.startLocalCapture(surfaceViewRenderer)
@@ -181,7 +180,7 @@ class StreamingViewModel(application: Application) :
     override fun onConnectionStateChange(state: PeerConnection.PeerConnectionState) {
         lastState = state
         _connectionState.value = state
-        
+
         when (state) {
             PeerConnection.PeerConnectionState.CONNECTED -> {
                 connectionTimeout?.cancel()
@@ -200,7 +199,7 @@ class StreamingViewModel(application: Application) :
 
     private fun startReconnectionTimer() {
         if (reconnectionJob?.isActive == true || reconnectionAttempts >= maxReconnectionAttempts) return
-        
+
         val baseDelay = reconnectionDelays.getOrElse(reconnectionAttempts) { 30000L }
         reconnectionJob = viewModelScope.launch {
             delay(baseDelay + Random.nextLong(0, 1000))
@@ -223,8 +222,10 @@ class StreamingViewModel(application: Application) :
                 val status = response.body()?.status
                 Log.i(TAG, "Pre-reconnect status check: service $serviceId is $status")
                 status == "COMPLETED"
-            } else false
-        } catch (e: Exception) {
+            } else {
+                false
+            }
+        } catch (e: java.io.IOException) {
             Log.e(TAG, "Error in pre-reconnect status check: ${e.message}")
             false
         }
@@ -234,7 +235,7 @@ class StreamingViewModel(application: Application) :
         if (reconnectionAttempts >= maxReconnectionAttempts || targetClientId == null) return
         reconnectionAttempts++
         Log.i(TAG, "Attempting connection recovery (Attempt $reconnectionAttempts)")
-        
+
         // Rebuild PeerConnection to escape potentially corrupted stack states
         webRTCManager.setupNewPeerConnection()
         webRTCManager.createOffer()
@@ -246,10 +247,10 @@ class StreamingViewModel(application: Application) :
      */
     fun completeService(serviceId: Long) {
         if (_isCompletingService.value) return
-        
+
         _isCompletingService.value = true
         _completeServiceError.value = null
-        
+
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.apiService.completeService(serviceId)
@@ -261,7 +262,7 @@ class StreamingViewModel(application: Application) :
                     _completeServiceError.value = errorMsg
                     Log.e(TAG, errorMsg)
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 val errorMsg = "Error completing service: ${e.message}"
                 _completeServiceError.value = errorMsg
                 Log.e(TAG, errorMsg, e)
@@ -281,7 +282,7 @@ class StreamingViewModel(application: Application) :
                 } else {
                     Log.e(TAG, "Failed to start service on backend: ${response.code()}")
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 Log.e(TAG, "Error starting service on backend: ${e.message}")
             }
         }

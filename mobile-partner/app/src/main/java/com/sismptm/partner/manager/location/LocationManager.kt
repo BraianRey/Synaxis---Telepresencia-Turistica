@@ -54,10 +54,14 @@ object LocationManager {
     }
 
     @SuppressLint("MissingPermission")
+    @Suppress("TooGenericExceptionCaught") // Play Services location APIs surface many unrelated exception types.
     fun requestSingleUpdate() {
         serviceScope.launch {
             try {
-                val location = fusedLocationClient?.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)?.await()
+                val location = fusedLocationClient?.getCurrentLocation(
+                    Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+                    null
+                )?.await()
                 location?.let { handleLocationUpdate(it) }
             } catch (e: Exception) {
                 Log.e(TAG, "Error requesting single location update", e)
@@ -74,7 +78,7 @@ object LocationManager {
                 } else {
                     Log.e(TAG, "Server error updating location: ${response.code()}")
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 Log.e(TAG, "Network error updating location", e)
             }
         }

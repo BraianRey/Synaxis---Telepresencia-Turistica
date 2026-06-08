@@ -8,6 +8,6 @@ import retrofit2.Response
  * Use case to retrieve all services associated with a specific partner.
  */
 class GetPartnerServicesUseCase(private val repository: PartnerRepository) {
-    suspend operator fun invoke(partnerId: Long): Response<List<ServiceResponse>> = 
+    suspend operator fun invoke(partnerId: Long): Response<List<ServiceResponse>> =
         repository.getPartnerServices(partnerId)
 }

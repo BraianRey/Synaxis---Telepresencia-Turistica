@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +36,6 @@ fun ServiceReadyScreen(
     onServiceCancelled: () -> Unit = onBack,
     viewModel: ServiceReadyViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val cancelUiState by viewModel.cancelUiState.collectAsState()
     val serviceState by viewModel.serviceState.collectAsState()
@@ -48,7 +46,7 @@ fun ServiceReadyScreen(
     LaunchedEffect(serviceId) {
         viewModel.fetchService(serviceId)
     }
-    
+
     // Improved time-gate logic to enable start button for scheduled services
     LaunchedEffect(serviceState) {
         serviceState?.let { service ->
@@ -58,13 +56,18 @@ fun ServiceReadyScreen(
                 // Periodically check if the scheduled time has arrived
                 while (true) {
                     val scheduledTime = service.scheduledAt?.let {
-                        try { Instant.parse(it) } catch (e: Exception) { null }
+                        try {
+                            Instant.parse(it)
+                        } catch (e: java.time.format.DateTimeParseException) {
+                            android.util.Log.w("ServiceReadyScreen", "Invalid scheduledAt: $it", e)
+                            null
+                        }
                     }
-                    
+
                     val now = Instant.now()
                     if (scheduledTime == null || now.isAfter(scheduledTime) || now == scheduledTime) {
                         isTimeToStartEnabled = true
-                        break 
+                        break
                     } else {
                         isTimeToStartEnabled = false
                     }
@@ -204,9 +207,11 @@ fun ServiceReadyScreen(
             if (serviceState?.scheduled == true && serviceState?.status?.uppercase() == "WAITING_FOR_START") {
                 val bannerColor = if (isTimeToStartEnabled) Color(0xFF065F46) else Color(0xFF78350F)
                 val textColor = if (isTimeToStartEnabled) Color(0xFFD1FAE5) else Color(0xFFFBD34D)
-                val text = if (isTimeToStartEnabled) 
+                val text = if (isTimeToStartEnabled) {
                     stringResource(R.string.its_time_ready)
-                    else stringResource(R.string.waiting_scheduled_time)
+                } else {
+                    stringResource(R.string.waiting_scheduled_time)
+                }
 
                 Card(
                     colors = CardDefaults.cardColors(containerColor = bannerColor),
@@ -242,7 +247,11 @@ fun ServiceReadyScreen(
                 } else {
                     Icon(Icons.Default.Stream, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.btn_start_transmission), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(
+                        stringResource(R.string.btn_start_transmission),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
             }
 
@@ -253,10 +262,17 @@ fun ServiceReadyScreen(
                 shape = RoundedCornerShape(12.dp),
                 enabled = !isActionInProgress,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = if (isActionInProgress) 0.3f else 1f))
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    Color(0xFFEF4444).copy(alpha = if (isActionInProgress) 0.3f else 1f)
+                )
             ) {
                 if (cancelUiState is ServiceReadyViewModel.CancelUiState.Loading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFFEF4444), strokeWidth = 2.dp)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color(0xFFEF4444),
+                        strokeWidth = 2.dp
+                    )
                 } else {
                     Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))

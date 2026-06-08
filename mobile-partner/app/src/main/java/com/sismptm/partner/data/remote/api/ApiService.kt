@@ -1,6 +1,7 @@
 package com.sismptm.partner.data.remote.api
 
 import com.sismptm.partner.data.remote.api.dto.*
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -8,11 +9,11 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
-import okhttp3.MultipartBody
 
 /**
  * Service interface for backend API communication.
  */
+@Suppress("TooManyFunctions") // API contract: one function per backend endpoint.
 interface ApiService {
     @GET("api/availability/ping")
     suspend fun availabilityPing(): Response<PingResponse>

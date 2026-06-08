@@ -43,7 +43,9 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
         Log.d(TAG, "Connecting to signaling server: $serverUrl")
         val request = Request.Builder().url(serverUrl).build()
 
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+        webSocket = client.newWebSocket(
+            request,
+            object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.i(TAG, "WebSocket connected successfully")
                 reconnectInterval = 2000L
@@ -56,7 +58,7 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e(TAG, "WebSocket failure: ${t.message}")
-                mainHandler.post { 
+                mainHandler.post {
                     listener.onError(t.message ?: "Connection error")
                     listener.onDisconnected()
                 }
@@ -68,7 +70,8 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
                 mainHandler.post { listener.onDisconnected() }
                 attemptReconnect()
             }
-        })
+        }
+        )
     }
 
     private fun attemptReconnect() {
@@ -107,7 +110,7 @@ class SignalingClient(private val serverUrl: String, private val listener: Signa
                     else -> Log.w(TAG, "Unknown signaling message type: ${message.type}")
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: com.google.gson.JsonSyntaxException) {
             Log.e(TAG, "Error parsing signaling message", e)
         }
     }

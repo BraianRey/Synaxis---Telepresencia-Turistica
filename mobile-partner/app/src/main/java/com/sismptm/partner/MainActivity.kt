@@ -16,11 +16,11 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.sismptm.partner.core.session.SessionManager
-import com.sismptm.partner.ui.navigation.PartnerNavGraph
-import com.sismptm.partner.ui.theme.SISPTMPartnerTheme
 import com.sismptm.partner.core.utils.LanguageContext
 import com.sismptm.partner.core.utils.NotificationHelper
 import com.sismptm.partner.manager.worker.ServiceReminderWorker
+import com.sismptm.partner.ui.navigation.PartnerNavGraph
+import com.sismptm.partner.ui.theme.SISPTMPartnerTheme
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         NotificationHelper.createNotificationChannel(this)
         setupBackgroundWorkers()
 

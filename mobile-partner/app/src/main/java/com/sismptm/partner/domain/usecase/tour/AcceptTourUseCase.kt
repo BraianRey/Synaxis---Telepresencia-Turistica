@@ -8,6 +8,6 @@ import retrofit2.Response
  * Use case to accept an available tour request.
  */
 class AcceptTourUseCase(private val repository: PartnerRepository) {
-    suspend operator fun invoke(serviceId: Long): Response<ServiceResponse> = 
+    suspend operator fun invoke(serviceId: Long): Response<ServiceResponse> =
         repository.acceptService(serviceId)
 }

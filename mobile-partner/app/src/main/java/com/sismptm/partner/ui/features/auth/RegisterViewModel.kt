@@ -59,7 +59,7 @@ class RegisterViewModel(
                     val errorBody = response.errorBody()?.string()
                     _uiState.value = RegisterUiState.Error(parseError(response.code(), errorBody))
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _uiState.value = RegisterUiState.Error(parseConnectionError(e))
             }
         }
@@ -69,9 +69,9 @@ class RegisterViewModel(
         val backendMessage = runCatching {
             if (body.isNullOrBlank()) "" else JSONObject(body).optString("error", "")
         }.getOrDefault("")
-        
+
         if (backendMessage.isNotBlank()) return backendMessage
-        
+
         return when (code) {
             409 -> "This email is already registered."
             400 -> "Invalid data. Please verify all fields."

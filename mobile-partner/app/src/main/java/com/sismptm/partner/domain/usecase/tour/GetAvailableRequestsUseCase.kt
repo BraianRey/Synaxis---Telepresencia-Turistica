@@ -8,6 +8,6 @@ import retrofit2.Response
  * Use case to retrieve all available (unassigned) tour requests.
  */
 class GetAvailableRequestsUseCase(private val repository: PartnerRepository) {
-    suspend operator fun invoke(): Response<List<ServiceResponse>> = 
+    suspend operator fun invoke(): Response<List<ServiceResponse>> =
         repository.getAvailableServices()
 }

@@ -78,9 +78,18 @@ fun RequestCard(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = clientName, style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = clientName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(text = stringResource(id = R.string.wants_tour, location), style = MaterialTheme.typography.bodyMedium, color = Color(0xFFB9C0CB))
+                    Text(
+                        text = stringResource(id = R.string.wants_tour, location),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFFB9C0CB)
+                    )
                 }
 
                 if (clientPicDirectory != null) {
@@ -121,7 +130,11 @@ fun RequestCard(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB), contentColor = Color.White)
                 ) {
                     if (isAccepting) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
                     } else {
                         Text(text = stringResource(id = R.string.accept), fontWeight = FontWeight.SemiBold)
                     }
@@ -134,7 +147,9 @@ fun RequestCard(
 @Composable
 private fun DetailChip(text: String) {
     Box(
-        modifier = Modifier.clip(RoundedCornerShape(999.dp)).background(Color(0xFF2B3444)).padding(horizontal = 12.dp, vertical = 6.dp)
+        modifier = Modifier.clip(
+            RoundedCornerShape(999.dp)
+        ).background(Color(0xFF2B3444)).padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(text = text, style = MaterialTheme.typography.labelMedium, color = Color(0xFFE5E7EB))
     }

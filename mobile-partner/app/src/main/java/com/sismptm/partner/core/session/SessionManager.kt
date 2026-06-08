@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Singleton managing the user session, providing a single source of truth for 
+ * Singleton managing the user session, providing a single source of truth for
  * tokens, user identification, and preferences.
  */
 object SessionManager {
@@ -21,11 +21,11 @@ object SessionManager {
     var language: String
         get() = _languageFlow.value
         private set(value) { _languageFlow.value = value }
-        
+
     fun updateLanguage(lang: String) {
         language = lang
     }
-    
+
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
 
     fun saveSession(token: String, id: Long, name: String, email: String, lang: String? = "en", picDirectory: String? = null) {

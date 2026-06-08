@@ -27,7 +27,7 @@ object AlarmScheduler {
 
         try {
             val triggerTime = Instant.parse(scheduledAt).toEpochMilli()
-            val finalTriggerTime = triggerTime - 60000 
+            val finalTriggerTime = triggerTime - 60000
 
             if (finalTriggerTime > System.currentTimeMillis()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {

@@ -14,10 +14,10 @@ object RegisterValidator {
 
     fun isValidEmail(email: String): Boolean = emailRegex.matches(email.trim())
 
-    fun isValidPassword(password: String): Boolean = 
+    fun isValidPassword(password: String): Boolean =
         password.isNotBlank() && password.length >= MIN_PASSWORD_LENGTH
 
-    fun doPasswordsMatch(password: String, confirmPassword: String): Boolean = 
+    fun doPasswordsMatch(password: String, confirmPassword: String): Boolean =
         confirmPassword.isNotEmpty() && password == confirmPassword
 
     /**

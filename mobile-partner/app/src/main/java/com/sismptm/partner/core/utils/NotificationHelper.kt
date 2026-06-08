@@ -43,9 +43,9 @@ object NotificationHelper {
             putExtra("SERVICE_ID", serviceId)
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(
-            context, 
-            serviceId.toInt(), 
-            intent, 
+            context,
+            serviceId.toInt(),
+            intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 

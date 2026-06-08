@@ -19,9 +19,13 @@ import org.json.JSONObject
  * ViewModel for the home screen, managing available tour requests and partner service history.
  */
 class HomeViewModel(
-    private val getAvailableRequestsUseCase: GetAvailableRequestsUseCase = GetAvailableRequestsUseCase(PartnerRepositoryImpl()),
+    private val getAvailableRequestsUseCase: GetAvailableRequestsUseCase = GetAvailableRequestsUseCase(
+        PartnerRepositoryImpl()
+    ),
     private val acceptTourUseCase: AcceptTourUseCase = AcceptTourUseCase(PartnerRepositoryImpl()),
-    private val getPartnerServicesUseCase: GetPartnerServicesUseCase = GetPartnerServicesUseCase(PartnerRepositoryImpl())
+    private val getPartnerServicesUseCase: GetPartnerServicesUseCase = GetPartnerServicesUseCase(
+        PartnerRepositoryImpl()
+    )
 ) : ViewModel() {
 
     sealed interface RequestsUiState {
@@ -72,7 +76,7 @@ class HomeViewModel(
                 } else {
                     _requestsState.value = RequestsUiState.Error(parseError(response.code(), response.errorBody()?.string()))
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _requestsState.value = RequestsUiState.Error(e.localizedMessage ?: "Unknown error")
             }
         }
@@ -93,13 +97,13 @@ class HomeViewModel(
                         )
                     }
                     _acceptedTour.value = acceptedService
-                    
+
                     // Refresh partner services to show the accepted service in "My Services"
                     loadPartnerServices()
                 } else {
                     _acceptErrorMessage.value = parseError(response.code(), response.errorBody()?.string())
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _acceptErrorMessage.value = e.localizedMessage ?: "Connection error"
             } finally {
                 _acceptingServiceId.value = null
@@ -124,7 +128,7 @@ class HomeViewModel(
                 } else {
                     _partnerServicesState.value = PartnerServicesUiState.Error(parseError(response.code(), response.errorBody()?.string()))
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _partnerServicesState.value = PartnerServicesUiState.Error(e.localizedMessage ?: "Connection error")
             }
         }
@@ -154,15 +158,16 @@ class HomeViewModel(
                     val ratings = response.body().orEmpty()
                     if (ratings.isNotEmpty()) {
                         val avg = ratings.map { it.score }.average()
-                        _averageRating.value = String.format("%.1f", avg)
+                        _averageRating.value = String.format(java.util.Locale.getDefault(), "%.1f", avg)
                         _ratingCount.value = ratings.size
                     } else {
                         _averageRating.value = "-"
                         _ratingCount.value = 0
                     }
                 }
-            } catch (e: Exception) {
-                // Silent — do not disrupt the home screen
+            } catch (e: java.io.IOException) {
+                // Silent — do not disrupt the home screen, but keep a trace for diagnostics
+                android.util.Log.w("HomeViewModel", "Failed to load partner ratings", e)
             } finally {
                 _isLoadingRatings.value = false
             }

@@ -3,7 +3,6 @@ package com.sismptm.partner.ui.features.tour
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.core.network.RetrofitClient
-import com.sismptm.partner.data.repository.PartnerRepositoryImpl
 import com.sismptm.partner.domain.usecase.tour.MarkServiceReadyUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,9 +13,9 @@ import org.json.JSONObject
  * ViewModel for the Service Ready screen, handling the transition from acceptance to streaming.
  */
 class ServiceReadyViewModel(
-    private val startServiceUseCase: MarkServiceReadyUseCase = MarkServiceReadyUseCase(PartnerRepositoryImpl())
+    private val startServiceUseCase: MarkServiceReadyUseCase = MarkServiceReadyUseCase()
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow<ReadyUiState>(ReadyUiState.Idle)
     val uiState: StateFlow<ReadyUiState> = _uiState
 
@@ -48,8 +47,8 @@ class ServiceReadyViewModel(
                 if (response.isSuccessful) {
                     _serviceState.value = response.body()
                 }
-            } catch (e: Exception) {
-                // Ignore for now
+            } catch (e: java.io.IOException) {
+                android.util.Log.w("ServiceReadyVM", "fetchService failed", e)
             }
         }
     }
@@ -65,7 +64,7 @@ class ServiceReadyViewModel(
                     val errorMsg = parseError(response.code(), response.errorBody()?.string())
                     _uiState.value = ReadyUiState.Error(errorMsg)
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _uiState.value = ReadyUiState.Error(e.localizedMessage ?: "Network error occurred")
             }
         }
@@ -82,7 +81,7 @@ class ServiceReadyViewModel(
                     val errorMsg = parseError(response.code(), response.errorBody()?.string())
                     _cancelUiState.value = CancelUiState.Error(errorMsg)
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _cancelUiState.value = CancelUiState.Error(e.localizedMessage ?: "Error de conexión al cancelar")
             }
         }
@@ -90,9 +89,13 @@ class ServiceReadyViewModel(
 
     private fun parseError(code: Int, body: String?): String {
         return try {
-            if (body.isNullOrBlank()) "Error $code"
-            else JSONObject(body).optString("error", "Server error ($code)")
-        } catch (e: Exception) {
+            if (body.isNullOrBlank()) {
+                "Error $code"
+            } else {
+                JSONObject(body).optString("error", "Server error ($code)")
+            }
+        } catch (e: org.json.JSONException) {
+            android.util.Log.w("ServiceReadyVM", "Failed to parse error body", e)
             "Server error ($code)"
         }
     }

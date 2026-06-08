@@ -25,6 +25,6 @@ object EnvironmentConfig {
     val BACKEND_URL: String
         get() = "$BACKEND_PROTOCOL://$BACKEND_HOST:$BACKEND_PORT/"
 
-    val IS_DEBUG: Boolean = true
-    val ENABLE_NETWORK_LOGGING: Boolean = IS_DEBUG
+    const val IS_DEBUG: Boolean = true
+    const val ENABLE_NETWORK_LOGGING: Boolean = IS_DEBUG
 }

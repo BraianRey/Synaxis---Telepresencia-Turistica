@@ -34,7 +34,8 @@ data class ServiceResponse(
             val start = java.time.Instant.parse(startedAt)
             val end = java.time.Instant.parse(endedAt)
             java.time.Duration.between(start, end).toMinutes()
-        } catch (e: Exception) {
+        } catch (e: java.time.format.DateTimeParseException) {
+            android.util.Log.w("ServiceResponse", "Invalid timestamp parsing duration", e)
             null
         }
     }
@@ -63,7 +64,7 @@ data class ServiceResponse(
      */
     fun getFormattedCost(): String {
         val cost = getTotalCost() ?: return "N/A"
-        return String.format("$%.2f USD", cost)
+        return String.format(java.util.Locale.getDefault(), "$%.2f USD", cost)
     }
 }
 

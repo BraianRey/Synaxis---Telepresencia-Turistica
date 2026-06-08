@@ -1,8 +1,5 @@
 package com.sismptm.partner.ui.features.tour
 
-import androidx.compose.ui.res.stringResource
-import com.sismptm.partner.R
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,25 +16,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.layout.ContentScale
-import com.sismptm.partner.core.network.NetworkConfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.sismptm.partner.R
+import com.sismptm.partner.core.network.NetworkConfig
 import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.data.remote.api.dto.PaymentSummaryResponse
 import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import com.sismptm.partner.ui.theme.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -71,13 +69,13 @@ class PartnerServiceSummaryViewModel : ViewModel() {
                             _payment.value = paymentResponse.body()
                         }
                         // Payment load failure is silent — service data is still shown
-                    } catch (e: Exception) {
-                        // Silent — do not override existing _error state
+                    } catch (e: java.io.IOException) {
+                        android.util.Log.w("ServiceSummaryVM", "Payment summary load failed", e)
                     }
                 } else {
                     _error.value = "Failed to load service details"
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _error.value = e.message ?: "Unknown error"
             } finally {
                 _isLoading.value = false
@@ -345,7 +343,7 @@ private fun PartnerEarningsCard(service: ServiceResponse, payment: PaymentSummar
                     icon = Icons.Default.AttachMoney,
                     label = stringResource(R.string.you_earned_label),
                     value = payment?.let {
-                        stringResource(R.string.currency_format, String.format("%,.0f", it.totalAmount))
+                        stringResource(R.string.currency_format, String.format(java.util.Locale.getDefault(), "%,.0f", it.totalAmount))
                     } ?: service.getFormattedCost(),
                     color = Color(0xFF4CAF50)
                 )
@@ -354,9 +352,9 @@ private fun PartnerEarningsCard(service: ServiceResponse, payment: PaymentSummar
             // Rate info
             Text(
                 text = payment?.let {
-                    "${stringResource(R.string.label_total_prefix)}${stringResource(R.string.currency_format, String.format("%,.0f", it.totalAmount))} • ${it.actualDurationMin}${stringResource(R.string.minutes_unit_short)}"
+                    "${stringResource(R.string.label_total_prefix)}${stringResource(R.string.currency_format, String.format(java.util.Locale.getDefault(), "%,.0f", it.totalAmount))} • ${it.actualDurationMin}${stringResource(R.string.minutes_unit_short)}"
                 } ?: service.hourlyRate?.let {
-                    "${stringResource(R.string.label_rate_prefix)}${stringResource(R.string.currency_format, String.format("%,.0f", it))}${stringResource(R.string.per_hour_suffix)}"
+                    "${stringResource(R.string.label_rate_prefix)}${stringResource(R.string.currency_format, String.format(java.util.Locale.getDefault(), "%,.0f", it))}${stringResource(R.string.per_hour_suffix)}"
                 } ?: stringResource(R.string.rate_na),
                 fontSize = 12.sp,
                 color = TextSecondary,
@@ -520,7 +518,8 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
                             .ofPattern("MMM dd, yyyy - HH:mm")
                             .withZone(java.time.ZoneId.systemDefault())
                         formatter.format(instant)
-                    } catch (e: Exception) {
+                    } catch (e: java.time.format.DateTimeParseException) {
+                        android.util.Log.w("ServiceSummary", "Bad endedAt date: $it", e)
                         it
                     }
                 } ?: stringResource(R.string.rate_na)
@@ -529,7 +528,9 @@ private fun ServiceDetailsCard(service: ServiceResponse) {
             DetailItem(
                 icon = Icons.Default.Schedule,
                 label = stringResource(R.string.agreed_hours_label),
-                value = "${service.agreedHours ?: stringResource(R.string.rate_na)}${stringResource(R.string.hours_unit)}"
+                value = "${service.agreedHours ?: stringResource(R.string.rate_na)}${stringResource(
+                    R.string.hours_unit
+                )}"
             )
         }
     }

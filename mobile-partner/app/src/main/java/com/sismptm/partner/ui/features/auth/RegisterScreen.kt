@@ -42,7 +42,6 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
 
 private data class CityOption(val label: String, val longitude: Double, val latitude: Double)
 
@@ -54,6 +53,7 @@ private val cityOptions = listOf(
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("TooGenericExceptionCaught") // Image decode/upload must degrade gracefully for any failure.
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
@@ -243,7 +243,14 @@ fun RegisterScreen(
                 }
             },
             isError = passwordMismatch,
-            supportingText = { if (passwordMismatch) Text(stringResource(R.string.passwords_do_not_match), color = Error) },
+            supportingText = {
+                if (passwordMismatch) {
+                Text(
+                    stringResource(R.string.passwords_do_not_match),
+                    color = Error
+                )
+            }
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             singleLine = true,
@@ -355,7 +362,7 @@ fun RegisterScreen(
                             inputStream?.close()
 
                             if (originalBitmap == null) {
-                                throw IllegalStateException("Could not decode image")
+                                error("Could not decode image")
                             }
 
                             // Resize if larger than 800px on any dimension
@@ -415,7 +422,11 @@ fun RegisterScreen(
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary, strokeWidth = 2.dp)
             } else {
-                Text(text = stringResource(id = R.string.register_button), fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                Text(
+                    text = stringResource(id = R.string.register_button),
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary
+                )
             }
         }
 

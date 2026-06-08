@@ -9,6 +9,6 @@ import retrofit2.Response
  * Use case to handle partner registration.
  */
 class RegisterUseCase(private val repository: PartnerRepository) {
-    suspend operator fun invoke(request: RegisterPartnerRequest): Response<RegisterPartnerResponse> = 
+    suspend operator fun invoke(request: RegisterPartnerRequest): Response<RegisterPartnerResponse> =
         repository.register(request)
 }

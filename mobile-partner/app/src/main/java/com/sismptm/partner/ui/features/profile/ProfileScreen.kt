@@ -16,14 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.layout.ContentScale
 import com.sismptm.partner.R
 import com.sismptm.partner.core.network.NetworkConfig
 import com.sismptm.partner.core.session.SessionManager
@@ -35,20 +35,30 @@ fun ProfileScreen(onBack: () -> Unit) {
     val name = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) }
     val email = SessionManager.partnerEmail.ifBlank { stringResource(R.string.not_specified) }
     val initial = name.take(1).uppercase()
-    
+
     var isEditing by remember { mutableStateOf(false) }
     var selectedLanguage by remember { mutableStateOf(SessionManager.language) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.my_profile), color = TextPrimary, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                    stringResource(R.string.my_profile),
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         // Exiting via navigation cancels edit mode by discarding state
                         onBack()
                     }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = TextPrimary)
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = TextPrimary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
@@ -89,9 +99,9 @@ fun ProfileScreen(onBack: () -> Unit) {
                     Text(text = initial, color = TextPrimary, fontSize = 48.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Name
             Text(
                 text = name,
@@ -99,21 +109,21 @@ fun ProfileScreen(onBack: () -> Unit) {
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // Info Cards
             ProfileInfoCard(icon = Icons.Default.Person, label = stringResource(R.string.full_name), value = name)
             Spacer(modifier = Modifier.height(12.dp))
             ProfileInfoCard(icon = Icons.Default.Email, label = stringResource(R.string.email), value = email)
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             if (isEditing) {
                 EditableLanguageCard(
                     selectedLanguage = selectedLanguage,
                     onLanguageSelected = { selectedLanguage = it }
                 )
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -128,12 +138,12 @@ fun ProfileScreen(onBack: () -> Unit) {
                     ) {
                         Text(stringResource(R.string.cancel), color = TextPrimary)
                     }
-                    
+
                     Button(
                         onClick = {
                             // TODO: API CALL
                             // Make a REST API call to /api/partners/profile to update the preferred language on the backend
-                            
+
                             SessionManager.updateLanguage(selectedLanguage)
                             isEditing = false
                         },
@@ -145,11 +155,11 @@ fun ProfileScreen(onBack: () -> Unit) {
                 }
             } else {
                 ProfileInfoCard(
-                    icon = Icons.Default.Settings, 
-                    label = stringResource(R.string.preferred_language), 
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.preferred_language),
                     value = SessionManager.language.uppercase()
                 )
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = { isEditing = true },
@@ -198,11 +208,20 @@ private fun EditableLanguageCard(selectedLanguage: String, onLanguageSelected: (
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text(text = stringResource(R.string.preferred_language), style = MaterialTheme.typography.bodySmall, color = TextTertiary)
-                    Text(text = selectedLabel, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, fontWeight = FontWeight.Medium)
+                    Text(
+                        text = stringResource(R.string.preferred_language),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextTertiary
+                    )
+                    Text(
+                        text = selectedLabel,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
-            
+
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -252,7 +271,12 @@ private fun ProfileInfoCard(icon: ImageVector, label: String, value: String) {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(text = label, style = MaterialTheme.typography.bodySmall, color = TextTertiary)
-                Text(text = value, style = MaterialTheme.typography.bodyLarge, color = TextPrimary, fontWeight = FontWeight.Medium)
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

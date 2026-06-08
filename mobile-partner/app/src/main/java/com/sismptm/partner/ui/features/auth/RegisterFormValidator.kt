@@ -21,10 +21,10 @@ object RegisterFormValidator {
         password: String,
         acceptedTerms: Boolean
     ): Boolean {
-        return fullName.trim().isNotEmpty()
-                && isValidEmail(email)
-                && isValidPassword(password)
-                && acceptedTerms
+        return fullName.trim().isNotEmpty() &&
+                isValidEmail(email) &&
+                isValidPassword(password) &&
+                acceptedTerms
     }
 
     fun isFormValid(
@@ -34,10 +34,10 @@ object RegisterFormValidator {
         confirmPassword: String,
         acceptedTerms: Boolean
     ): Boolean {
-        return fullName.trim().isNotEmpty()
-                && isValidEmail(email)
-                && isValidPassword(password)
-                && doPasswordsMatch(password, confirmPassword)
-                && acceptedTerms
+        return fullName.trim().isNotEmpty() &&
+                isValidEmail(email) &&
+                isValidPassword(password) &&
+                doPasswordsMatch(password, confirmPassword) &&
+                acceptedTerms
     }
 }

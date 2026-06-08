@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sismptm.partner.core.session.SessionManager
 import com.sismptm.partner.data.remote.api.dto.LoginRequest
-import com.sismptm.partner.domain.usecase.auth.LoginUseCase
-import com.sismptm.partner.domain.usecase.auth.CheckServerStatusUseCase
 import com.sismptm.partner.data.repository.PartnerRepositoryImpl
+import com.sismptm.partner.domain.usecase.auth.CheckServerStatusUseCase
+import com.sismptm.partner.domain.usecase.auth.LoginUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,7 +42,10 @@ class LoginViewModel(
                 val response = loginUseCase(LoginRequest(email = email.trim(), password = password))
                 if (response.isSuccessful) {
                     response.body()?.let { body ->
-                        Log.d("LoginDebug", "Partner login response: id=${body.id}, name=${body.name}, picDirectory=${body.picDirectory}")
+                        Log.d(
+                            "LoginDebug",
+                            "Partner login response: id=${body.id}, name=${body.name}, picDirectory=${body.picDirectory}"
+                        )
                         SessionManager.saveSession(
                             token = body.accessToken,
                             id = body.id,
@@ -58,7 +61,7 @@ class LoginViewModel(
                     val errorBody = response.errorBody()?.string()
                     _uiState.value = LoginUiState.Error(parseError(response.code(), errorBody))
                 }
-            } catch (ex: Exception) {
+            } catch (ex: java.io.IOException) {
                 _uiState.value = LoginUiState.Error(parseConnectionError(ex))
             }
         }
@@ -73,7 +76,7 @@ class LoginViewModel(
                 } else {
                     _pingState.value = "Server unreachable (Code: ${response.code()})"
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _pingState.value = "Connection error: ${e.localizedMessage}"
             }
         }
@@ -104,4 +107,3 @@ class LoginViewModel(
         _uiState.value = LoginUiState.Idle
     }
 }
-

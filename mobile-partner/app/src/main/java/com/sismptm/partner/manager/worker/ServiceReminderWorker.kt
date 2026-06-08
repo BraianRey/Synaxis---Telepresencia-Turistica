@@ -2,10 +2,11 @@ package com.sismptm.partner.manager.worker
 
 import android.content.Context
 import androidx.work.*
+import com.sismptm.partner.R
 import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.core.session.SessionManager
 import com.sismptm.partner.core.utils.NotificationHelper
-import com.sismptm.partner.R
+import com.sismptm.partner.data.remote.api.dto.ServiceResponse
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -22,39 +23,41 @@ class ServiceReminderWorker(
         val partnerId = SessionManager.partnerId
         if (partnerId == 0L || !SessionManager.isLoggedIn()) return Result.success()
 
-        try {
+        return try {
             val response = RetrofitClient.apiService.getServicesByPartner(partnerId)
             if (response.isSuccessful) {
-                val services = response.body() ?: emptyList()
                 val now = Instant.now()
-
-                services.forEach { service ->
-                    if (service.status.uppercase() == "WAITING_FOR_START" && service.scheduledAt != null) {
-                        val scheduledTime = try { Instant.parse(service.scheduledAt) } catch (e: Exception) { null }
-                        
-                        scheduledTime?.let { time ->
-                            val diff = Duration.between(now, time).toMinutes()
-                            
-                            // 1. Trigger notification if it's already time (or 1 min before)
-                            if (now.isAfter(time.minusSeconds(60))) {
-                                NotificationHelper.showNotification(
-                                    applicationContext,
-                                    service.serviceId,
-                                    applicationContext.getString(R.string.notification_title_reminder),
-                                    applicationContext.getString(R.string.notification_msg_partner, service.serviceId)
-                                )
-                            } 
-                            // 2. If the tour is in the future but soon, we could schedule a one-time precise shot
-                            // but usually the Periodic worker + the App open logic is enough.
-                        }
-                    }
-                }
+                response.body().orEmpty().forEach { service -> notifyIfDue(service, now) }
             }
-        } catch (e: Exception) {
-            return Result.retry()
+            Result.success()
+        } catch (e: java.io.IOException) {
+            android.util.Log.w("ServiceReminder", "Network error while checking services, will retry", e)
+            Result.retry()
+        }
+    }
+
+    /**
+     * Triggers a reminder notification for a single scheduled service when its start time
+     * has arrived (or is within one minute). No-op for any other service state.
+     */
+    private fun notifyIfDue(service: ServiceResponse, now: Instant) {
+        if (service.status.uppercase() != "WAITING_FOR_START" || service.scheduledAt == null) return
+
+        val scheduledTime = try {
+            Instant.parse(service.scheduledAt)
+        } catch (e: java.time.format.DateTimeParseException) {
+            android.util.Log.w("ServiceReminder", "Invalid scheduledAt: ${service.scheduledAt}", e)
+            return
         }
 
-        return Result.success()
+        if (now.isAfter(scheduledTime.minusSeconds(60))) {
+            NotificationHelper.showNotification(
+                applicationContext,
+                service.serviceId,
+                applicationContext.getString(R.string.notification_title_reminder),
+                applicationContext.getString(R.string.notification_msg_partner, service.serviceId)
+            )
+        }
     }
 
     companion object {
@@ -63,7 +66,12 @@ class ServiceReminderWorker(
          */
         fun schedulePreciseNotification(context: Context, serviceId: Long, scheduledAt: String) {
             val now = Instant.now()
-            val tourTime = try { Instant.parse(scheduledAt) } catch (e: Exception) { return }
+            val tourTime = try {
+                Instant.parse(scheduledAt)
+            } catch (e: java.time.format.DateTimeParseException) {
+                android.util.Log.w("ServiceReminder", "Invalid scheduledAt: $scheduledAt", e)
+                return
+            }
             val delay = Duration.between(now, tourTime).toMillis()
 
             if (delay > 0) {
