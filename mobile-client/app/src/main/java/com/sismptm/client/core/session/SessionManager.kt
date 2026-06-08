@@ -41,6 +41,10 @@ object SessionManager {
         language = lang
     }
 
+    fun updatePicDirectory(newPath: String) {
+        picDirectory = newPath
+    }
+
     /**
      * Checks if a user is currently logged in based on the presence of an access token.
      */

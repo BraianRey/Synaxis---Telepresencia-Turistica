@@ -53,6 +53,7 @@
     <string name="home_services_no_active">No hay servicios activos</string>
     <string name="home_services_history">Historial de servicios</string>
     <string name="home_services_no_history">No hay servicios en el historial</string>
+    <string name="active_services">Servicios activos</string>
     <string name="search_cancel">Cancelar</string>
     <string name="search_partners_found">%1$d socios encontrados</string>
     <string name="search_sort_by">Ordenar por</string>
@@ -200,6 +201,9 @@
     <string name="describe_location_title">Describe la ubicación</string>
     <string name="confirm_location">Confirmar ubicación</string>
     <string name="close">Cerrar</string>
+    <string name="change_profile_photo">Cambiar foto de perfil</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_spanish">Español</string>
     <string name="nav_favorites">Favoritos</string>
     <string name="nav_messages">Mensajes</string>
     <string name="nav_account">Cuenta</string>

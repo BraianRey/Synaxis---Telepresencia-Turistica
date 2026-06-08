@@ -218,7 +218,14 @@ private fun MapServiceComposable(navController: NavHostController, backStackEntr
     val isReserveMode = mode == "reserve"
     MapServiceScreen(
         reserveMode = isReserveMode,
-        onBack = { navController.popBackStack() },
+        onBack = {
+            if (!navController.popBackStack()) {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Home.route) { inclusive = false }
+                    launchSingleTop = true
+                }
+            }
+        },
         onServiceCreated = { serviceId ->
             navController.navigate(Screen.ServiceWaiting.createRoute(serviceId)) {
                 popUpTo(Screen.MapService.route) { inclusive = true }

@@ -59,6 +59,7 @@
     <string name="home_services_no_active">No hay servicios activos</string>
     <string name="home_services_history">Historial de servicios</string>
     <string name="home_services_no_history">No hay servicios en el historial</string>
+    <string name="active_services">Servicios activos</string>
     <string name="reserve_service_btn">Reservar servicio</string>
     <string name="recent_places">Lugares recientes</string>
 
@@ -221,6 +222,9 @@
     <string name="save_changes">Guardar Cambios</string>
     <string name="cancel">Cancelar</string>
     <string name="role">Rol</string>
+    <string name="change_profile_photo">Cambiar foto de perfil</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_spanish">Español</string>
     <string name="search_placeholder_example">Bogotá, Colombia</string>
     <string name="location_placeholder_example">Ej.: Cafetería cerca del parque...</string>
     <string name="describe_location_title">Describe la ubicación</string>

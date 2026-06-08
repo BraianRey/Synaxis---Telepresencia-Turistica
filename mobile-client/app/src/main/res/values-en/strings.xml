@@ -52,6 +52,7 @@
     <string name="home_services_no_active">No active services</string>
     <string name="home_services_history">Service history</string>
     <string name="home_services_no_history">No services in history</string>
+    <string name="active_services">Active services</string>
     <string name="search_cancel">Cancel</string>
     <string name="search_partners_found">%1$d partners found</string>
     <string name="search_sort_by">Sort by</string>
@@ -200,6 +201,9 @@
     <string name="nav_favorites">Favorites</string>
     <string name="nav_messages">Messages</string>
     <string name="nav_account">Account</string>
+    <string name="change_profile_photo">Change profile photo</string>
+    <string name="language_english">English</string>
+    <string name="language_spanish">Español</string>
 
     <!-- Rating -->
     <string name="rate_your_guide">Rate your guide</string>
