@@ -6,10 +6,14 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,11 +23,13 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import android.content.Context
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -122,7 +128,8 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(Background)
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 24.dp, horizontal = 24.dp),
+            .imePadding()
+            .padding(top = 32.dp, bottom = 24.dp, start = 24.dp, end = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         RegisterHeader()
@@ -295,12 +302,21 @@ private fun ProfileSection(
     UploadErrorMessage(uploadError)
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RegisterForm(state: RegisterFormState) {
+    val fullNameBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val emailBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val passwordBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val confirmPasswordBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
     RegisterInputField(
         value = state.fullName,
         onValueChange = state.onFullNameChange,
         placeholderResId = R.string.full_name_placeholder,
+        modifier = Modifier.bringIntoViewRequester(fullNameBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { fullNameBringIntoViewRequester.bringIntoView() } },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next
@@ -316,12 +332,14 @@ private fun RegisterForm(state: RegisterFormState) {
         value = state.email,
         onValueChange = state.onEmailChange,
         placeholderResId = R.string.email_placeholder,
+        modifier = Modifier.bringIntoViewRequester(emailBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { emailBringIntoViewRequester.bringIntoView() } },
         isError = state.emailHasError,
-        supportingText = {
-            if (state.emailHasError) {
+        supportingText = if (state.emailHasError) {
+            {
                 Text(text = stringResource(R.string.invalid_email), color = Error)
             }
-        },
+        } else null,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -337,6 +355,8 @@ private fun RegisterForm(state: RegisterFormState) {
         value = state.password,
         onValueChange = state.onPasswordChange,
         placeholderResId = R.string.password_placeholder,
+        modifier = Modifier.bringIntoViewRequester(passwordBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { passwordBringIntoViewRequester.bringIntoView() } },
         passwordVisible = state.passwordVisible,
         onVisibilityToggle = state.onTogglePasswordVisible,
         keyboardActions = KeyboardActions(
@@ -350,14 +370,16 @@ private fun RegisterForm(state: RegisterFormState) {
         value = state.confirmPassword,
         onValueChange = state.onConfirmPasswordChange,
         placeholderResId = R.string.confirm_password,
+        modifier = Modifier.bringIntoViewRequester(confirmPasswordBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { confirmPasswordBringIntoViewRequester.bringIntoView() } },
         passwordVisible = state.confirmPasswordVisible,
         onVisibilityToggle = state.onToggleConfirmPasswordVisible,
         isError = state.passwordMismatch,
-        supportingText = {
-            if (state.passwordMismatch) {
+        supportingText = if (state.passwordMismatch) {
+            {
                 Text(text = stringResource(R.string.passwords_do_not_match), color = Error)
             }
-        },
+        } else null,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
@@ -436,9 +458,10 @@ private fun RegisterInputField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = true,
+        textStyle = LocalTextStyle.current.copy(lineHeight = 20.sp),
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .heightIn(min = 56.dp),
         shape = RoundedCornerShape(8.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryAccent,
