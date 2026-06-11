@@ -22,5 +22,7 @@ public record RegisterClientRequest(
 
                 @NotNull @AssertTrue Boolean termsAccepted,
 
-                UserLanguage language) {
+                UserLanguage language,
+
+                String profilePictureBase64) {
 }

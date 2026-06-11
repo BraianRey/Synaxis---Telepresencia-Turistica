@@ -3,6 +3,7 @@ package com.sismptm.client.ui.features.auth
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,18 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
-import com.sismptm.client.core.network.NetworkConfig
-import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.domain.validation.RegisterValidator
 import com.sismptm.client.ui.common.ProfilePictureUpload
 import com.sismptm.client.ui.theme.*
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
 
 private data class RegisterFormState(
     val fullName: String,
@@ -95,6 +89,8 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var showPhotoOptions by remember { mutableStateOf(false) }
     var isUploading by remember { mutableStateOf(false) }
     var uploadError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -111,6 +107,17 @@ fun RegisterScreen(
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
+            selectedImageBitmap = null
+            uploadError = null
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        bitmap?.let {
+            selectedImageBitmap = it
+            selectedImageUri = null
             uploadError = null
         }
     }
@@ -134,11 +141,34 @@ fun RegisterScreen(
     ) {
         RegisterHeader()
 
-        ProfileSection(
-            onPhotoClick = { imagePickerLauncher.launch("image/*") },
-            selectedImageUri = selectedImageUri,
-            uploadError = uploadError
-        )
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            ProfileSection(
+                onPhotoClick = { showPhotoOptions = true },
+                selectedImageUri = selectedImageUri,
+                selectedImageBitmap = selectedImageBitmap,
+                uploadError = uploadError
+            )
+            DropdownMenu(
+                expanded = showPhotoOptions,
+                onDismissRequest = { showPhotoOptions = false },
+                modifier = Modifier.wrapContentSize()
+            ) {
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.choose_from_gallery)) },
+                    onClick = {
+                        showPhotoOptions = false
+                        imagePickerLauncher.launch("image/*")
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.take_photo)) },
+                    onClick = {
+                        showPhotoOptions = false
+                        cameraLauncher.launch(null)
+                    }
+                )
+            }
+        }
 
         if (uploadError != null) {
             Text(
@@ -190,10 +220,16 @@ fun RegisterScreen(
             onClick = {
                 scope.launch {
                     handleRegisterClick(
-                        context, selectedImageUri,
+                        context,
+                        selectedImageUri = selectedImageUri,
+                        selectedImageBitmap = selectedImageBitmap,
                         onUploadError = { uploadError = it },
                         onUploadingChange = { isUploading = it },
-                        viewModel, fullName, email, password, acceptedTerms
+                        viewModel = viewModel,
+                        fullName = fullName,
+                        email = email,
+                        password = password,
+                        acceptedTerms = acceptedTerms
                     )
                 }
             }
@@ -210,6 +246,7 @@ fun RegisterScreen(
 private suspend fun handleRegisterClick(
     context: Context,
     selectedImageUri: Uri?,
+    selectedImageBitmap: Bitmap?,
     onUploadError: (String?) -> Unit,
     onUploadingChange: (Boolean) -> Unit,
     viewModel: RegisterViewModel,
@@ -218,20 +255,19 @@ private suspend fun handleRegisterClick(
     password: String,
     acceptedTerms: Boolean
 ) {
-    val uri = selectedImageUri
-    if (uri != null) {
+    val profilePictureBase64 = if (selectedImageUri != null || selectedImageBitmap != null) {
         onUploadingChange(true)
         try {
-            val uploadSuccess = uploadProfilePicture(context, uri)
-            if (!uploadSuccess) {
-                onUploadError("Image upload failed. Registration will continue without photo.")
-            }
-        } catch (e: java.io.IOException) {
-            Log.e("RegisterDebug", "Upload exception", e)
-            onUploadError("Image upload failed: ${e.localizedMessage ?: "Unknown error"}. Registration will continue without photo.")
+            prepareProfilePictureBase64(context, selectedImageUri, selectedImageBitmap)
+        } catch (e: Exception) {
+            Log.e("RegisterDebug", "Image processing exception", e)
+            onUploadError("Could not prepare profile image. Registration will continue without photo.")
+            null
         } finally {
             onUploadingChange(false)
         }
+    } else {
+        null
     }
 
     viewModel.register(
@@ -239,28 +275,34 @@ private suspend fun handleRegisterClick(
         email = email,
         password = password,
         termsAccepted = acceptedTerms,
-        picDirectory = null
+        picDirectory = null,
+        profilePictureBase64 = profilePictureBase64
     )
 }
 
-private suspend fun uploadProfilePicture(
+private suspend fun prepareProfilePictureBase64(
     context: Context,
-    uri: Uri
-): Boolean {
-    // Decode original image
-    val inputStream = context.contentResolver.openInputStream(uri)
-    val originalBitmap = BitmapFactory.decodeStream(inputStream)
-    inputStream?.close()
+    selectedImageUri: Uri?,
+    selectedImageBitmap: Bitmap?
+): String? {
+    val originalBitmap = when {
+        selectedImageBitmap != null -> selectedImageBitmap
+        selectedImageUri != null -> {
+            val inputStream = context.contentResolver.openInputStream(selectedImageUri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+            bitmap
+        }
+        else -> null
+    } ?: return null
 
-    check(originalBitmap != null) { "Could not decode image" }
-
-    // Resize if larger than 800px on any dimension
     val maxDimension = 800
     val scaleRatio = minOf(
         maxDimension.toFloat() / originalBitmap.width,
         maxDimension.toFloat() / originalBitmap.height,
         1.0f
     )
+
     val resizedBitmap = if (scaleRatio < 1.0f) {
         val newWidth = (originalBitmap.width * scaleRatio).toInt()
         val newHeight = (originalBitmap.height * scaleRatio).toInt()
@@ -269,34 +311,25 @@ private suspend fun uploadProfilePicture(
         originalBitmap
     }
 
-    // Compress to JPEG 80%
     val baos = ByteArrayOutputStream()
     resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
     val compressedBytes = baos.toByteArray()
     baos.close()
 
-    val tempFile = File(context.cacheDir, "profile_upload_${System.currentTimeMillis()}.jpg")
-    tempFile.writeBytes(compressedBytes)
-
-    return try {
-        val requestBody = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-        val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
-        val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
-        uploadResponse.isSuccessful && (uploadResponse.body()?.success == true)
-    } finally {
-        tempFile.delete()
-    }
+    return Base64.encodeToString(compressedBytes, Base64.NO_WRAP)
 }
 
 @Composable
 private fun ProfileSection(
     onPhotoClick: () -> Unit,
     selectedImageUri: Uri?,
+    selectedImageBitmap: Bitmap?,
     uploadError: String?
 ) {
     ProfilePictureUpload(
         onPhotoClick = onPhotoClick,
         selectedImageUri = selectedImageUri,
+        selectedImageBitmap = selectedImageBitmap,
         modifier = Modifier.padding(vertical = 24.dp)
     )
     UploadErrorMessage(uploadError)

@@ -28,7 +28,8 @@ data class RegisterClientRequest(
     val name: String,
     val termsAccepted: Boolean,
     val language: String,
-    val picDirectory: String? = null
+    val picDirectory: String? = null,
+    val profilePictureBase64: String? = null
 )
 
 data class RegisterClientResponse(

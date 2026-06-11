@@ -64,6 +64,16 @@ public class ClientServiceImpl implements ClientService {
         client.setRole(UserRole.CLIENT);
         client.setCreatedAt(Instant.now());
 
+        if (request.profilePictureBase64() != null && !request.profilePictureBase64().isBlank()) {
+            try {
+                byte[] profileBytes = java.util.Base64.getDecoder().decode(request.profilePictureBase64());
+                client.setProfilePicture(profileBytes);
+                client.setProfilePictureContentType("image/jpeg");
+            } catch (IllegalArgumentException ex) {
+                // Ignore invalid base64; save user without photo.
+            }
+        }
+
         Client saved = clientRepository.save(client);
 
         return new RegisterClientResponse(
