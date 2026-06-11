@@ -36,7 +36,8 @@ class RegisterViewModel(
         longitude: Double,
         latitude: Double,
         termsAccepted: Boolean,
-        picDirectory: String? = null
+        picDirectory: String? = null,
+        profilePictureBase64: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = RegisterUiState.Loading
@@ -50,7 +51,8 @@ class RegisterViewModel(
                     latitude = latitude,
                     termsAccepted = termsAccepted,
                     language = language,
-                    picDirectory = picDirectory
+                    picDirectory = picDirectory,
+                    profilePictureBase64 = profilePictureBase64
                 )
                 val response = registerUseCase(request)
                 if (response.isSuccessful) {

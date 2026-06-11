@@ -139,15 +139,16 @@ class ProfileUploadViewModel : ViewModel() {
             val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
             val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
             if (uploadResponse.isSuccessful) {
-                val picDirectory = uploadResponse.body()?.picDirectory
+                val body = uploadResponse.body()
+                val success = body?.success == true
+                val picDirectory = body?.picDirectory
                 if (!picDirectory.isNullOrBlank()) {
                     SessionManager.picDirectory = picDirectory
-                    true
-                } else {
-                    false
                 }
+                success
             } else {
                 Log.e("ProfileUpload", "Profile upload returned error: ${uploadResponse.code()}")
+                Log.e("ProfileUpload", "Profile upload error body: ${uploadResponse.errorBody()?.string()}")
                 false
             }
         } catch (ex: Exception) {

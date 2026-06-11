@@ -34,15 +34,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import com.sismptm.partner.core.network.RetrofitClient
 import com.sismptm.partner.domain.validation.RegisterValidator
+import android.util.Base64
 import com.sismptm.partner.ui.common.ProfilePictureUpload
 import com.sismptm.partner.ui.theme.*
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
 
 private data class CityOption(val label: String, val longitude: Double, val latitude: Double)
 
@@ -344,53 +340,15 @@ fun RegisterScreen(
             onClick = {
                 scope.launch {
                     val uri = selectedImageUri
-                    var picDirectory: String? = null
+                    var profilePictureBase64: String? = null
 
                     if (uri != null) {
                         isUploading = true
                         try {
-                            // Decode original image
-                            val inputStream = context.contentResolver.openInputStream(uri)
-                            val originalBitmap = BitmapFactory.decodeStream(inputStream)
-                            inputStream?.close()
-
-                            if (originalBitmap == null) {
-                                throw IllegalStateException("Could not decode image")
-                            }
-
-                            // Resize if larger than 800px on any dimension
-                            val maxDimension = 800
-                            val scaleRatio = minOf(
-                                maxDimension.toFloat() / originalBitmap.width,
-                                maxDimension.toFloat() / originalBitmap.height,
-                                1.0f
-                            )
-                            val resizedBitmap = if (scaleRatio < 1.0f) {
-                                val newWidth = (originalBitmap.width * scaleRatio).toInt()
-                                val newHeight = (originalBitmap.height * scaleRatio).toInt()
-                                Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
-                            } else {
-                                originalBitmap
-                            }
-
-                            // Compress to JPEG 80%
-                            val baos = ByteArrayOutputStream()
-                            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
-                            val compressedBytes = baos.toByteArray()
-                            baos.close()
-
-                            val tempFile = File(context.cacheDir, "profile_upload_${System.currentTimeMillis()}.jpg")
-                            tempFile.writeBytes(compressedBytes)
-
-                            val requestBody = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                            val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
-                            val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
-                            if (uploadResponse.isSuccessful) {
-                                picDirectory = uploadResponse.body()?.picDirectory
-                            }
-                            tempFile.delete()
+                            profilePictureBase64 = prepareProfilePictureBase64(context, uri)
+                            uploadError = null
                         } catch (e: Exception) {
-                            uploadError = "Image upload failed: ${e.localizedMessage ?: "Unknown error"}. Registration will continue without photo."
+                            uploadError = "Image processing failed: ${e.localizedMessage ?: "Unknown error"}. Registration will continue without photo."
                         } finally {
                             isUploading = false
                         }
@@ -403,7 +361,8 @@ fun RegisterScreen(
                         longitude = selectedCity?.longitude ?: 0.0,
                         latitude = selectedCity?.latitude ?: 0.0,
                         termsAccepted = acceptedTerms,
-                        picDirectory = picDirectory
+                        picDirectory = null,
+                        profilePictureBase64 = profilePictureBase64
                     )
                 }
             },
@@ -425,4 +384,34 @@ fun RegisterScreen(
             Text(text = stringResource(id = R.string.already_have_account), color = PrimaryAccent)
         }
     }
+}
+
+private suspend fun prepareProfilePictureBase64(context: android.content.Context, uri: Uri): String {
+    val inputStream = context.contentResolver.openInputStream(uri)
+    val originalBitmap = BitmapFactory.decodeStream(inputStream)
+    inputStream?.close()
+
+    requireNotNull(originalBitmap) { "Could not decode selected image." }
+
+    val maxDimension = 800
+    val scaleRatio = minOf(
+        maxDimension.toFloat() / originalBitmap.width,
+        maxDimension.toFloat() / originalBitmap.height,
+        1.0f
+    )
+
+    val resizedBitmap = if (scaleRatio < 1.0f) {
+        val newWidth = (originalBitmap.width * scaleRatio).toInt()
+        val newHeight = (originalBitmap.height * scaleRatio).toInt()
+        Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+    } else {
+        originalBitmap
+    }
+
+    val baos = ByteArrayOutputStream()
+    resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
+    val bytes = baos.toByteArray()
+    baos.close()
+
+    return Base64.encodeToString(bytes, Base64.NO_WRAP)
 }

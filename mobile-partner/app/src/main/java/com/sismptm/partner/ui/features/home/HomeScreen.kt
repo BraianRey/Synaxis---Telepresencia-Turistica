@@ -35,8 +35,11 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import com.sismptm.partner.ui.features.profile.ProfileUploadViewModel
 import com.sismptm.partner.ui.features.profile.ProfileViewModel
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
@@ -58,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.partner.R
 import com.sismptm.partner.core.session.SessionManager
@@ -141,6 +145,9 @@ private fun HomeContent(
     var selectedTab by remember { mutableStateOf(0) }
     var isOnline by remember { mutableStateOf(false) }
 
+    val profileViewModel: ProfileViewModel = viewModel()
+    val profileBitmap by profileViewModel.profilePictureBitmap.collectAsStateWithLifecycle()
+
     val requestsState by homeViewModel.requestsState.collectAsState()
     val acceptedTour by homeViewModel.acceptedTour.collectAsState()
     val acceptingServiceId by homeViewModel.acceptingServiceId.collectAsState()
@@ -222,7 +229,7 @@ private fun HomeContent(
             if (selectedTab != 3) {
                 HeaderSection(
                     partnerName = SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) },
-                    picDirectory = SessionManager.picDirectory,
+                    profileBitmap = profileBitmap,
                     onProfileClick = { selectedTab = 3 },
                     modifier = Modifier.padding(16.dp)
                 )
@@ -590,7 +597,7 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun HeaderSection(partnerName: String, picDirectory: String? = null, onProfileClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun HeaderSection(partnerName: String, profileBitmap: Bitmap? = null, onProfileClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = buildAnnotatedString {
@@ -612,13 +619,9 @@ private fun HeaderSection(partnerName: String, picDirectory: String? = null, onP
                 .clickable { onProfileClick() },
             contentAlignment = Alignment.Center
         ) {
-            if (picDirectory != null) {
-                val imageUrl = NetworkConfig.BASE_URL + picDirectory
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .crossfade(300)
-                        .build(),
+            if (profileBitmap != null) {
+                Image(
+                    bitmap = profileBitmap.asImageBitmap(),
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .size(48.dp)
@@ -795,11 +798,13 @@ private fun ProfileTab(
 ) {
     val profileViewModel: ProfileViewModel = viewModel()
     val uploadViewModel: ProfileUploadViewModel = viewModel()
-    val uiState by profileViewModel.uiState.collectAsState()
-    val profilePictureDirectory by profileViewModel.profilePictureDirectory.collectAsState()
-    val uploadState by uploadViewModel.photoUploadState.collectAsState()
+    val uiState by profileViewModel.uiState.collectAsStateWithLifecycle()
+    val profileBitmap by profileViewModel.profilePictureBitmap.collectAsStateWithLifecycle()
+    val profilePictureDirectory by profileViewModel.profilePictureDirectory.collectAsStateWithLifecycle()
+    val uploadState by uploadViewModel.photoUploadState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    var showPhotoOptions by remember { mutableStateOf(false) }
     val name = uiState.name.ifBlank { SessionManager.partnerName.ifBlank { stringResource(R.string.default_partner_name) } }
     val email = uiState.email.ifBlank { SessionManager.partnerEmail.ifBlank { stringResource(R.string.not_specified) } }
     val role = uiState.role.ifBlank { SessionManager.partnerRole.ifBlank { stringResource(R.string.not_specified) } }
@@ -812,15 +817,37 @@ private fun ProfileTab(
         selectedLanguage = uiState.language.ifBlank { SessionManager.language }
     }
 
+    val onUpdatePhoto: (android.net.Uri) -> Unit = { uri ->
+        uploadViewModel.updateProfilePicture(context, uri)
+    }
+    val onTakePhoto: (Bitmap) -> Unit = { bitmap ->
+        uploadViewModel.updateProfilePicture(context, bitmap)
+    }
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { uploadViewModel.updateProfilePicture(context, it) }
+    ) { uri: android.net.Uri? ->
+        uri?.let(onUpdatePhoto)
+    }
+
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED
+        )
     }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        bitmap?.let { uploadViewModel.updateProfilePicture(context, it) }
+    ) { bitmap: Bitmap? ->
+        bitmap?.let(onTakePhoto)
+    }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasCameraPermission = granted
+        if (granted) {
+            cameraLauncher.launch(null)
+        }
     }
 
     Column(
@@ -880,7 +907,7 @@ private fun ProfileTab(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Button(
-                        onClick = { imagePickerLauncher.launch("image/*") },
+                        onClick = { showPhotoOptions = true },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent)
                     ) {
                         Text(stringResource(R.string.retry), color = TextPrimary)
@@ -891,10 +918,22 @@ private fun ProfileTab(
 
         AvatarSection(
             initial = name.take(1).uppercase(),
+            profileBitmap = profileBitmap,
             profilePictureDirectory = profilePictureDirectory,
             isUploading = uploadState is ProfileUploadViewModel.ProfilePhotoUploadState.Loading,
-            onGallerySelected = { imagePickerLauncher.launch("image/*") },
-            onCameraSelected = { cameraLauncher.launch(null) }
+            onGallerySelected = {
+                showPhotoOptions = false
+                imagePickerLauncher.launch("image/*")
+            },
+            onCameraSelected = {
+                showPhotoOptions = false
+                if (hasCameraPermission) {
+                    cameraLauncher.launch(null)
+                } else {
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
+            },
+            onPhotoButtonClicked = { showPhotoOptions = true }
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -934,10 +973,12 @@ private fun ProfileTab(
 @Composable
 private fun AvatarSection(
     initial: String,
+    profileBitmap: Bitmap?,
     profilePictureDirectory: String?,
     isUploading: Boolean,
     onGallerySelected: () -> Unit,
-    onCameraSelected: () -> Unit
+    onCameraSelected: () -> Unit,
+    onPhotoButtonClicked: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -951,10 +992,22 @@ private fun AvatarSection(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .clickable { expanded = true },
+                .clickable(onClick = {
+                    expanded = true
+                    onPhotoButtonClicked()
+                }),
             contentAlignment = Alignment.Center
         ) {
-            if (profilePictureDirectory != null) {
+            if (profileBitmap != null) {
+                Image(
+                    bitmap = profileBitmap.asImageBitmap(),
+                    contentDescription = stringResource(R.string.change_profile_photo),
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else if (profilePictureDirectory != null) {
                 val imageUrl = NetworkConfig.BASE_URL + profilePictureDirectory
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -1020,14 +1073,14 @@ private fun AvatarSection(
             onDismissRequest = { expanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.choose_from_gallery), color = Color.Black) },
+                text = { Text(stringResource(R.string.choose_from_gallery), color = Color.White) },
                 onClick = {
                     expanded = false
                     onGallerySelected()
                 }
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.take_photo), color = Color.Black) },
+                text = { Text(stringResource(R.string.take_photo), color = Color.White) },
                 onClick = {
                     expanded = false
                     onCameraSelected()

@@ -19,8 +19,11 @@ interface ApiService {
 
     /** Uploads a profile picture and returns the stored path */
     @Multipart
-    @POST("api/upload/profile-pic")
+    @POST("api/users/me/profile-picture")
     suspend fun uploadProfilePicture(@Part file: MultipartBody.Part): Response<UploadResponse>
+
+    @GET("api/users/me/profile-picture")
+    suspend fun downloadProfilePicture(): Response<okhttp3.ResponseBody>
 
     @POST("api/partners/register")
     suspend fun registerPartner(@Body request: RegisterPartnerRequest): Response<RegisterPartnerResponse>

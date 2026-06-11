@@ -68,6 +68,12 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setAverageRating(0.0);
         partner.setRatingCount(0);
 
+        if (request.profilePictureBase64() != null && !request.profilePictureBase64().isBlank()) {
+            byte[] pictureBytes = java.util.Base64.getDecoder().decode(request.profilePictureBase64());
+            partner.setProfilePicture(pictureBytes);
+            partner.setProfilePictureContentType("image/jpeg");
+        }
+
         Partner saved = partnerRepository.save(partner);
 
         return new RegisterPartnerResponse(

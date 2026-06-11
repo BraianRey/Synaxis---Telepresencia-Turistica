@@ -26,6 +26,8 @@ public record RegisterPartnerRequest(
 
                 @NotNull @AssertTrue Boolean termsAccepted,
 
-                UserLanguage language) {
+                UserLanguage language,
+
+                String profilePictureBase64) {
 
 }
