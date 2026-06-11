@@ -31,11 +31,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import com.sismptm.client.core.network.NetworkConfig
+
 import com.sismptm.client.core.session.SessionManager
 import com.sismptm.client.ui.theme.*
 import androidx.compose.ui.res.stringResource
@@ -49,6 +49,10 @@ import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.domain.model.HomeUiState
 import com.sismptm.client.ui.features.tour.ServiceViewModel
 import com.sismptm.client.ui.features.profile.ProfileScreen
+import com.sismptm.client.ui.features.profile.ProfileViewModel
+import android.graphics.Bitmap
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import java.time.Instant
 
 @Composable
@@ -65,8 +69,20 @@ fun HomeScreen(
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val servicesState by homeViewModel.servicesState.collectAsStateWithLifecycle()
     val activeServicesState by homeViewModel.activeServicesState.collectAsStateWithLifecycle()
+    val photoUploadState by homeViewModel.photoUploadState.collectAsStateWithLifecycle()
+    val profileViewModel: ProfileViewModel = viewModel()
+    val profileBitmap by profileViewModel.profilePictureBitmap.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val context = LocalContext.current
+
+    LaunchedEffect(selectedTab) {
+        // Start polling when Explore or Tours tab is active; stop otherwise.
+        if (selectedTab == 0 || selectedTab == 1) {
+            homeViewModel.startPollingServices()
+        } else {
+            homeViewModel.stopPollingServices()
+        }
+    }
 
     LaunchedEffect(servicesState) {
         val state = servicesState
@@ -102,6 +118,7 @@ fun HomeScreen(
                     uiState = uiState,
                     servicesState = servicesState,
                     activeServicesState = activeServicesState,
+                    profileBitmap = profileBitmap,
                     onNavigateToPartnerSearch = onNavigateToPartnerSearch,
                     onNavigateToMapService = onNavigateToMapService,
                     onNavigateToReserveMap = onNavigateToReserveMap,
@@ -114,8 +131,10 @@ fun HomeScreen(
                 )
                 2 -> ProfileScreen(
                     onLogout,
-                    picDirectory = uiState.picDirectory,
-                    onUpdatePhoto = { uri -> homeViewModel.updateProfilePicture(context, uri) }
+                    onUpdatePhoto = { uri -> homeViewModel.updateProfilePicture(context, uri) },
+                    onTakePhoto = { bitmap -> homeViewModel.updateProfilePicture(context, bitmap) },
+                    photoUploadState = photoUploadState,
+                    profileViewModel = profileViewModel
                 )
             }
         }
@@ -127,6 +146,7 @@ private fun ExploreTabContent(
     uiState: HomeUiState,
     servicesState: HomeViewModel.ClientServicesUiState,
     activeServicesState: HomeViewModel.ClientServicesUiState,
+    profileBitmap: Bitmap?,
     @Suppress("UnusedParameter")
     onNavigateToPartnerSearch: () -> Unit,
     onNavigateToMapService: () -> Unit,
@@ -139,7 +159,7 @@ private fun ExploreTabContent(
             .statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
-        HomeHeader(uiState.userName, uiState.picDirectory, onAvatarClick)
+        HomeHeader(uiState.userName, profileBitmap, onAvatarClick)
         SearchBar()
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -196,7 +216,7 @@ private fun ExploreTabContent(
 }
 
 @Composable
-private fun HomeHeader(userName: String, picDirectory: String? = null, onAvatarClick: () -> Unit) {
+private fun HomeHeader(userName: String, profileBitmap: Bitmap? = null, onAvatarClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -227,14 +247,9 @@ private fun HomeHeader(userName: String, picDirectory: String? = null, onAvatarC
                 .clickable { onAvatarClick() },
             contentAlignment = Alignment.Center
         ) {
-            if (picDirectory != null) {
-                val imageUrl = NetworkConfig.BASE_URL + picDirectory
-                android.util.Log.d("HomeDebug", "Loading profile image from: $imageUrl")
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .crossfade(300)
-                        .build(),
+            if (profileBitmap != null) {
+                Image(
+                    bitmap = profileBitmap.asImageBitmap(),
                     contentDescription = "Profile picture",
                     modifier = Modifier
                         .size(48.dp)
@@ -539,7 +554,7 @@ private fun ServiceStatusBadge(status: String) {
 }
 
 @Composable
-private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
+private fun ProfileTab(onLogout: () -> Unit, profileBitmap: Bitmap? = null) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -557,13 +572,9 @@ private fun ProfileTab(onLogout: () -> Unit, picDirectory: String? = null) {
                     .background(CardBackground),
                 contentAlignment = Alignment.Center
             ) {
-                if (picDirectory != null) {
-                    val imageUrl = NetworkConfig.BASE_URL + picDirectory
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(imageUrl)
-                            .crossfade(300)
-                            .build(),
+                if (profileBitmap != null) {
+                    Image(
+                        bitmap = profileBitmap.asImageBitmap(),
                         contentDescription = "Profile picture",
                         modifier = Modifier
                             .size(80.dp)

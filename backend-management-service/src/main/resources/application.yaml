@@ -3,14 +3,19 @@ spring:
     name: management-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/tourpresence
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tourpresence}
+    username: ${SPRING_DATASOURCE_USERNAME:synexis}
+    password: ${SPRING_DATASOURCE_PASSWORD:synexis123}
     driver-class-name: org.postgresql.Driver
-    username: synexis
-    password: synexis123
 
   sql:
     init:
       mode: never
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -26,7 +31,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8085/realms/synexis
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8085/realms/synexis}
 
   servlet:
     multipart:
@@ -39,8 +44,10 @@ spring:
       write-empty-json-arrays: true
 
 server:
-  port: 8080
+  port: ${PORT:8081}
 
 keycloak:
-  realm: synexis
-  
+  realm: ${KEYCLOAK_REALM:synexis}
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8085}
+  client-id: ${KEYCLOAK_CLIENT_ID:telepresence}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:wO8qciPyigPvlYPQAX3wzft18wa1lqv6}

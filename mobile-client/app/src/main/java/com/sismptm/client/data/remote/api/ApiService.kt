@@ -10,6 +10,7 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 
 /**
  * Interface defining the API endpoints for the application.
@@ -18,8 +19,12 @@ interface ApiService {
 
     /** Uploads a profile picture and returns the stored path */
     @Multipart
-    @POST("api/upload/profile-pic")
+    @POST("api/users/me/profile-picture")
     suspend fun uploadProfilePicture(@Part file: MultipartBody.Part): Response<UploadResponse>
+
+    /** Downloads the authenticated user's profile picture (raw bytes) */
+    @GET("api/users/me/profile-picture")
+    suspend fun downloadProfilePicture(): Response<ResponseBody>
 
     /** Registers a new client */
     @POST("api/clients/register")

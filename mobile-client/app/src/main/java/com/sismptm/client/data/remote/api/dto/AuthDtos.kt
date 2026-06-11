@@ -44,15 +44,15 @@ data class RegisterClientResponse(
 )
 
 data class UserProfileResponse(
-    val id: Int,
-    val name: String,
-    val email: String,
-    val status: String,
-    val language: String,
-    val role: String,
-    val picDirectory: String?
+    val id: Long? = null,
+    val name: String? = null,
+    val email: String? = null,
+    val status: String? = null,
+    val language: String? = null,
+    val role: String? = null,
+    val picDirectory: String? = null
 )
 
 data class UploadResponse(
-    val picDirectory: String
+    val success: Boolean
 )

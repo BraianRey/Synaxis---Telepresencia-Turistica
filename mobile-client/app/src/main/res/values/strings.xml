@@ -222,6 +222,9 @@
     <string name="cancel">Cancel</string>
     <string name="role">Role</string>
     <string name="change_profile_photo">Change profile photo</string>
+    <string name="photo_uploading">Uploading photo...</string>
+    <string name="choose_from_gallery">Choose from gallery</string>
+    <string name="take_photo">Take photo</string>
     <string name="language_english">English</string>
     <string name="language_spanish">Español</string>
     <string name="search_placeholder_example">Bogotá, Colombia</string>

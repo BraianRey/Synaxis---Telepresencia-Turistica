@@ -6,6 +6,5 @@ public record ClientProfileResponse(
         String name,
         String email,
         String language,
-        String picDirectory,
         Instant createdAt
 ) implements ProfileData {}

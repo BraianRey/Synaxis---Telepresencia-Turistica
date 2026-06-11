@@ -26,8 +26,6 @@ public record RegisterPartnerRequest(
 
                 @NotNull @AssertTrue Boolean termsAccepted,
 
-                UserLanguage language,
-
-                @Size(max = 255) String picDirectory) {
+                UserLanguage language) {
 
 }

@@ -16,7 +16,6 @@ public record RegisterPartnerResponse(
         UserLanguage language,
         Instant createdAt,
         Boolean termsAccepted,
-        String picDirectory,
         UserRole role,
         PartnerAvailabilityStatus availabilityStatus) {
 }

@@ -28,19 +28,15 @@ public class ServiceMapper {
 
         public ServiceResponse toResponse(ServiceEntity service) {
                 Partner partner = service.getPartner();
-                String clientPic = service.getClient().getPicDirectory();
-                System.out.println("[ServiceMapper] Service " + service.getIdService() + ": client=" + service.getClient().getName() + ", picDirectory=" + clientPic);
 
                 return new ServiceResponse(
                                 service.getIdService(),
                                 // Client info
                                 service.getClient().getName(),
                                 service.getClient().getEmail(),
-                                clientPic,
                                 // Partner info
                                 partner != null ? partner.getName() : null,
                                 partner != null ? partner.getEmail() : null,
-                                partner != null ? partner.getPicDirectory() : null,
                                 // Service details
                                 service.getStartLocationDescription(),
                                 service.getAgreedHours(),

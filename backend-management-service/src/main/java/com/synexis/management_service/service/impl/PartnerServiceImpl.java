@@ -62,7 +62,6 @@ public class PartnerServiceImpl implements PartnerService {
         partner.setAvailabilityStatus(PartnerAvailabilityStatus.available);
         partner.setTermsAccepted(request.termsAccepted());
         partner.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
-        partner.setPicDirectory(normalizePicDirectory(request.picDirectory()));
         partner.setRole(UserRole.PARTNER);
         partner.setCreatedAt(Instant.now());
         partner.setLocation(GeoUtils.createPoint(request.longitude(), request.latitude()));
@@ -79,7 +78,6 @@ public class PartnerServiceImpl implements PartnerService {
                 saved.getLanguage(), 
                 saved.getCreatedAt(), 
                 saved.getTermsAccepted(),
-                saved.getPicDirectory(), 
                 saved.getRole(), 
                 saved.getAvailabilityStatus());
     }
@@ -94,7 +92,6 @@ public class PartnerServiceImpl implements PartnerService {
 
         return new PartnerPublicProfileResponse(
                 partner.getName(),
-                partner.getPicDirectory(),
                 partner.getAverageRating(),
                 partner.getRatingCount(),
                 partner.getLanguage().name(),
@@ -108,10 +105,4 @@ public class PartnerServiceImpl implements PartnerService {
     }
 
     
-    private String normalizePicDirectory(String path) {
-        if (path == null)
-            return null;
-        String t = path.trim();
-        return t.isEmpty() ? null : t;
-    }
 }

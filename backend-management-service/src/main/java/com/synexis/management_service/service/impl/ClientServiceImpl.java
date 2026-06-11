@@ -61,7 +61,6 @@ public class ClientServiceImpl implements ClientService {
         client.setName(trimmedName);
         client.setTermsAccepted(request.termsAccepted());
         client.setLanguage(request.language() != null ? request.language() : UserLanguage.es);
-        client.setPicDirectory(normalizePicDirectory(request.picDirectory()));
         client.setRole(UserRole.CLIENT);
         client.setCreatedAt(Instant.now());
 
@@ -70,7 +69,7 @@ public class ClientServiceImpl implements ClientService {
         return new RegisterClientResponse(
                 saved.getId(), saved.getEmail(), saved.getName(), saved.getStatus(),
                 saved.getLanguage(), saved.getCreatedAt(), saved.getTermsAccepted(),
-                saved.getPicDirectory(), saved.getRole());
+                saved.getRole());
     }
 
     public ClientPublicProfileResponse getPublicProfile(Long clientId) {
@@ -83,17 +82,10 @@ public class ClientServiceImpl implements ClientService {
 
         return new ClientPublicProfileResponse(
                 client.getName(),
-                client.getPicDirectory(),
                 client.getLanguage().name(),
                 client.getCreatedAt()
         );
     }
 
 
-    private String normalizePicDirectory(String path) {
-        if (path == null)
-            return null;
-        String t = path.trim();
-        return t.isEmpty() ? null : t;
-    }
 }

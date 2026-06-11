@@ -15,6 +15,5 @@ public record RegisterClientResponse(
                 UserLanguage language,
                 Instant createdAt,
                 Boolean termsAccepted,
-                String picDirectory,
                 UserRole role) {
 }

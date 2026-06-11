@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        SessionManager.initialize(this)
         NotificationHelper.createNotificationChannel(this)
         setupBackgroundWorkers()
 

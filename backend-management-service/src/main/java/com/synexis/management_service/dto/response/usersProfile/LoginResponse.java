@@ -10,6 +10,5 @@ public record LoginResponse(
                 String email,
                 String name,
                 String role,
-                String language,
-                String picDirectory) {
+                String language) {
 }

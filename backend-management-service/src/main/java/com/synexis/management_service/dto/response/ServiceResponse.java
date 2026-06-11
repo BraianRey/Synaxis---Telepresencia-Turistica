@@ -23,11 +23,9 @@ public class ServiceResponse {
 
     private String clientName;
     private String clientEmail;
-    private String clientPicDirectory;
 
     private String partnerName;
     private String partnerEmail;
-    private String partnerPicDirectory;
 
     private String startLocationDescription;
 

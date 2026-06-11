@@ -41,7 +41,7 @@ class LoginViewModel : ViewModel() {
                 )
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
-                        Log.d("LoginDebug", "Login response: id=${loginResponse.id}, name=${loginResponse.name}, picDirectory=${loginResponse.picDirectory}")
+                        Log.d("LoginDebug", "Login response: id=${loginResponse.id}, name=${loginResponse.name}")
                         // Using the new unified SessionManager
                         SessionManager.saveSession(
                             token = loginResponse.accessToken,
@@ -49,10 +49,9 @@ class LoginViewModel : ViewModel() {
                             name = loginResponse.name,
                             email = loginResponse.email,
                             role = loginResponse.role,
-                            lang = loginResponse.language,
-                            picDirectory = loginResponse.picDirectory
+                            lang = loginResponse.language
                         )
-                        Log.d("LoginDebug", "SessionManager saved: picDirectory=${SessionManager.picDirectory}")
+                            Log.d("LoginDebug", "SessionManager saved")
                     }
                     _uiState.value = LoginUiState.Success
                 } else {

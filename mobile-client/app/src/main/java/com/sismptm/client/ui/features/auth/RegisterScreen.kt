@@ -212,11 +212,13 @@ private suspend fun handleRegisterClick(
     acceptedTerms: Boolean
 ) {
     val uri = selectedImageUri
-    var picDirectory: String? = null
     if (uri != null) {
         onUploadingChange(true)
         try {
-            picDirectory = uploadProfilePicture(context, uri)
+            val uploadSuccess = uploadProfilePicture(context, uri)
+            if (!uploadSuccess) {
+                onUploadError("Image upload failed. Registration will continue without photo.")
+            }
         } catch (e: java.io.IOException) {
             Log.e("RegisterDebug", "Upload exception", e)
             onUploadError("Image upload failed: ${e.localizedMessage ?: "Unknown error"}. Registration will continue without photo.")
@@ -230,14 +232,14 @@ private suspend fun handleRegisterClick(
         email = email,
         password = password,
         termsAccepted = acceptedTerms,
-        picDirectory = picDirectory
+        picDirectory = null
     )
 }
 
 private suspend fun uploadProfilePicture(
     context: Context,
     uri: Uri
-): String? {
+): Boolean {
     // Decode original image
     val inputStream = context.contentResolver.openInputStream(uri)
     val originalBitmap = BitmapFactory.decodeStream(inputStream)
@@ -273,11 +275,7 @@ private suspend fun uploadProfilePicture(
         val requestBody = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
         val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
         val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
-        if (uploadResponse.isSuccessful) {
-            uploadResponse.body()?.picDirectory
-        } else {
-            null
-        }
+        uploadResponse.isSuccessful && (uploadResponse.body()?.success == true)
     } finally {
         tempFile.delete()
     }

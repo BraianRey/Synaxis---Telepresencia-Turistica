@@ -11,6 +11,9 @@ import com.synexis.management_service.exception.WrongPasswordException;
 import com.synexis.management_service.repository.ClientRepository;
 import com.synexis.management_service.repository.PartnerRepository;
 import com.synexis.management_service.service.LoginService;
+
+import org.springframework.beans.factory.annotation.Value;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -23,10 +26,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class LoginServiceImpl implements LoginService {
 
-    private static final String KEYCLOAK_URL = "http://localhost:8085";
-    private static final String REALM = "synexis";
-    private static final String CLIENT_ID = "telepresence";
-    private static final String CLIENT_SECRET = "wO8qciPyigPvlYPQAX3wzft18wa1lqv6";
+    @Value("${keycloak.server-url}")
+    private String KEYCLOAK_URL;
+    @Value("${keycloak.realm}")
+    private String REALM;
+    @Value("${keycloak.client-id}")
+    private String CLIENT_ID;
+    @Value("${keycloak.client-secret}")
+    private String CLIENT_SECRET;
 
     private final ClientRepository clientRepository;
     private final PartnerRepository partnerRepository;
@@ -47,8 +54,6 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(InvalidCredentialsException::new);
 
         TokenResult token = requestToken(normalizedEmail, password);
-        String picDir = client.getPicDirectory();
-        System.out.println("[LoginDebug] Client login: email=" + normalizedEmail + ", picDirectory=" + picDir);
         return new LoginResponse(
                 token.accessToken,
                 token.refreshToken,
@@ -58,8 +63,7 @@ public class LoginServiceImpl implements LoginService {
                 client.getEmail(),
                 client.getName(),
                 client.getRole().name(),
-                client.getLanguage().name(),
-                picDir);
+                client.getLanguage().name());
     }
 
     @Override
@@ -69,8 +73,6 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(InvalidCredentialsException::new);
 
         TokenResult token = requestToken(normalizedEmail, password);
-        String picDir = partner.getPicDirectory();
-        System.out.println("[LoginDebug] Partner login: email=" + normalizedEmail + ", picDirectory=" + picDir);
         return new LoginResponse(
                 token.accessToken,
                 token.refreshToken,
@@ -80,8 +82,7 @@ public class LoginServiceImpl implements LoginService {
                 partner.getEmail(),
                 partner.getName(),
                 partner.getRole().name(),
-                partner.getLanguage().name(),
-                picDir);
+                partner.getLanguage().name());
     }
 
     private TokenResult requestToken(String email, String password) {
