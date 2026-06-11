@@ -44,7 +44,7 @@ spring:
       write-empty-json-arrays: true
 
 server:
-  port: ${PORT:8081}
+  port: ${PORT:8080}
 
 keycloak:
   realm: ${KEYCLOAK_REALM:synexis}

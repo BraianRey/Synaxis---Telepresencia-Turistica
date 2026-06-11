@@ -65,6 +65,8 @@
     <string name="profile">Profile</string>
     <string name="permission_required">Location permission required</string>
     <string name="default_partner_name">Partner</string>
+    <string name="status">Status</string>
+    <string name="role">Role</string>
     <string name="permission_description">The application needs location permission to transmit your status and receive requests.</string>
     <string name="request_permission">Request permission</string>
     <string name="estimated_duration">Estimated duration: %d min</string>

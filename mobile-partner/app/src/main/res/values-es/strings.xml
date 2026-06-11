@@ -211,6 +211,16 @@
     <string name="check_server_status">Verificar estado del servidor</string>
     <string name="toggle_password_visibility">Alternar visibilidad de la contraseña</string>
     <string name="navigate_back">Volver atrás</string>
+    <string name="add_photo">Agregar foto</string>
+    <string name="change_profile_photo">Cambiar foto de perfil</string>
+    <string name="choose_from_gallery">Elegir de la galería</string>
+    <string name="take_photo">Tomar foto</string>
+    <string name="photo_uploading">Subiendo foto...</string>
+    <string name="upload_failed">Error al subir. Por favor, inténtalo de nuevo.</string>
+    <string name="status">Estado</string>
+    <string name="role">Rol</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_spanish">Español</string>
     <string name="request_description_tour">Descripción: Tour guiado de 4 horas</string>
     <string name="route_historic_downtown_tour">Ruta: Tour por el Centro Histórico</string>
     <string name="sample_client_name">María García</string>

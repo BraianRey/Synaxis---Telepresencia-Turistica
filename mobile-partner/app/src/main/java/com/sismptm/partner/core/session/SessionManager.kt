@@ -13,6 +13,7 @@ object SessionManager {
     var partnerId: Long = 0L
     var partnerName: String = ""
     var partnerEmail: String = ""
+    var partnerRole: String = ""
     var picDirectory: String? = null
 
     private val _languageFlow = MutableStateFlow("en")
@@ -28,11 +29,12 @@ object SessionManager {
     
     fun isLoggedIn(): Boolean = accessToken.isNotEmpty()
 
-    fun saveSession(token: String, id: Long, name: String, email: String, lang: String? = "en", picDirectory: String? = null) {
+    fun saveSession(token: String, id: Long, name: String, email: String, lang: String? = "en", role: String = "", picDirectory: String? = null) {
         accessToken = token
         partnerId = id
         partnerName = name
         partnerEmail = email
+        partnerRole = role
         language = lang ?: "en"
         this.picDirectory = picDirectory
     }
@@ -42,6 +44,7 @@ object SessionManager {
         partnerId = 0L
         partnerName = ""
         partnerEmail = ""
+        partnerRole = ""
         language = "en"
         picDirectory = null
     }
