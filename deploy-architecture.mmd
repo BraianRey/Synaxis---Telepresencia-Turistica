@@ -1,0 +1,37 @@
+flowchart TB
+    subgraph Cliente["Clientes Android"]
+        C1["Android Client\nhttp://192.168.18.21:8080\nws://192.168.18.21:8081/ws-signaling"]
+        C2["Android Partner\nhttp://192.168.18.21:8080\nws://192.168.18.21:8081/ws-signaling"]
+    end
+
+    subgraph Soporte["Servicios de soporte (Docker Compose)"]
+        PG["PostgreSQL + PostGIS\npostgis/postgis:16-3.4\nDB: tourpresence"]
+        KC["Keycloak 26.2.5\nRealm: synexis\nPuerto: 8085"]
+    end
+
+    subgraph Backend["Servicios Spring Boot"]
+        MS["management-service\nPuerto: 8080\nOAuth2 Resource Server + JWT"]
+        SS["streaming-service\nPuerto: 8081\nWebSocket RAW /ws-signaling"]
+    end
+
+    subgraph Externos["Servicios externos"]
+        NOM["Nominatim (OpenStreetMap)\nreverse geocoding"]
+        WIKI["Wikimedia Commons\nmedia assets"]
+    end
+
+    C1 --> MS
+    C1 --> KC
+    C1 --> SS
+
+    C2 --> MS
+    C2 --> KC
+    C2 --> SS
+
+    MS --> PG
+    KC --> PG
+
+    MS --> KC
+    MS --> NOM
+    MS --> WIKI
+
+    SS --> KC

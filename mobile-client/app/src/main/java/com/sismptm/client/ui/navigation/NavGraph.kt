@@ -152,9 +152,6 @@ private fun WelcomeComposable(navController: NavHostController) {
             navController.navigate(Screen.Login.route) {
                 popUpTo(Screen.Welcome.route) { inclusive = true }
             }
-        },
-        onNavigateToStreaming = {
-            navController.navigate(Screen.Streaming.createRoute(0L))
         }
     )
 }

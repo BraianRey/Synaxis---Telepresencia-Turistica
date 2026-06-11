@@ -23,8 +23,7 @@ import androidx.compose.ui.Alignment
 import android.content.Context
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusManager import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -36,8 +35,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sismptm.client.R
-import com.sismptm.client.core.network.NetworkConfig
+import com.sismptm.client.R import com.sismptm.client.core.network.NetworkConfig
 import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.domain.validation.RegisterValidator
 import com.sismptm.client.ui.common.ProfilePictureUpload
@@ -47,8 +45,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
+import java.io.File import java.io.FileOutputStream
 
 private data class RegisterFormState(
     val fullName: String,
@@ -341,6 +338,10 @@ private fun RegisterForm(state: RegisterFormState) {
         placeholderResId = R.string.password_placeholder,
         passwordVisible = state.passwordVisible,
         onVisibilityToggle = state.onTogglePasswordVisible,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Next
+        ),
         keyboardActions = KeyboardActions(
             onNext = { state.focusManager.moveFocus(FocusDirection.Down) }
         )
@@ -439,8 +440,7 @@ private fun RegisterInputField(
         keyboardActions = keyboardActions,
         singleLine = true,
         modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryAccent,

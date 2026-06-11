@@ -117,8 +117,7 @@ fun LoginScreen(
             ),
             singleLine = true,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = PrimaryAccent,
@@ -160,8 +159,7 @@ fun LoginScreen(
             ),
             singleLine = true,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = PrimaryAccent,
