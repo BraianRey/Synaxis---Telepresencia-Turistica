@@ -28,7 +28,8 @@ data class RegisterPartnerRequest(
     val latitude: Double,
     val termsAccepted: Boolean,
     val language: String,
-    val picDirectory: String? = null
+    val picDirectory: String? = null,
+    val profilePictureBase64: String? = null
 )
 
 data class RegisterPartnerResponse(
@@ -45,5 +46,6 @@ data class RegisterPartnerResponse(
 )
 
 data class UploadResponse(
-    val picDirectory: String
+    val success: Boolean? = null,
+    val picDirectory: String? = null
 )

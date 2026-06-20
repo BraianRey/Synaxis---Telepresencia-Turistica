@@ -10,10 +10,12 @@ import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.data.remote.api.dto.ServiceResponse
 import com.sismptm.client.core.session.SessionManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.sismptm.client.core.events.ProfileEvents
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -33,6 +35,15 @@ class HomeViewModel : ViewModel() {
         data class Error(val message: String) : ClientServicesUiState
     }
 
+    sealed interface ProfilePhotoUploadState {
+        object Idle : ProfilePhotoUploadState
+        object Loading : ProfilePhotoUploadState
+        data class Error(val message: String) : ProfilePhotoUploadState
+    }
+
+    private val _photoUploadState = MutableStateFlow<ProfilePhotoUploadState>(ProfilePhotoUploadState.Idle)
+    val photoUploadState: StateFlow<ProfilePhotoUploadState> = _photoUploadState.asStateFlow()
+
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
@@ -42,14 +53,14 @@ class HomeViewModel : ViewModel() {
     private val _activeServicesState = MutableStateFlow<ClientServicesUiState>(ClientServicesUiState.Idle)
     val activeServicesState: StateFlow<ClientServicesUiState> = _activeServicesState.asStateFlow()
 
+    private var pollingJob: Job? = null
+
     init {
         // Step 1: Display name immediately from local session
         val localName = SessionManager.userName
-        val localPic = SessionManager.picDirectory
-        Log.d("HomeDebug", "SessionManager.picDirectory=$localPic, userName=$localName, userId=${SessionManager.userId}")
+        Log.d("HomeDebug", "userName=$localName, userId=${SessionManager.userId}")
         _uiState.value = _uiState.value.copy(
             userName = if (localName.isNotBlank()) localName else "Viajero",
-            picDirectory = localPic,
             isLoading = false,
             destinations = listOf(
                 Destination(1, "Popayan", "Colombia", "Puente del Humilladero", 3),
@@ -70,10 +81,9 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val profile = apiService.getMyProfile()
-                val fullName = profile.name.trim()
+                val fullName = profile.name?.trim().takeUnless { it.isNullOrBlank() }
                 _uiState.value = _uiState.value.copy(
-                    userName = if (fullName.isNotBlank()) fullName else _uiState.value.userName,
-                    picDirectory = profile.picDirectory ?: _uiState.value.picDirectory
+                    userName = fullName ?: _uiState.value.userName
                 )
             } catch (_: Exception) {
                 // Keep local name, don't show error
@@ -82,17 +92,24 @@ class HomeViewModel : ViewModel() {
 
         loadClientServices()
         loadActiveClientServices()
-        startPollingServices()
+        // Polling must be started by the UI when the Home screen is visible to avoid
+        // background network traffic when the screen is not active.
     }
 
-    private fun startPollingServices() {
-        viewModelScope.launch {
+    fun startPollingServices() {
+        if (pollingJob?.isActive == true) return
+        pollingJob = viewModelScope.launch {
             while (true) {
                 delay(5000) // Poll every 5 seconds
                 loadClientServices(silent = true)
                 loadActiveClientServices(silent = true)
             }
         }
+    }
+
+    fun stopPollingServices() {
+        pollingJob?.cancel()
+        pollingJob = null
     }
 
     fun loadClientServices(silent: Boolean = false) {
@@ -163,39 +180,103 @@ class HomeViewModel : ViewModel() {
 
     fun updateProfilePicture(context: Context, uri: android.net.Uri) {
         viewModelScope.launch {
-            val newPicDirectory = uploadProfilePicture(context, uri)
-            if (!newPicDirectory.isNullOrBlank()) {
-                SessionManager.updatePicDirectory(newPicDirectory)
-                _uiState.value = _uiState.value.copy(picDirectory = newPicDirectory)
+            _photoUploadState.value = ProfilePhotoUploadState.Loading
+            val success = uploadProfilePicture(context, uri)
+            if (success) {
+                _photoUploadState.value = ProfilePhotoUploadState.Idle
+                // Notify listeners (e.g., ProfileViewModel) to reload the picture
+                try {
+                    ProfileEvents.profilePictureUpdated.emit(Unit)
+                } catch (ex: Exception) {
+                    Log.w("HomeDebug", "Failed to emit profile update event", ex)
+                }
             } else {
+                _photoUploadState.value = ProfilePhotoUploadState.Error("No se pudo subir la foto. Intenta nuevamente.")
                 Log.e("HomeDebug", "Failed to upload profile picture")
             }
         }
     }
 
-    private suspend fun uploadProfilePicture(context: Context, uri: android.net.Uri): String? {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val originalBitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream?.close()
+    fun updateProfilePicture(context: Context, bitmap: Bitmap) {
+        viewModelScope.launch {
+            _photoUploadState.value = ProfilePhotoUploadState.Loading
+            val success = uploadProfilePicture(context, bitmap)
+            if (success) {
+                _photoUploadState.value = ProfilePhotoUploadState.Idle
+                // Notify listeners to reload the picture
+                try {
+                    ProfileEvents.profilePictureUpdated.emit(Unit)
+                } catch (ex: Exception) {
+                    Log.w("HomeDebug", "Failed to emit profile update event", ex)
+                }
+            } else {
+                _photoUploadState.value = ProfilePhotoUploadState.Error("No se pudo subir la foto. Intenta nuevamente.")
+                Log.e("HomeDebug", "Failed to upload profile picture from camera")
+            }
+        }
+    }
+
+    private suspend fun uploadProfilePicture(context: Context, uri: android.net.Uri): Boolean {
+        var originalBitmap: Bitmap? = null
+        var inputStream = context.contentResolver.openInputStream(uri)
+        try {
+            originalBitmap = BitmapFactory.decodeStream(inputStream)
+        } catch (ex: Exception) {
+            Log.w("HomeDebug", "decodeStream failed", ex)
+        } finally {
+            inputStream?.close()
+        }
+
+        if (originalBitmap == null) {
+            // Try file descriptor approach
+            try {
+                val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+                pfd?.use { fd ->
+                    originalBitmap = BitmapFactory.decodeFileDescriptor(fd.fileDescriptor)
+                }
+            } catch (ex: Exception) {
+                Log.w("HomeDebug", "decodeFileDescriptor failed", ex)
+            }
+        }
+
+        if (originalBitmap == null) {
+            // Fallback: copy to temp file and decode
+            try {
+                val tempFile = File(context.cacheDir, "profile_src_${System.currentTimeMillis()}")
+                context.contentResolver.openInputStream(uri)?.use { ins ->
+                    tempFile.outputStream().use { outs ->
+                        ins.copyTo(outs)
+                    }
+                }
+                originalBitmap = BitmapFactory.decodeFile(tempFile.absolutePath)
+                tempFile.delete()
+            } catch (ex: Exception) {
+                Log.w("HomeDebug", "fallback decode failed", ex)
+            }
+        }
 
         if (originalBitmap == null) {
             Log.e("HomeDebug", "Could not decode selected image")
-            return null
+            return false
         }
 
+        return uploadProfilePicture(context, originalBitmap)
+    }
+
+    private suspend fun uploadProfilePicture(context: Context, bitmap: Bitmap): Boolean {
         val maxDimension = 800
         val scaleRatio = minOf(
-            maxDimension.toFloat() / originalBitmap.width,
-            maxDimension.toFloat() / originalBitmap.height,
+            maxDimension.toFloat() / bitmap.width,
+            maxDimension.toFloat() / bitmap.height,
             1.0f
         )
 
         val resizedBitmap = if (scaleRatio < 1.0f) {
-            val newWidth = (originalBitmap.width * scaleRatio).toInt()
-            val newHeight = (originalBitmap.height * scaleRatio).toInt()
-            Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+            val newWidth = (bitmap.width * scaleRatio).toInt()
+            val newHeight = (bitmap.height * scaleRatio).toInt()
+            Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
         } else {
-            originalBitmap
+            bitmap
         }
 
         val baos = ByteArrayOutputStream()
@@ -211,14 +292,14 @@ class HomeViewModel : ViewModel() {
             val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
             val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
             if (uploadResponse.isSuccessful) {
-                uploadResponse.body()?.picDirectory
+                uploadResponse.body()?.success == true
             } else {
                 Log.e("HomeDebug", "Profile upload returned error: ${uploadResponse.code()}")
-                null
+                false
             }
         } catch (ex: Exception) {
             Log.e("HomeDebug", "Profile upload exception", ex)
-            null
+            false
         } finally {
             tempFile.delete()
         }

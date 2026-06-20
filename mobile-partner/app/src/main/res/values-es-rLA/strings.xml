@@ -73,6 +73,8 @@
     <string name="profile">Perfil</string>
     <string name="permission_required">Permiso de ubicación requerido</string>
     <string name="default_partner_name">Socio</string>
+    <string name="status">Estado</string>
+    <string name="role">Rol</string>
     <string name="permission_description">La aplicación necesita permiso de ubicación para transmitir tu estado y recibir solicitudes.</string>
     <string name="request_permission">Solicitar permiso</string>
     <string name="estimated_duration">Duración estimada: %d min</string>

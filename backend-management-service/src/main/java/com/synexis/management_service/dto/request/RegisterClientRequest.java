@@ -24,5 +24,5 @@ public record RegisterClientRequest(
 
                 UserLanguage language,
 
-                @Size(max = 255) String picDirectory) {
+                String profilePictureBase64) {
 }

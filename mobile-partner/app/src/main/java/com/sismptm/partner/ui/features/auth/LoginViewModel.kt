@@ -49,6 +49,7 @@ class LoginViewModel(
                             name = body.name,
                             email = body.email,
                             lang = body.language,
+                            role = body.role,
                             picDirectory = body.picDirectory
                         )
                         Log.d("LoginDebug", "Partner SessionManager saved: picDirectory=${SessionManager.picDirectory}")

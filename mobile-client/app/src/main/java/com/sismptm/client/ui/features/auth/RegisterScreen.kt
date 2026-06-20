@@ -3,13 +3,18 @@ package com.sismptm.client.ui.features.auth
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,11 +24,13 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import android.content.Context
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -37,18 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sismptm.client.R
-import com.sismptm.client.core.network.NetworkConfig
-import com.sismptm.client.core.network.RetrofitClient
 import com.sismptm.client.domain.validation.RegisterValidator
 import com.sismptm.client.ui.common.ProfilePictureUpload
 import com.sismptm.client.ui.theme.*
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
 
 private data class RegisterFormState(
     val fullName: String,
@@ -89,6 +89,8 @@ fun RegisterScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var showPhotoOptions by remember { mutableStateOf(false) }
     var isUploading by remember { mutableStateOf(false) }
     var uploadError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
@@ -105,6 +107,17 @@ fun RegisterScreen(
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
+            selectedImageBitmap = null
+            uploadError = null
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        bitmap?.let {
+            selectedImageBitmap = it
+            selectedImageUri = null
             uploadError = null
         }
     }
@@ -122,16 +135,40 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(Background)
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 24.dp, horizontal = 24.dp),
+            .imePadding()
+            .padding(top = 32.dp, bottom = 24.dp, start = 24.dp, end = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         RegisterHeader()
 
-        ProfileSection(
-            onPhotoClick = { imagePickerLauncher.launch("image/*") },
-            selectedImageUri = selectedImageUri,
-            uploadError = uploadError
-        )
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            ProfileSection(
+                onPhotoClick = { showPhotoOptions = true },
+                selectedImageUri = selectedImageUri,
+                selectedImageBitmap = selectedImageBitmap,
+                uploadError = uploadError
+            )
+            DropdownMenu(
+                expanded = showPhotoOptions,
+                onDismissRequest = { showPhotoOptions = false },
+                modifier = Modifier.wrapContentSize()
+            ) {
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.choose_from_gallery)) },
+                    onClick = {
+                        showPhotoOptions = false
+                        imagePickerLauncher.launch("image/*")
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(R.string.take_photo)) },
+                    onClick = {
+                        showPhotoOptions = false
+                        cameraLauncher.launch(null)
+                    }
+                )
+            }
+        }
 
         if (uploadError != null) {
             Text(
@@ -183,10 +220,16 @@ fun RegisterScreen(
             onClick = {
                 scope.launch {
                     handleRegisterClick(
-                        context, selectedImageUri,
+                        context,
+                        selectedImageUri = selectedImageUri,
+                        selectedImageBitmap = selectedImageBitmap,
                         onUploadError = { uploadError = it },
                         onUploadingChange = { isUploading = it },
-                        viewModel, fullName, email, password, acceptedTerms
+                        viewModel = viewModel,
+                        fullName = fullName,
+                        email = email,
+                        password = password,
+                        acceptedTerms = acceptedTerms
                     )
                 }
             }
@@ -203,6 +246,7 @@ fun RegisterScreen(
 private suspend fun handleRegisterClick(
     context: Context,
     selectedImageUri: Uri?,
+    selectedImageBitmap: Bitmap?,
     onUploadError: (String?) -> Unit,
     onUploadingChange: (Boolean) -> Unit,
     viewModel: RegisterViewModel,
@@ -211,18 +255,19 @@ private suspend fun handleRegisterClick(
     password: String,
     acceptedTerms: Boolean
 ) {
-    val uri = selectedImageUri
-    var picDirectory: String? = null
-    if (uri != null) {
+    val profilePictureBase64 = if (selectedImageUri != null || selectedImageBitmap != null) {
         onUploadingChange(true)
         try {
-            picDirectory = uploadProfilePicture(context, uri)
-        } catch (e: java.io.IOException) {
-            Log.e("RegisterDebug", "Upload exception", e)
-            onUploadError("Image upload failed: ${e.localizedMessage ?: "Unknown error"}. Registration will continue without photo.")
+            prepareProfilePictureBase64(context, selectedImageUri, selectedImageBitmap)
+        } catch (e: Exception) {
+            Log.e("RegisterDebug", "Image processing exception", e)
+            onUploadError("Could not prepare profile image. Registration will continue without photo.")
+            null
         } finally {
             onUploadingChange(false)
         }
+    } else {
+        null
     }
 
     viewModel.register(
@@ -230,28 +275,34 @@ private suspend fun handleRegisterClick(
         email = email,
         password = password,
         termsAccepted = acceptedTerms,
-        picDirectory = picDirectory
+        picDirectory = null,
+        profilePictureBase64 = profilePictureBase64
     )
 }
 
-private suspend fun uploadProfilePicture(
+private suspend fun prepareProfilePictureBase64(
     context: Context,
-    uri: Uri
+    selectedImageUri: Uri?,
+    selectedImageBitmap: Bitmap?
 ): String? {
-    // Decode original image
-    val inputStream = context.contentResolver.openInputStream(uri)
-    val originalBitmap = BitmapFactory.decodeStream(inputStream)
-    inputStream?.close()
+    val originalBitmap = when {
+        selectedImageBitmap != null -> selectedImageBitmap
+        selectedImageUri != null -> {
+            val inputStream = context.contentResolver.openInputStream(selectedImageUri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+            bitmap
+        }
+        else -> null
+    } ?: return null
 
-    check(originalBitmap != null) { "Could not decode image" }
-
-    // Resize if larger than 800px on any dimension
     val maxDimension = 800
     val scaleRatio = minOf(
         maxDimension.toFloat() / originalBitmap.width,
         maxDimension.toFloat() / originalBitmap.height,
         1.0f
     )
+
     val resizedBitmap = if (scaleRatio < 1.0f) {
         val newWidth = (originalBitmap.width * scaleRatio).toInt()
         val newHeight = (originalBitmap.height * scaleRatio).toInt()
@@ -260,49 +311,45 @@ private suspend fun uploadProfilePicture(
         originalBitmap
     }
 
-    // Compress to JPEG 80%
     val baos = ByteArrayOutputStream()
     resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
     val compressedBytes = baos.toByteArray()
     baos.close()
 
-    val tempFile = File(context.cacheDir, "profile_upload_${System.currentTimeMillis()}.jpg")
-    tempFile.writeBytes(compressedBytes)
-
-    return try {
-        val requestBody = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-        val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
-        val uploadResponse = RetrofitClient.apiService.uploadProfilePicture(part)
-        if (uploadResponse.isSuccessful) {
-            uploadResponse.body()?.picDirectory
-        } else {
-            null
-        }
-    } finally {
-        tempFile.delete()
-    }
+    return Base64.encodeToString(compressedBytes, Base64.NO_WRAP)
 }
 
 @Composable
 private fun ProfileSection(
     onPhotoClick: () -> Unit,
     selectedImageUri: Uri?,
+    selectedImageBitmap: Bitmap?,
     uploadError: String?
 ) {
     ProfilePictureUpload(
         onPhotoClick = onPhotoClick,
         selectedImageUri = selectedImageUri,
+        selectedImageBitmap = selectedImageBitmap,
         modifier = Modifier.padding(vertical = 24.dp)
     )
     UploadErrorMessage(uploadError)
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RegisterForm(state: RegisterFormState) {
+    val fullNameBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val emailBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val passwordBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val confirmPasswordBringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
     RegisterInputField(
         value = state.fullName,
         onValueChange = state.onFullNameChange,
         placeholderResId = R.string.full_name_placeholder,
+        modifier = Modifier.bringIntoViewRequester(fullNameBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { fullNameBringIntoViewRequester.bringIntoView() } },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next
@@ -318,12 +365,14 @@ private fun RegisterForm(state: RegisterFormState) {
         value = state.email,
         onValueChange = state.onEmailChange,
         placeholderResId = R.string.email_placeholder,
+        modifier = Modifier.bringIntoViewRequester(emailBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { emailBringIntoViewRequester.bringIntoView() } },
         isError = state.emailHasError,
-        supportingText = {
-            if (state.emailHasError) {
+        supportingText = if (state.emailHasError) {
+            {
                 Text(text = stringResource(R.string.invalid_email), color = Error)
             }
-        },
+        } else null,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -339,6 +388,8 @@ private fun RegisterForm(state: RegisterFormState) {
         value = state.password,
         onValueChange = state.onPasswordChange,
         placeholderResId = R.string.password_placeholder,
+        modifier = Modifier.bringIntoViewRequester(passwordBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { passwordBringIntoViewRequester.bringIntoView() } },
         passwordVisible = state.passwordVisible,
         onVisibilityToggle = state.onTogglePasswordVisible,
         keyboardActions = KeyboardActions(
@@ -352,14 +403,16 @@ private fun RegisterForm(state: RegisterFormState) {
         value = state.confirmPassword,
         onValueChange = state.onConfirmPasswordChange,
         placeholderResId = R.string.confirm_password,
+        modifier = Modifier.bringIntoViewRequester(confirmPasswordBringIntoViewRequester)
+            .onFocusChanged { if (it.isFocused) scope.launch { confirmPasswordBringIntoViewRequester.bringIntoView() } },
         passwordVisible = state.confirmPasswordVisible,
         onVisibilityToggle = state.onToggleConfirmPasswordVisible,
         isError = state.passwordMismatch,
-        supportingText = {
-            if (state.passwordMismatch) {
+        supportingText = if (state.passwordMismatch) {
+            {
                 Text(text = stringResource(R.string.passwords_do_not_match), color = Error)
             }
-        },
+        } else null,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
@@ -438,9 +491,10 @@ private fun RegisterInputField(
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = true,
+        textStyle = LocalTextStyle.current.copy(lineHeight = 20.sp),
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .heightIn(min = 56.dp),
         shape = RoundedCornerShape(8.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = PrimaryAccent,

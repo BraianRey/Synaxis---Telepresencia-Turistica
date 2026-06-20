@@ -6,7 +6,6 @@ public record PartnerProfileResponse(
         String name,
         String email,
         String language,
-        String picDirectory,
         Double averageRating,
         Integer ratingCount,
         String availabilityStatus,

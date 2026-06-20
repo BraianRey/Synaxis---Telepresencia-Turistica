@@ -19,7 +19,6 @@ import com.sismptm.partner.ui.features.tour.RequestDetailScreen
 import com.sismptm.partner.ui.features.tour.ServiceDetailScreen
 import com.sismptm.partner.ui.features.tour.ServiceReadyScreen
 import com.sismptm.partner.ui.features.tour.PartnerServiceSummaryScreen
-import com.sismptm.partner.ui.features.profile.ProfileScreen
 
 /**
  * Defines the navigation structure and routes for the Partner application.
@@ -40,7 +39,6 @@ sealed class Screen(val route: String) {
     }
     object RequestDetail : Screen("request_detail")
     object ServiceDetail : Screen("service_detail")
-    object Profile : Screen("profile")
 }
 
 /**
@@ -94,9 +92,6 @@ fun PartnerNavGraph() {
                 },
                 onNavigateToServiceReady = { serviceId ->
                     navController.navigate(Screen.ServiceReady.createRoute(serviceId))
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
@@ -170,10 +165,5 @@ fun PartnerNavGraph() {
             )
         }
 
-        composable(Screen.Profile.route) {
-            ProfileScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
     }
 }

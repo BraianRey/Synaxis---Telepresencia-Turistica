@@ -223,6 +223,9 @@
     <string name="cancel">Cancelar</string>
     <string name="role">Rol</string>
     <string name="change_profile_photo">Cambiar foto de perfil</string>
+    <string name="photo_uploading">Subiendo foto...</string>
+    <string name="choose_from_gallery">Elegir de la galería</string>
+    <string name="take_photo">Tomar foto</string>
     <string name="language_english">Inglés</string>
     <string name="language_spanish">Español</string>
     <string name="search_placeholder_example">Bogotá, Colombia</string>

@@ -217,6 +217,16 @@
     <string name="check_server_status">Check server status</string>
     <string name="toggle_password_visibility">Toggle password visibility</string>
     <string name="navigate_back">Navigate back</string>
+    <string name="add_photo">Add photo</string>
+    <string name="change_profile_photo">Change profile photo</string>
+    <string name="choose_from_gallery">Choose from gallery</string>
+    <string name="take_photo">Take photo</string>
+    <string name="photo_uploading">Uploading photo...</string>
+    <string name="upload_failed">Upload failed. Please try again.</string>
+    <string name="status">Status</string>
+    <string name="role">Role</string>
+    <string name="language_english">English</string>
+    <string name="language_spanish">Spanish</string>
     <string name="request_description_tour">Description: 4-hour guided tour</string>
     <string name="route_historic_downtown_tour">Route: Historic Downtown Tour</string>
     <string name="sample_client_name">Maria Garcia</string>

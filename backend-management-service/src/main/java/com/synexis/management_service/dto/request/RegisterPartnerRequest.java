@@ -28,6 +28,6 @@ public record RegisterPartnerRequest(
 
                 UserLanguage language,
 
-                @Size(max = 255) String picDirectory) {
+                String profilePictureBase64) {
 
 }

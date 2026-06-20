@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -20,6 +22,12 @@ public class RoomController {
     public RoomController(SessionManager sessionManager) {
         this.sessionManager = sessionManager;
     }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("RoomController is healthy");
+    }
+    
 
     @PostMapping
     public ResponseEntity<RoomResponse> createRoom(

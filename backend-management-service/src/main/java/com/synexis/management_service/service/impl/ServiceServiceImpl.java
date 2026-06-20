@@ -46,9 +46,6 @@ import com.synexis.management_service.service.ServiceService;
 public class ServiceServiceImpl implements ServiceService {
 
     private static final Set<ServiceStatus> ACTIVE_SERVICE_STATUSES = Set.of(
-            ServiceStatus.REQUESTED,
-            ServiceStatus.ACCEPTED,
-            ServiceStatus.WAITING_FOR_START,
             ServiceStatus.READY,
             ServiceStatus.IN_PROGRESS);
 

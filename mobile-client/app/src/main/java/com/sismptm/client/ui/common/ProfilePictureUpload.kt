@@ -1,6 +1,8 @@
 package com.sismptm.client.ui.common
 
+import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +30,7 @@ import com.sismptm.client.ui.theme.BlueSecondary
 fun ProfilePictureUpload(
     onPhotoClick: () -> Unit,
     selectedImageUri: Uri? = null,
+    selectedImageBitmap: Bitmap? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -45,32 +49,45 @@ fun ProfilePictureUpload(
                 .clickable(onClick = onPhotoClick),
             contentAlignment = Alignment.Center
         ) {
-            if (selectedImageUri != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(selectedImageUri)
-                        .crossfade(300)
-                        .build(),
-                    contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Add photo",
-                    modifier = Modifier.size(48.dp),
-                    tint = BlueSecondary
-                )
+            when {
+                selectedImageUri != null -> {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(selectedImageUri)
+                            .crossfade(300)
+                            .build(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                selectedImageBitmap != null -> {
+                    Image(
+                        bitmap = selectedImageBitmap.asImageBitmap(),
+                        contentDescription = "Profile picture",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                else -> {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add photo",
+                        modifier = Modifier.size(48.dp),
+                        tint = BlueSecondary
+                    )
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = if (selectedImageUri != null) "Change photo" else "Add photo",
+            text = if (selectedImageUri != null || selectedImageBitmap != null) "Change photo" else "Add photo",
             fontSize = 14.sp,
             color = BlueSecondary,
             fontWeight = FontWeight.Medium

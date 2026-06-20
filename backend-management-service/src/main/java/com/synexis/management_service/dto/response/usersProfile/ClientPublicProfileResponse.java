@@ -4,7 +4,6 @@ import java.time.Instant;
 
 public record ClientPublicProfileResponse(
         String name,
-        String picDirectory,
         String language,
         Instant createdAt
 ) {
